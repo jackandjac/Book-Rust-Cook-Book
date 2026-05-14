@@ -90,7 +90,7 @@ Build with `cargo build --profile release-with-debug`. The `inherits` field is *
 
 Rust has two styles of documentation comment, both rendered as HTML by `cargo doc`.
 
-```rust
+```rust,no_run
 //! # my_math
 //!
 //! `my_math` provides precise arithmetic utilities.
@@ -138,7 +138,7 @@ cargo test                # runs unit tests, integration tests, AND doc tests
 
 Hiding boilerplate lines from rendered docs (still compiled):
 
-```rust
+```rust,no_run
 /// ```
 /// # use my_math::add_one;   // compiled but hidden in HTML
 /// assert_eq!(add_one(2), 3);
@@ -147,7 +147,7 @@ Hiding boilerplate lines from rendered docs (still compiled):
 
 ### Hiding implementation details
 
-```rust
+```rust,no_run
 #[doc(hidden)]
 pub fn internal_helper() {}   // still fully pub (callable by external crates); excluded from rustdoc
 
@@ -160,7 +160,7 @@ pub fn the_answer() -> u32 { 42 }
 
 Deep module hierarchies are useful internally but painful for callers. `pub use` re-exports items at the crate root.
 
-```rust
+```rust,no_run
 // src/lib.rs
 //! # art
 //! A library for modeling artistic concepts.
@@ -341,7 +341,7 @@ anyhow     = { workspace = true }
 
 **`core/src/lib.rs`:**
 
-```rust
+```rust,no_run
 //! Shared domain logic for the myapp workspace.
 
 use anyhow::Result;
@@ -362,7 +362,7 @@ pub fn find_user(id: u64) -> Result<User> {
 
 **`cli/src/main.rs`:**
 
-```rust
+```rust,no_run
 use anyhow::Result;
 use myapp_core::find_user;
 
@@ -474,7 +474,7 @@ serde = ["dep:serde"]
 
 ### Using `#[cfg(feature = "...")]` in code
 
-```rust
+```rust,no_run
 // core/src/lib.rs
 
 #[derive(Debug, Clone)]

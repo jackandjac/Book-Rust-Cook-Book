@@ -72,7 +72,7 @@ The `"full"` feature enables every Tokio sub-system: the multi-threaded schedule
 
 ### 17.3.1 Your First Async Function
 
-```rust
+```rust,no_run
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -92,7 +92,7 @@ async fn main() {
 
 `async fn fetch_data(...)` desugars to approximately:
 
-```rust
+```rust,no_run
 fn fetch_data(id: u32) -> impl Future<Output = String> {
     async move {
         sleep(Duration::from_millis(100)).await;
@@ -109,7 +109,7 @@ The function body is **not executed** when you call `fetch_data(42)`. It returns
 
 You can use `async {}` anywhere an expression is valid:
 
-```rust
+```rust,no_run
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -130,7 +130,7 @@ async fn main() {
 
 Conceptually, `Future` is defined as:
 
-```rust
+```rust,no_run
 pub trait Future {
     type Output;
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output>;
@@ -150,7 +150,7 @@ The runtime calls `poll` repeatedly. When the future is ready, it returns `Poll:
 
 `main` cannot itself be `async` without a runtime. The `#[tokio::main]` attribute expands to:
 
-```rust
+```rust,no_run
 fn main() {
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -164,7 +164,7 @@ fn main() {
 
 Use `#[tokio::main(flavor = "current_thread")]` for single-threaded execution (useful for embedded or simple CLIs):
 
-```rust
+```rust,no_run
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     println!("running on a single-threaded runtime");
@@ -177,7 +177,7 @@ async fn main() {
 
 `tokio::spawn` launches an async task concurrently. It is analogous to `new Thread(...).start()` or submitting to an `ExecutorService`.
 
-```rust
+```rust,no_run
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -212,7 +212,7 @@ async fn main() {
 
 `tokio::spawn` requires the future to be `Send + 'static`:
 
-```rust
+```rust,no_run
 // This does NOT compile:
 // async fn bad(data: &str) -> usize { data.len() }
 // tokio::spawn(bad("hello")); // Error: future is not 'static
@@ -237,7 +237,7 @@ The `'static` bound exists because the task may outlive the current scope. The `
 
 `tokio::join!` drives multiple futures concurrently on the **current task**. Unlike `tokio::spawn`, it does not create new tasks — it interleaves execution within one task.
 
-```rust
+```rust,no_run
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -263,7 +263,7 @@ async fn main() {
 
 **`join!` vs sequential `.await`:**
 
-```rust
+```rust,no_run
 // Sequential — total time = 100 + 200 + 150 = 450ms
 let a = fetch("alpha", 100).await;
 let b = fetch("beta", 200).await;
@@ -279,7 +279,7 @@ let (a, b, c) = tokio::join!(fetch("alpha", 100), fetch("beta", 200), fetch("gam
 
 When the number of futures is determined at runtime, use `tokio::spawn` in a loop and collect `JoinHandle`s:
 
-```rust
+```rust,no_run
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -311,7 +311,7 @@ tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 ```
 
-```rust
+```rust,no_run
 use futures::future::try_join_all;
 
 async fn fetch_page(id: u32) -> Result<String, String> {
@@ -337,7 +337,7 @@ async fn main() -> Result<(), String> {
 
 `tokio::select!` polls multiple futures and returns when the *first* one completes, cancelling the rest.
 
-```rust
+```rust,no_run
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -365,7 +365,7 @@ async fn main() {
 
 **Biased polling:** By default, `select!` randomly polls branches to prevent starvation. Add `biased;` to poll in declaration order (useful for prioritizing a shutdown signal):
 
-```rust
+```rust,no_run
 use tokio::sync::oneshot;
 
 #[tokio::main]
@@ -405,7 +405,7 @@ async fn main() {
 
 ### 17.7.1 `sleep`
 
-```rust
+```rust,no_run
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -421,7 +421,7 @@ async fn main() {
 
 ### 17.7.2 `timeout`
 
-```rust
+```rust,no_run
 use std::time::Duration;
 use tokio::time::{sleep, timeout};
 
@@ -441,7 +441,7 @@ async fn main() {
 
 `tokio::time::timeout` returns `Result<T, tokio::time::error::Elapsed>`. If the inner future itself returns a `Result`, you get nested results:
 
-```rust
+```rust,no_run
 async fn fallible() -> Result<String, std::io::Error> {
     Ok("done".to_string())
 }
@@ -466,7 +466,7 @@ Use the `?` operator carefully: the first `?` propagates `Elapsed`, the second p
 
 ### 17.8.1 Async File Operations with `tokio::fs`
 
-```rust
+```rust,no_run
 use tokio::fs;
 
 #[tokio::main]
@@ -494,7 +494,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 For streaming reads and writes, use the extension traits from `tokio::io`:
 
-```rust
+```rust,no_run
 use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
@@ -530,7 +530,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 Read multiple files concurrently and collect their contents:
 
-```rust
+```rust,no_run
 use tokio::fs;
 
 async fn read_file(path: &str) -> Result<(String, String), std::io::Error> {
@@ -577,7 +577,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 A minimal async TCP echo server demonstrates `TcpListener`, per-connection tasks, and `tokio::io::copy`:
 
-```rust
+```rust,no_run
 use tokio::net::TcpListener;
 use tokio::io;
 
@@ -638,7 +638,7 @@ tokio-stream = "0.1"
 
 ### 17.10.2 Creating and Consuming Streams
 
-```rust
+```rust,no_run
 use tokio_stream::{self, StreamExt};
 
 #[tokio::main]
@@ -657,7 +657,7 @@ async fn main() {
 
 `StreamExt` provides combinators analogous to `Iterator`:
 
-```rust
+```rust,no_run
 use tokio_stream::{self, StreamExt};
 use std::time::Duration;
 
@@ -679,7 +679,7 @@ async fn main() {
 
 ### 17.10.4 Time-Based Stream (Ticks)
 
-```rust
+```rust,no_run
 use tokio_stream::StreamExt;
 use tokio::time::{interval, Duration};
 use tokio_stream::wrappers::IntervalStream;
@@ -699,7 +699,7 @@ async fn main() {
 
 ### 17.10.5 Converting a Channel Receiver into a Stream
 
-```rust
+```rust,no_run
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::StreamExt;
@@ -731,7 +731,7 @@ async fn main() {
 
 The `?` operator works inside `async fn` exactly as in synchronous functions:
 
-```rust
+```rust,no_run
 use tokio::fs;
 
 async fn read_config(path: &str) -> Result<String, std::io::Error> {
@@ -757,7 +757,7 @@ tokio = { version = "1", features = ["full"] }
 anyhow = "1"
 ```
 
-```rust
+```rust,no_run
 use anyhow::{Context, Result};
 use tokio::fs;
 
@@ -786,7 +786,7 @@ async fn main() -> Result<()> {
 
 When spawning fallible tasks, you deal with double-wrapping: `JoinError` on the outside, your error type on the inside:
 
-```rust
+```rust,no_run
 use anyhow::Result;
 
 async fn might_fail(id: u32) -> Result<String> {
@@ -828,7 +828,7 @@ Tokio provides four channel types for different communication patterns:
 
 ### 17.12.1 `mpsc` — Multi-Producer Single-Consumer
 
-```rust
+```rust,no_run
 use tokio::sync::mpsc;
 use std::time::Duration;
 
@@ -875,7 +875,7 @@ async fn main() {
 
 ### 17.12.2 `oneshot` — Single Response
 
-```rust
+```rust,no_run
 use tokio::sync::oneshot;
 
 async fn compute(tx: oneshot::Sender<u64>, input: u64) {
@@ -900,7 +900,7 @@ async fn main() {
 
 ### 17.12.3 `broadcast` — Fan-Out
 
-```rust
+```rust,no_run
 use tokio::sync::broadcast;
 
 #[tokio::main]
@@ -937,7 +937,7 @@ async fn main() {
 
 ### 17.13.1 Why NOT `std::sync::Mutex` Across Await Points
 
-```rust
+```rust,no_run
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -954,7 +954,7 @@ The problem: `std::sync::Mutex` holds the OS mutex across the await point, block
 
 **Fix 1:** Drop the guard before the `.await`:
 
-```rust
+```rust,no_run
 use std::sync::Mutex;
 
 async fn fixed_with_std_mutex(data: &Mutex<Vec<u32>>) {
@@ -968,7 +968,7 @@ async fn fixed_with_std_mutex(data: &Mutex<Vec<u32>>) {
 
 **Fix 2:** Use `tokio::sync::Mutex` when you must hold the lock across `.await`:
 
-```rust
+```rust,no_run
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -998,7 +998,7 @@ async fn main() {
 
 ### 17.13.2 `RwLock` for Read-Heavy Workloads
 
-```rust
+```rust,no_run
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -1034,7 +1034,7 @@ async fn main() {
 
 When you must call synchronous blocking code (database drivers, CPU-intensive work, legacy libraries), use `tokio::task::spawn_blocking` to run it on a dedicated thread pool that does not affect the async worker threads.
 
-```rust
+```rust,no_run
 use tokio::task;
 
 fn heavy_computation(input: u64) -> u64 {
@@ -1072,7 +1072,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 `tokio::sync::Semaphore` limits the number of concurrent operations:
 
-```rust
+```rust,no_run
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Semaphore;
@@ -1119,7 +1119,7 @@ Only `MAX_CONCURRENT` (3) tasks will be inside `fetch_url` simultaneously. The r
 
 A realistic pattern for concurrent HTTP fetching, simulated with `tokio::time::sleep` to avoid requiring `reqwest`:
 
-```rust
+```rust,no_run
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -1214,7 +1214,7 @@ async fn main() {
 
 ### Pitfall 1: Blocking the Async Thread
 
-```rust
+```rust,no_run
 // WRONG: blocks the tokio worker thread
 async fn bad() {
     std::thread::sleep(std::time::Duration::from_secs(1)); // NEVER do this
@@ -1236,7 +1236,7 @@ As shown in §17.13.1, holding an `std::sync::Mutex` guard across an `.await` po
 
 Borrows and non-`Send` types cannot be sent across tasks:
 
-```rust
+```rust,no_run
 // WRONG
 let local = std::rc::Rc::new(42); // Rc is not Send
 tokio::spawn(async move {
@@ -1254,7 +1254,7 @@ tokio::spawn(async move {
 
 Dropping a future cancels it at its next await point. If a future performs cleanup (closing resources, sending a final message), that cleanup may not run if the future is cancelled:
 
-```rust
+```rust,no_run
 use tokio::sync::mpsc;
 
 async fn worker(mut rx: mpsc::Receiver<u32>) {
@@ -1278,7 +1278,7 @@ Not all futures are safe to cancel and restart. `tokio::sync::mpsc::Receiver::re
 
 Since Rust 1.75, `async fn` in traits is stable:
 
-```rust
+```rust,no_run
 trait Fetcher {
     async fn fetch(&self, url: &str) -> Result<String, String>;
 }

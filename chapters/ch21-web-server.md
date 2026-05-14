@@ -436,7 +436,7 @@ Key design decisions:
 
 Add a `/sleep` route that simulates a slow endpoint:
 
-```rust
+```rust,no_run
 // Add to the route() match arm:
 ("GET", "/sleep") => {
     std::thread::sleep(Duration::from_secs(5));
@@ -507,7 +507,7 @@ src/
 
 ### `src/lib.rs` — ThreadPool Implementation
 
-```rust
+```rust,no_run
 // src/lib.rs
 use std::{
     sync::{Arc, Mutex, mpsc},
@@ -574,7 +574,7 @@ This is the same contract Java's `Runnable` interface expresses implicitly (all 
 
 ## Stage 5b — Worker Threads
 
-```rust
+```rust,no_run
 // Continues in src/lib.rs
 
 struct Worker {
@@ -612,7 +612,7 @@ impl Worker {
 
 **Critical detail — mutex lock scope:**
 
-```rust
+```rust,no_run
 // CORRECT: lock is released before job() runs
 let message = receiver.lock().unwrap().recv();
 match message { Ok(job) => job(), ... }
@@ -638,7 +638,7 @@ When `ThreadPool` goes out of scope, we want to:
 
 The signal is simple: drop the sender. When the channel's sender side is dropped, `recv()` in each worker returns `Err(RecvError)`, which causes the worker loop to `break`.
 
-```rust
+```rust,no_run
 // Continues in src/lib.rs
 
 impl Drop for ThreadPool {
@@ -688,7 +688,7 @@ Java's `ExecutorService.shutdown()` is called explicitly. Rust's `Drop` implemen
 
 ## Stage 7 — Putting It Together: `main.rs` with ThreadPool
 
-```rust
+```rust,no_run
 // src/main.rs — with ThreadPool
 use hello::ThreadPool;
 use std::{
@@ -942,7 +942,7 @@ impl Worker {
 
 ### `src/main.rs` — HTTP Server
 
-```rust
+```rust,no_run
 use hello::ThreadPool;
 use std::{
     fs,
@@ -1102,7 +1102,7 @@ tokio = { version = "1", features = ["full"] }
 
 ### Minimal Tokio Web Server
 
-```rust
+```rust,no_run
 // src/main.rs — Tokio async version (separate project)
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
@@ -1204,14 +1204,14 @@ Timeouts protect the server from two distinct problems:
 
 For the threaded version we used `set_read_timeout` and `set_write_timeout`. These are OS-level socket options:
 
-```rust
+```rust,no_run
 stream.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
 stream.set_write_timeout(Some(Duration::from_secs(5))).unwrap();
 ```
 
 When a timeout fires, the next `read` or `write` call returns `Err(io::Error { kind: TimedOut, ... })`. Our `handle_connection` function handles this gracefully:
 
-```rust
+```rust,no_run
 let request_line = match buf_reader.lines().next() {
     Some(Ok(line)) => line,
     _ => return, // TimedOut, broken pipe, EOF — all handled here
@@ -1220,7 +1220,7 @@ let request_line = match buf_reader.lines().next() {
 
 For the Tokio version, use `tokio::time::timeout`:
 
-```rust
+```rust,no_run
 use tokio::time::{timeout, Duration};
 
 async fn handle_connection(mut stream: TcpStream) {

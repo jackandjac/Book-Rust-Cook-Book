@@ -214,6 +214,35 @@ mod tests_p206 {
 **Complexity:** O(m + n) time, O(1) space.
 
 ```rust
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct ListNode {
+    pub val: i32,
+    pub next: Option<Box<ListNode>>,
+}
+impl ListNode {
+    #[inline]
+    fn new(val: i32) -> Self { ListNode { val, next: None } }
+}
+
+fn to_list(vals: Vec<i32>) -> Option<Box<ListNode>> {
+    let mut head = None;
+    for &v in vals.iter().rev() {
+        let mut node = Box::new(ListNode::new(v));
+        node.next = head;
+        head = Some(node);
+    }
+    head
+}
+
+fn to_vec(mut head: Option<Box<ListNode>>) -> Vec<i32> {
+    let mut result = Vec::new();
+    while let Some(node) = head {
+        result.push(node.val);
+        head = node.next;
+    }
+    result
+}
+
 pub fn merge_two_lists(
     mut l1: Option<Box<ListNode>>,
     mut l2: Option<Box<ListNode>>,
@@ -287,6 +316,35 @@ mod tests_p21 {
 **Complexity:** O(n) time, O(1) space.
 
 ```rust
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct ListNode {
+    pub val: i32,
+    pub next: Option<Box<ListNode>>,
+}
+impl ListNode {
+    #[inline]
+    fn new(val: i32) -> Self { ListNode { val, next: None } }
+}
+
+fn to_list(vals: Vec<i32>) -> Option<Box<ListNode>> {
+    let mut head = None;
+    for &v in vals.iter().rev() {
+        let mut node = Box::new(ListNode::new(v));
+        node.next = head;
+        head = Some(node);
+    }
+    head
+}
+
+fn to_vec(mut head: Option<Box<ListNode>>) -> Vec<i32> {
+    let mut result = Vec::new();
+    while let Some(node) = head {
+        result.push(node.val);
+        head = node.next;
+    }
+    result
+}
+
 pub fn reorder_list(head: &mut Option<Box<ListNode>>) {
     // Count length
     let mut len = 0;
@@ -389,6 +447,35 @@ mod tests_p143 {
 **Complexity:** O(L) time (one pass), O(1) space.
 
 ```rust
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct ListNode {
+    pub val: i32,
+    pub next: Option<Box<ListNode>>,
+}
+impl ListNode {
+    #[inline]
+    fn new(val: i32) -> Self { ListNode { val, next: None } }
+}
+
+fn to_list(vals: Vec<i32>) -> Option<Box<ListNode>> {
+    let mut head = None;
+    for &v in vals.iter().rev() {
+        let mut node = Box::new(ListNode::new(v));
+        node.next = head;
+        head = Some(node);
+    }
+    head
+}
+
+fn to_vec(mut head: Option<Box<ListNode>>) -> Vec<i32> {
+    let mut result = Vec::new();
+    while let Some(node) = head {
+        result.push(node.val);
+        head = node.next;
+    }
+    result
+}
+
 pub fn remove_nth_from_end(head: Option<Box<ListNode>>, n: i32) -> Option<Box<ListNode>> {
     // Dummy head simplifies removing the actual head node
     let mut dummy = Box::new(ListNode::new(0));
@@ -623,6 +710,35 @@ mod tests_p138 {
 **Complexity:** O(max(m, n)) time, O(max(m, n)) space.
 
 ```rust
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct ListNode {
+    pub val: i32,
+    pub next: Option<Box<ListNode>>,
+}
+impl ListNode {
+    #[inline]
+    fn new(val: i32) -> Self { ListNode { val, next: None } }
+}
+
+fn to_list(vals: Vec<i32>) -> Option<Box<ListNode>> {
+    let mut head = None;
+    for &v in vals.iter().rev() {
+        let mut node = Box::new(ListNode::new(v));
+        node.next = head;
+        head = Some(node);
+    }
+    head
+}
+
+fn to_vec(mut head: Option<Box<ListNode>>) -> Vec<i32> {
+    let mut result = Vec::new();
+    while let Some(node) = head {
+        result.push(node.val);
+        head = node.next;
+    }
+    result
+}
+
 pub fn add_two_numbers(
     mut l1: Option<Box<ListNode>>,
     mut l2: Option<Box<ListNode>>,
@@ -878,6 +994,35 @@ mod tests_p146 {
 **Complexity:** O(N log k) time where N = total nodes, k = number of lists; O(k) heap space.
 
 ```rust
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct ListNode {
+    pub val: i32,
+    pub next: Option<Box<ListNode>>,
+}
+impl ListNode {
+    #[inline]
+    fn new(val: i32) -> Self { ListNode { val, next: None } }
+}
+
+fn to_list(vals: Vec<i32>) -> Option<Box<ListNode>> {
+    let mut head = None;
+    for &v in vals.iter().rev() {
+        let mut node = Box::new(ListNode::new(v));
+        node.next = head;
+        head = Some(node);
+    }
+    head
+}
+
+fn to_vec(mut head: Option<Box<ListNode>>) -> Vec<i32> {
+    let mut result = Vec::new();
+    while let Some(node) = head {
+        result.push(node.val);
+        head = node.next;
+    }
+    result
+}
+
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
@@ -978,6 +1123,35 @@ mod tests_p23 {
 **Complexity:** O(n) time, O(n/k) stack space for recursion (O(1) for iterative).
 
 ```rust
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct ListNode {
+    pub val: i32,
+    pub next: Option<Box<ListNode>>,
+}
+impl ListNode {
+    #[inline]
+    fn new(val: i32) -> Self { ListNode { val, next: None } }
+}
+
+fn to_list(vals: Vec<i32>) -> Option<Box<ListNode>> {
+    let mut head = None;
+    for &v in vals.iter().rev() {
+        let mut node = Box::new(ListNode::new(v));
+        node.next = head;
+        head = Some(node);
+    }
+    head
+}
+
+fn to_vec(mut head: Option<Box<ListNode>>) -> Vec<i32> {
+    let mut result = Vec::new();
+    while let Some(node) = head {
+        result.push(node.val);
+        head = node.next;
+    }
+    result
+}
+
 /// Detaches the first k nodes from `head`. Returns (chunk, remainder).
 /// Returns (None, original_head) if fewer than k nodes exist.
 fn take_k(

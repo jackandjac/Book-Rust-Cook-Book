@@ -115,7 +115,7 @@ In Java, `s2 = s1` copies the *reference* (the pointer). Both variables point to
 
 ### Rust assignment: move ownership
 
-```rust
+```rust,compile_fail
 fn main() {
     let s1 = String::from("hello");
     let s2 = s1;    // s1 is MOVED into s2 — s1 is no longer valid
@@ -153,7 +153,7 @@ The official term for this is a **move**: not a shallow copy (Java), not a deep 
 
 ### Moves happen with function calls too
 
-```rust
+```rust,compile_fail
 fn takes_ownership(s: String) {
     println!("{s}");
 } // s is dropped here — heap memory freed
@@ -263,7 +263,7 @@ fn main() {
 
 Trying to modify a borrowed value through a `&` reference fails:
 
-```rust
+```rust,compile_fail
 fn change(s: &String) {
     s.push_str(", world"); // ERROR
 }
@@ -319,7 +319,7 @@ The borrow checker enforces two rules about references. These rules are what pre
 
 **Two mutable references to the same value — illegal:**
 
-```rust
+```rust,compile_fail
 fn main() {
     let mut s = String::from("hello");
 
@@ -347,7 +347,7 @@ error[E0499]: cannot borrow `s` as mutable more than once at a time
 
 **A mutable reference while an immutable one is live — also illegal:**
 
-```rust
+```rust,compile_fail
 fn main() {
     let mut s = String::from("hello");
 
@@ -443,7 +443,7 @@ Java's GC prevents use-after-free and double-free for objects (because the GC ow
 
 A dangling reference is a reference to memory that has been freed — the most common source of security vulnerabilities in C/C++. Rust makes them impossible:
 
-```rust
+```rust,compile_fail
 fn dangle() -> &String { // Tries to return a reference to a local String
     let s = String::from("hello");
     &s
@@ -594,7 +594,7 @@ fn main() {
 
 ### The error you will encounter
 
-```rust
+```rust,compile_fail
 fn takes_str(s: &str) {}
 
 fn main() {
@@ -679,7 +679,7 @@ fn main() {
 
 **With slices — the borrow checker enforces correctness:**
 
-```rust
+```rust,compile_fail
 fn first_word(s: &str) -> &str {
     for (i, &byte) in s.as_bytes().iter().enumerate() {
         if byte == b' ' {

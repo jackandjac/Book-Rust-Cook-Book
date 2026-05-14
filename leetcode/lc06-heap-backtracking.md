@@ -1197,7 +1197,7 @@ mod tests_lc79 {
     #[test]
     fn test_single_char() {
         let board = grid(&["A"]);
-        assert!(Solution::exist(board, "A".to_string()));
+        assert!(Solution::exist(board.clone(), "A".to_string()));
         assert!(!Solution::exist(board, "B".to_string()));
     }
 }

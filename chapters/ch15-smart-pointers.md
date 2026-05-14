@@ -64,7 +64,7 @@ A classic problem: how do you define a type that contains itself? The compiler m
 
 This fails:
 
-```rust
+```rust,compile_fail
 // Does NOT compile
 enum List {
     Cons(i32, List),  // How big is List? It contains another List... forever.
@@ -465,7 +465,15 @@ fn main() {
 
 You cannot call `.drop()` directly:
 
-```rust
+```rust,compile_fail
+struct DatabaseConnection { url: String }
+impl DatabaseConnection {
+    fn new(url: &str) -> Self { DatabaseConnection { url: url.to_string() } }
+}
+impl Drop for DatabaseConnection {
+    fn drop(&mut self) { println!("Closing connection to {}", self.url); }
+}
+
 // Does NOT compile
 fn main() {
     let c = DatabaseConnection::new("postgres://localhost/mydb");
@@ -487,6 +495,15 @@ error[E0040]: explicit use of destructor method
 **The solution** is `std::mem::drop()`, which takes ownership (`T`, not `&mut T`) and lets the value die at the end of the `drop` function call:
 
 ```rust
+struct DatabaseConnection { url: String }
+impl DatabaseConnection {
+    fn new(url: &str) -> Self { DatabaseConnection { url: url.to_string() } }
+    fn query(&self, _sql: &str) -> String { format!("Results from {}", self.url) }
+}
+impl Drop for DatabaseConnection {
+    fn drop(&mut self) { println!("Closing connection to {}", self.url); }
+}
+
 fn main() {
     let conn = DatabaseConnection::new("postgres://localhost/mydb");
     println!("Connection established");
@@ -513,7 +530,7 @@ pub fn drop<T>(_x: T) {} // T is moved in, then dropped at end of this function
 
 `Box<T>` has exactly one owner. When you try to share it, you get a compile error:
 
-```rust
+```rust,compile_fail
 enum List {
     Cons(i32, Box<List>),
     Nil,

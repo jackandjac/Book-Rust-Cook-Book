@@ -143,7 +143,7 @@ fn main() {
 
 #### Calling a C Function (FFI)
 
-```rust
+```rust,no_run
 // Rust 2024: the block itself is annotated unsafe.
 // Items inside can be marked `safe` to opt into call-site safety.
 unsafe extern "C" {
@@ -989,7 +989,7 @@ pub trait HelloMacro {
 
 **Derive macro crate (`hello_macro_derive/src/lib.rs`):**
 
-```rust
+```rust,no_run
 use proc_macro::TokenStream;
 use quote::quote;
 use syn;
@@ -1019,7 +1019,7 @@ fn impl_hello_macro(ast: &syn::DeriveInput) -> TokenStream {
 
 **User code:**
 
-```rust
+```rust,no_run
 use hello_macro::HelloMacro;
 use hello_macro_derive::HelloMacro;
 
@@ -1039,7 +1039,7 @@ fn main() {
 
 **Attribute macros** (`#[proc_macro_attribute]`) attach to any item and receive two `TokenStream` arguments: the attribute contents and the item body. **Function-like macros** (`#[proc_macro]`) look like `sql!(...)` calls and receive a single `TokenStream`.
 
-```rust
+```rust,no_run
 // Attribute macro: #[route(GET, "/")] fn index() { ... }
 // Receives attr = `GET, "/"` and item = the fn body.
 #[proc_macro_attribute]

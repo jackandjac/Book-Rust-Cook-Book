@@ -90,6 +90,8 @@ mod tests_125 {
 **Common bug:** The return value must be **1-indexed**. In Rust: `vec![(l + 1) as i32, (r + 1) as i32]`. Forgetting the `+1` is one of the most common mistakes on this problem.
 
 ```rust
+struct Solution;
+
 impl Solution {
     pub fn two_sum(numbers: Vec<i32>, target: i32) -> Vec<i32> {
         let (mut l, mut r) = (0usize, numbers.len() - 1);
@@ -136,6 +138,8 @@ mod tests_167 {
 - Inner after match: advance `l` past all equal values, advance `r` back past all equal values, then step once more.
 
 ```rust
+struct Solution;
+
 impl Solution {
     pub fn three_sum(mut nums: Vec<i32>) -> Vec<Vec<i32>> {
         nums.sort_unstable(); // sort_unstable is fine; no stability requirement
@@ -215,6 +219,8 @@ mod tests_15 {
 **Key insight:** Start with the widest possible container (`l=0`, `r=n-1`). The area is `width * min(height[l], height[r])`. To potentially find a better answer, always move the pointer pointing to the *shorter* line — moving the taller one can only reduce (or maintain) the min height while also reducing width.
 
 ```rust
+struct Solution;
+
 impl Solution {
     pub fn max_area(height: Vec<i32>) -> i32 {
         let (mut l, mut r) = (0usize, height.len() - 1);
@@ -259,6 +265,8 @@ mod tests_11 {
 **Key insight (two-pointer O(1) space):** At each position, trapped water equals `min(left_max, right_max) - height[i]`. Instead of precomputing prefix/suffix max arrays, track running maxima with two pointers. Process whichever side has the smaller current max — that side's trapped water is fully determined by its own max.
 
 ```rust
+struct Solution;
+
 impl Solution {
     pub fn trap(height: Vec<i32>) -> i32 {
         if height.is_empty() {
@@ -327,6 +335,8 @@ mod tests_42 {
 **Key insight:** This is technically a one-pass sliding window / greedy: track the minimum price seen so far (`buy` pointer) and the maximum gain from selling at the current price (`sell` pointer). If the current price is lower than `min_price`, update the buy point — never sell before you buy.
 
 ```rust
+struct Solution;
+
 impl Solution {
     pub fn max_profit(prices: Vec<i32>) -> i32 {
         let mut min_price = i32::MAX; // sentinel: "haven't bought yet"
@@ -373,6 +383,8 @@ mod tests_121 {
 **Rust-specific optimization:** A `[usize; 128]` array (one slot per ASCII code point) replaces a `HashMap<u8, usize>`. Array indexing is O(1) with no hashing overhead and no heap allocation.
 
 ```rust
+struct Solution;
+
 impl Solution {
     pub fn length_of_longest_substring(s: String) -> i32 {
         let bytes = s.as_bytes();
@@ -434,6 +446,8 @@ mod tests_3 {
 **Subtle correctness point:** `max_freq` is never decremented when shrinking. This is intentional — we only care about finding a window *at least as large* as the current best. If `max_freq` would decrease on shrink, no window of that size can be better, so we simply maintain size without expanding incorrectly.
 
 ```rust
+struct Solution;
+
 impl Solution {
     pub fn character_replacement(s: String, k: i32) -> i32 {
         let bytes = s.as_bytes();
@@ -501,6 +515,8 @@ mod tests_424 {
 **Rust-specific optimization:** Use `[i32; 26]` arrays instead of `HashMap`. Comparing two `[i32; 26]` arrays with `==` is a single O(26) comparison — effectively O(1). In Java, `Arrays.equals()` on `int[26]` does the same thing, but Java devs often reach for `HashMap` by habit.
 
 ```rust
+struct Solution;
+
 impl Solution {
     pub fn check_inclusion(s1: String, s2: String) -> bool {
         if s1.len() > s2.len() {
@@ -570,6 +586,8 @@ mod tests_567 {
 **Key insight:** Use the `have` / `need` counter pattern. `need` is the count of distinct characters in `t` that still need to be fully satisfied in the window. When `have == need`, all required characters are present — try to shrink from the left. This avoids comparing full maps on every step (which would make it O(n·m)).
 
 ```rust
+struct Solution;
+
 impl Solution {
     pub fn min_window(s: String, t: String) -> String {
         use std::collections::HashMap;
@@ -680,6 +698,8 @@ mod tests_76 {
 2. Pop from the **back** any indices whose values are ≤ `nums[i]` — they can never be the maximum while `nums[i]` is in the window.
 
 ```rust
+struct Solution;
+
 impl Solution {
     pub fn max_sliding_window(nums: Vec<i32>, k: i32) -> Vec<i32> {
         use std::collections::VecDeque;

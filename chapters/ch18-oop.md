@@ -1005,8 +1005,8 @@ impl CompressionStrategy for RunLengthEncoding {
         while i < data.len() {
             let byte = data[i];
             let mut count = 1u8;
-            while i + count as usize < data.len()
-                && data[i + count as usize] == byte
+            while i + (count as usize) < data.len()
+                && data[i + (count as usize)] == byte
                 && count < 255
             {
                 count += 1;
@@ -1416,6 +1416,28 @@ fn main() {
 ```rust
 use std::fmt;
 
+// §18.4.1 Shape trait and implementations (repeated here for self-contained example)
+trait Shape {
+    fn area(&self) -> f64;
+    fn color(&self) -> &str;
+    fn describe(&self) -> String {
+        format!("{} shape with area {:.2}", self.color(), self.area())
+    }
+}
+
+struct Circle { color: String, radius: f64 }
+struct Rectangle { color: String, width: f64, height: f64 }
+
+impl Shape for Circle {
+    fn area(&self) -> f64 { std::f64::consts::PI * self.radius * self.radius }
+    fn color(&self) -> &str { &self.color }
+}
+
+impl Shape for Rectangle {
+    fn area(&self) -> f64 { self.width * self.height }
+    fn color(&self) -> &str { &self.color }
+}
+
 // USE GENERICS when the type is known at the call site and performance matters.
 // The compiler generates a separate version of this function for each concrete T.
 fn print_debug<T: fmt::Debug>(value: &T) {
@@ -1423,7 +1445,6 @@ fn print_debug<T: fmt::Debug>(value: &T) {
 }
 
 // USE dyn when the concrete type isn't known until runtime.
-// (Shape, Circle, Rectangle defined above in §18.4.1)
 fn make_shape(kind: &str) -> Box<dyn Shape> {
     match kind {
         "circle" => Box::new(Circle { color: "red".into(), radius: 1.0 }),
@@ -1443,7 +1464,7 @@ fn main() {
     print_debug(&"hello");           // static dispatch — T = &str
 
     let shape = make_shape("circle");
-    println!("Dynamic shape: {}", shape.name());
+    println!("Dynamic shape: {}", shape.describe());
 }
 ```
 

@@ -30,6 +30,13 @@ pub struct Config {
 ### Creating an instance
 
 ```rust
+struct User {
+    active: bool,
+    username: String,
+    email: String,
+    sign_in_count: u64,
+}
+
 fn main() {
     let user1 = User {
         active: true,
@@ -51,6 +58,13 @@ Field order in the literal does not need to match the definition order.
 Rust does not let you mark individual fields `mut`. Mutability applies to the whole binding:
 
 ```rust
+struct User {
+    active: bool,
+    username: String,
+    email: String,
+    sign_in_count: u64,
+}
+
 fn main() {
     let mut user1 = User {
         active: true,
@@ -87,6 +101,13 @@ fn build_user(email: String, username: String) -> User {
 Create a new instance based on an existing one, overriding only the fields you care about:
 
 ```rust
+struct User {
+    active: bool,
+    username: String,
+    email: String,
+    sign_in_count: u64,
+}
+
 fn main() {
     let user1 = User {
         active: true,
@@ -141,8 +162,11 @@ fn main() {
 Even though `Color` and `Point` have identical field types, they are **different types**. You cannot pass a `Color` where a `Point` is expected — the compiler will reject it. This is called the *newtype pattern* and is one of the most underrated ways to prevent bugs.
 
 ```rust
+struct Point(i32, i32, i32);
+struct Color(i32, i32, i32);
+
 fn translate(p: Point, dx: i32, dy: i32) -> Point {
-    Point(p.0 + dx, p.1 + dy)
+    Point(p.0 + dx, p.1 + dy, p.2)
 }
 
 fn main() {
@@ -383,6 +407,9 @@ fn main() {
 ### The three `self` receivers
 
 ```rust
+#[derive(Debug)]
+struct Rectangle { width: u32, height: u32 }
+
 impl Rectangle {
     // 1. &self — immutable borrow; most common
     //    Use when: reading data, no modification needed
@@ -440,6 +467,9 @@ rect.area();          // Rust automatically borrows as &rect
 Associated functions are defined in `impl` but do **not** take `self`. They are called with `::` syntax, not `.`:
 
 ```rust
+#[derive(Debug)]
+struct Rectangle { width: u32, height: u32 }
+
 impl Rectangle {
     // Associated function — no self parameter
     // Called as Rectangle::square(5), not rect.square(5)

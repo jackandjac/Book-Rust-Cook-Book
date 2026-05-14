@@ -96,12 +96,12 @@ Functions and closures differ in annotation requirements:
 // Function: must annotate everything
 fn double_fn(x: i32) -> i32 { x * 2 }
 
-// Closure: annotations are optional
-let double_cl       = |x|       x * 2;          // fully inferred
-let double_cl_typed = |x: i32| x * 2;           // params only
-let double_cl_full  = |x: i32| -> i32 { x * 2 }; // fully annotated
-
 fn main() {
+    // Closure: annotations are optional
+    let double_cl       = |x|       x * 2;          // fully inferred
+    let double_cl_typed = |x: i32| x * 2;           // params only
+    let double_cl_full  = |x: i32| -> i32 { x * 2 }; // fully annotated
+
     println!("{}", double_fn(5));       // 10
     println!("{}", double_cl(5));       // 10
     println!("{}", double_cl_typed(5)); // 10
@@ -409,7 +409,7 @@ fn main() {
 
 Rust 1.85 (the 2024 edition release) stabilized async closures:
 
-```rust
+```rust,no_run
 // async closures are written as: async |args| { ... }
 // They implement AsyncFn, AsyncFnMut, AsyncFnOnce
 
@@ -436,7 +436,7 @@ This is an advanced feature. For most beginner use cases, regular closures passe
 
 Every iterator in Rust implements this single trait:
 
-```rust
+```rust,no_run
 pub trait Iterator {
     type Item;                              // the element type
     fn next(&mut self) -> Option<Self::Item>; // returns None when done
@@ -998,7 +998,22 @@ fn main() {
 Demonstrating the custom iterator from 13.4.1 in a real pipeline:
 
 ```rust
-// Assumes Fibonacci struct defined above
+struct Fibonacci { a: u128, b: u128, overflow: bool }
+impl Fibonacci {
+    fn new() -> Self { Fibonacci { a: 0, b: 1, overflow: false } }
+}
+impl Iterator for Fibonacci {
+    type Item = u128;
+    fn next(&mut self) -> Option<u128> {
+        if self.overflow { return None; }
+        let current = self.a;
+        match self.a.checked_add(self.b) {
+            Some(next_b) => { self.a = self.b; self.b = next_b; }
+            None => { self.overflow = true; }
+        }
+        Some(current)
+    }
+}
 
 fn main() {
     // Fibonacci numbers that are also perfect squares
@@ -1043,7 +1058,7 @@ Rust's iterator model is described as a **zero-cost abstraction** — you pay no
 
 When you write:
 
-```rust
+```rust,no_run
 fn sum_of_squares(data: &[i32]) -> i32 {
     data.iter()
         .map(|&x| x * x)
@@ -1056,7 +1071,7 @@ LLVM sees through all the closures and iterator adaptor calls. Because everythin
 
 The equivalent explicit loop:
 
-```rust
+```rust,no_run
 fn sum_of_squares_explicit(data: &[i32]) -> i32 {
     let mut result = 0;
     for &x in data {
@@ -1075,7 +1090,7 @@ Both compile to the same machine instructions. You can verify this on [Compiler 
 
 In practice, iterators are often *faster* than explicit loops because the optimizer can apply SIMD vectorization more aggressively when it sees clean iterator patterns. The key rule: **if in doubt, benchmark with `cargo bench`**.
 
-```rust
+```rust,no_run
 // Cargo.toml: [dev-dependencies] criterion = "0.5"
 // benches/iter_bench.rs
 
@@ -1213,7 +1228,7 @@ fn main() {
 
 ### Closure Syntax Quick Reference
 
-```rust
+```rust,no_run
 // Forms from minimal to fully annotated
 let f = |x| x + 1;
 let f = |x: i32| x + 1;

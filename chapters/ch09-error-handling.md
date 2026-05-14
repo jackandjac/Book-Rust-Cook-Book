@@ -169,7 +169,7 @@ The mental model: **`panic!` is for bugs**. If a function can fail for legitimat
 
 `Result` is a standard-library enum with exactly two variants:
 
-```rust
+```rust,no_run
 // This is defined in the standard library (simplified):
 enum Result<T, E> {
     Ok(T),   // success — carries a value of type T
@@ -274,7 +274,7 @@ fn main() {
 
 The real power of `?` is automatic error type conversion via the `From` trait. If your function returns `Result<T, MyError>` and you `?` on a `Result<_, io::Error>`, Rust will call `MyError::from(io_error)` automatically — as long as you implement `From<io::Error> for MyError`.
 
-```rust
+```rust,no_run
 use std::io;
 use std::num::ParseIntError;
 use std::fmt;
@@ -320,7 +320,7 @@ fn read_count(path: &str) -> Result<i32, AppError> {
 
 `?` can be chained on method calls. This reads naturally:
 
-```rust
+```rust,no_run
 use std::fs;
 use std::io;
 
@@ -343,7 +343,7 @@ Each `?` in a chain is an independent propagation point. If `read_to_string` fai
 
 Sometimes you want to extract the value from a `Result` without a full `match`. The standard library provides several methods:
 
-```rust
+```rust,no_run
 use std::fs;
 
 fn demo() {
@@ -434,7 +434,7 @@ fn main() {
 
 **Key behaviour:** `collect::<Result<Vec<_>, _>>()` short-circuits — it stops iterating on the first `Err`. If you want all errors (not just the first), you must collect into `Vec<Result<_,_>>` and process it yourself.
 
-```rust
+```rust,no_run
 fn parse_all_errors(inputs: &[&str]) -> Vec<Result<i32, std::num::ParseIntError>> {
     // Keep going even on errors — collect every result
     inputs.iter().map(|s| s.parse::<i32>()).collect()
@@ -480,7 +480,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 For library crates, you want callers to be able to match on specific failure modes. A custom error enum achieves this:
 
-```rust
+```rust,no_run
 use std::fmt;
 use std::io;
 use std::num::ParseIntError;
@@ -503,7 +503,7 @@ pub enum ConfigError {
 
 For your error type to participate in the Rust error ecosystem, implement two traits:
 
-```rust
+```rust,no_run
 // Display is shown to end users — make it human-readable
 impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -559,7 +559,7 @@ edition = "2024"
 thiserror = "2"
 ```
 
-```rust
+```rust,no_run
 use thiserror::Error;
 use std::io;
 use std::num::ParseIntError;
@@ -628,7 +628,7 @@ edition = "2024"
 anyhow  = "1"
 ```
 
-```rust
+```rust,no_run
 use anyhow::{Context, Result};
 use std::fs;
 
@@ -676,7 +676,7 @@ Caused by:
 
 Before reaching for `anyhow`, you can use `Box<dyn std::error::Error>` as a quick erasure type:
 
-```rust
+```rust,no_run
 use std::error::Error;
 use std::fs;
 
@@ -689,7 +689,7 @@ fn read_and_parse(path: &str) -> Result<i32, Box<dyn Error>> {
 
 For multi-threaded code, you need `Box<dyn Error + Send + Sync + 'static>` so the error can be sent across thread boundaries:
 
-```rust
+```rust,no_run
 use std::error::Error;
 
 type ThreadSafeError = Box<dyn Error + Send + Sync + 'static>;
@@ -710,7 +710,7 @@ The downside of `Box<dyn Error>`: the caller loses the ability to inspect the co
 
 This is the most idiomatic Rust pattern. Write the happy path as if nothing can fail; the `?` operators handle the exits:
 
-```rust
+```rust,no_run
 use std::io;
 use std::fs;
 
@@ -770,7 +770,7 @@ Use `.ok_or(err)` for a static error value and `.ok_or_else(|| compute_err())` f
 
 When propagating errors with `?`, the original error often lacks context about *what the program was doing* when it failed. `anyhow`'s `.context()` wraps each error with a message that threads through the source chain:
 
-```rust
+```rust,no_run
 use anyhow::{Context, Result};
 
 fn read_user_id(path: &str) -> Result<u64> {
@@ -829,7 +829,7 @@ Concretely:
 - Writing library code (let the caller decide how to handle failure).
 - Failure is an expected part of normal program operation.
 
-```rust
+```rust,no_run
 // PANIC is right here — the IP is hardcoded and must be valid
 use std::net::IpAddr;
 fn localhost() -> IpAddr {
@@ -850,7 +850,7 @@ fn parse_user_ip(input: &str) -> Result<IpAddr, std::net::AddrParseError> {
 
 A realistic CSV-like parser that handles missing files, malformed lines, and validation failures:
 
-```rust
+```rust,no_run
 // Cargo.toml dependency: thiserror = "2"
 use thiserror::Error;
 use std::io;
@@ -957,7 +957,7 @@ fn main() {
 
 Simulating a multi-step workflow (authenticate, fetch resource, decode response) with `anyhow` context layering:
 
-```rust
+```rust,no_run
 // Cargo.toml dependency: anyhow = "1"
 use anyhow::{bail, Context, Result};
 
@@ -1029,7 +1029,7 @@ fn main() {
 
 A CLI that reads from a file, processes data, and exits with the right exit code — without panicking on user errors:
 
-```rust
+```rust,no_run
 // Cargo.toml dependency: anyhow = "1"
 use anyhow::{Context, Result};
 use std::path::PathBuf;
@@ -1092,7 +1092,7 @@ Key CLI error-handling practices demonstrated here:
 
 A complete library-style module with a non-exhaustive error enum (allows adding variants without breaking callers):
 
-```rust
+```rust,no_run
 // src/lib.rs — a hypothetical key-value store library
 // Cargo.toml dependency: thiserror = "2"
 

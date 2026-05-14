@@ -56,7 +56,7 @@ my-app/
 
 The binary in `main.rs` treats the library like an external dependency:
 
-```rust
+```rust,no_run
 // src/main.rs
 // The library crate is available under the package name.
 use my_app::greet;      // "my-app" becomes "my_app" (hyphens → underscores)
@@ -66,14 +66,14 @@ fn main() {
 }
 ```
 
-```rust
+```rust,no_run
 // src/lib.rs
 pub fn greet(name: &str) {
     println!("Hello, {name}!");
 }
 ```
 
-```rust
+```rust,no_run
 // src/bin/tool.rs — a standalone binary in the same package
 use my_app::greet;
 
@@ -227,7 +227,7 @@ package com.restaurant.front;   // file must live at com/restaurant/front/Hostin
 // No declaration step inside the package — class membership follows from file location.
 ```
 
-```rust
+```rust,no_run
 // Rust: mod declares the module explicitly; the body or the file is tied to the declaration.
 mod front_of_house {            // inline — or `mod front_of_house;` loads src/front_of_house.rs
     pub mod hosting { ... }
@@ -356,7 +356,7 @@ mod outer {
 
 A very common beginner error: making a module public does **not** make its contents public.
 
-```rust
+```rust,compile_fail
 // src/lib.rs
 mod front_of_house {
     pub mod hosting {
@@ -566,7 +566,7 @@ pub fn eat_at_restaurant() {
 
 For **functions**: bring in the **parent module**, not the function. This makes it clear the function is not defined locally.
 
-```rust
+```rust,no_run
 // IDIOMATIC — reader sees `hosting::` and knows it is external.
 use crate::front_of_house::hosting;
 hosting::add_to_waitlist();
@@ -641,7 +641,7 @@ fn main() {
 
 ### Nested paths — cleaning up multiple `use` statements
 
-```rust
+```rust,no_run
 // Before: verbose
 use std::cmp::Ordering;
 use std::io;
@@ -679,7 +679,7 @@ pub fn eat_at_restaurant() {
 ```
 
 Now consumers can write:
-```rust
+```rust,no_run
 // Before pub use: restaurant::front_of_house::hosting::add_to_waitlist()
 // After  pub use: restaurant::hosting::add_to_waitlist()
 use restaurant::hosting;
@@ -688,7 +688,7 @@ hosting::add_to_waitlist();
 
 ### A realistic library façade
 
-```rust
+```rust,no_run
 // src/lib.rs — a "mylib" crate
 mod models;
 mod services;
@@ -752,7 +752,7 @@ mod tests {
 
 2. **Preludes** — library crates commonly provide a `prelude` module intended to be glob-imported. Users opt in explicitly:
 
-```rust
+```rust,no_run
 // In your library:
 pub mod prelude {
     pub use crate::models::User;
@@ -770,7 +770,7 @@ use mylib::prelude::*;
 
 In Rust's 2015 edition, you had to declare external crates at the crate root:
 
-```rust
+```rust,no_run
 // 2015 edition — required
 extern crate rand;
 extern crate serde;
@@ -786,7 +786,7 @@ From Rust 2018 onwards, **`extern crate` is no longer needed** for dependencies 
 
 2. **`no_std` crates** — when you opt out of the standard library, `alloc` must be linked explicitly:
 
-```rust
+```rust,no_run
 // In a no_std crate (e.g., embedded firmware)
 #![no_std]
 
@@ -798,7 +798,7 @@ use alloc::string::String;
 
 3. **Renaming a crate** — if a crate's package name contains hyphens (e.g., `my-utils`), Cargo converts them to underscores (`my_utils`). The legacy form for explicit renaming is:
 
-```rust
+```rust,no_run
 extern crate my_utils as utils;
 ```
 
@@ -812,7 +812,7 @@ In modern Rust, the `Cargo.toml` `[dependencies]` section supports `package` ren
 
 When a module grows large, move it to its own file. Replace the inline block with just the declaration:
 
-```rust
+```rust,no_run
 // src/lib.rs — BEFORE (inline)
 mod front_of_house {
     pub mod hosting {
@@ -845,7 +845,7 @@ src/
     └── hosting.rs           ← defines the hosting module
 ```
 
-```rust
+```rust,no_run
 // src/front_of_house.rs
 pub mod hosting;  // compiler looks for src/front_of_house/hosting.rs
 ```
@@ -894,7 +894,7 @@ src/
 └── errors.rs
 ```
 
-```rust
+```rust,no_run
 // src/lib.rs
 mod models;
 mod services;
@@ -908,13 +908,13 @@ pub use services::order_service::OrderService;
 pub use errors::AppError;
 ```
 
-```rust
+```rust,no_run
 // src/models/mod.rs  (or src/models.rs if using modern style)
 pub mod user;
 pub mod order;
 ```
 
-```rust
+```rust,no_run
 // src/models/user.rs
 use crate::errors::AppError;
 
@@ -980,7 +980,7 @@ src/
 └── utils.rs        ← shared utilities
 ```
 
-```rust
+```rust,no_run
 // src/main.rs
 mod cli;
 mod config;
@@ -1016,13 +1016,13 @@ pub fn parse_args() -> Args {
 }
 ```
 
-```rust
+```rust,no_run
 // src/commands/mod.rs
 pub mod run;
 pub mod build;
 ```
 
-```rust
+```rust,no_run
 // src/commands/run.rs
 use crate::cli::Args;
 use crate::utils;
@@ -1046,7 +1046,7 @@ pub fn log(msg: &str) {
 
 This example shows how to use a trait in one module and concrete implementations in child modules, with a registry function that returns them via a common interface:
 
-```rust
+```rust,no_run
 // src/lib.rs — a "plugin_host" crate
 
 pub mod plugin;
@@ -1062,7 +1062,7 @@ pub fn run_all_plugins() {
 }
 ```
 
-```rust
+```rust,no_run
 // src/plugin/mod.rs
 pub mod logger;
 pub mod metrics;
@@ -1075,7 +1075,7 @@ pub trait Plugin {
 }
 ```
 
-```rust
+```rust,no_run
 // src/plugin/logger.rs
 use super::Plugin;
 
@@ -1087,7 +1087,7 @@ impl Plugin for LoggerPlugin {
 }
 ```
 
-```rust
+```rust,no_run
 // src/plugin/metrics.rs
 use super::Plugin;
 
@@ -1099,7 +1099,7 @@ impl Plugin for MetricsPlugin {
 }
 ```
 
-```rust
+```rust,no_run
 // src/plugin/registry.rs
 use crate::plugin::{Plugin, logger::LoggerPlugin, metrics::MetricsPlugin};
 
@@ -1157,7 +1157,7 @@ mod tools {
 
 A module is declared **once**. Declaring it twice gives a compile error:
 
-```rust
+```rust,compile_fail
 // src/lib.rs
 mod utils;  // OK: loads src/utils.rs
 mod utils;  // Error: module `utils` is defined multiple times
@@ -1188,7 +1188,7 @@ Fix: move `components.rs` to `src/frontend/components.rs`.
 
 ### Pitfall 5: `use` outside a module doesn't propagate into it
 
-```rust
+```rust,compile_fail
 use std::collections::HashMap;  // in scope at crate root
 
 mod data {

@@ -84,7 +84,7 @@ cargo run
 
 #### `use std::io;`
 
-```rust
+```rust,no_run
 use std::io;
 ```
 
@@ -96,7 +96,7 @@ The Rust prelude includes things like `Vec`, `String`, `Option`, `Result`, and `
 
 #### `let mut guess = String::new();`
 
-```rust
+```rust,no_run
 let mut guess = String::new();
 ```
 
@@ -112,14 +112,14 @@ Two things are happening here that differ from Java:
 
 Why does `guess` need `mut`? Because `read_line` will modify it. Without `mut`, the compiler refuses:
 
-```rust
+```rust,no_run
 // ❌ WRONG — Rust won't compile this
 let guess = String::new();
 io::stdin().read_line(&mut guess).expect("...");
 // error[E0596]: cannot borrow `guess` as mutable, as it is not declared as mutable
 ```
 
-```rust
+```rust,no_run
 // ✅ CORRECT
 let mut guess = String::new();
 io::stdin().read_line(&mut guess).expect("...");
@@ -127,7 +127,7 @@ io::stdin().read_line(&mut guess).expect("...");
 
 #### `io::stdin().read_line(&mut guess)`
 
-```rust
+```rust,no_run
 io::stdin()
     .read_line(&mut guess)
     .expect("Failed to read line");
@@ -139,7 +139,7 @@ The `&mut guess` is a *mutable reference* — you are lending `read_line` permis
 
 `.read_line` returns `io::Result<usize>` — the number of bytes read. `Result` is an enum:
 
-```rust
+```rust,no_run
 // Simplified definition (not the actual source)
 enum Result<T, E> {
     Ok(T),   // success — carries a value of type T
@@ -180,7 +180,7 @@ cargo build
 
 Now update `src/main.rs`:
 
-```rust
+```rust,no_run
 // src/main.rs  —  v2: generate a secret number and compare
 use std::io;
 use std::cmp::Ordering;
@@ -224,7 +224,7 @@ cargo run
 
 #### `rand::random_range(1..=100)`
 
-```rust
+```rust,no_run
 let secret_number: u32 = rand::random_range(1..=100);
 ```
 
@@ -240,7 +240,7 @@ The type annotation `: u32` tells Rust which integer type to generate. Without i
 
 #### Variable Shadowing: `let guess: u32 = guess.trim().parse()...`
 
-```rust
+```rust,no_run
 let mut guess = String::new();   // guess is a String
 // ... read_line fills guess ...
 let guess: u32 = guess.trim().parse().expect("Please type a number!");
@@ -255,7 +255,7 @@ Why call `.trim()`? Because `read_line` appends a `\n` (or `\r\n` on Windows) to
 
 #### `match guess.cmp(&secret_number)`
 
-```rust
+```rust,no_run
 match guess.cmp(&secret_number) {
     Ordering::Less    => println!("Too small!"),
     Ordering::Greater => println!("Too big!"),
@@ -276,7 +276,7 @@ match guess.cmp(&secret_number) {
 
 The game should keep asking until the player wins. Replace the single-shot comparison with a `loop`:
 
-```rust
+```rust,no_run
 // src/main.rs  —  v3: loop until the player wins
 use std::io;
 use std::cmp::Ordering;
@@ -322,7 +322,7 @@ fn main() {
 
 Right now, if the user types `"abc"`, the program panics. Let's handle that gracefully using `match` on the `Result` from `.parse()`:
 
-```rust
+```rust,no_run
 // src/main.rs  —  v4: handle invalid input without panicking
 use std::io;
 use std::cmp::Ordering;
@@ -367,7 +367,7 @@ fn main() {
 
 The key change:
 
-```rust
+```rust,no_run
 let guess: u32 = match guess.trim().parse() {
     Ok(num) => num,
     Err(_)  => {
@@ -389,7 +389,7 @@ let guess: u32 = match guess.trim().parse() {
 
 Here is the full, final version of the game with all features assembled:
 
-```rust
+```rust,no_run
 // src/main.rs  —  complete guessing game
 use std::io;
 use std::cmp::Ordering;
@@ -463,7 +463,7 @@ The sections below show how to extend the game with practical features. Each exa
 
 ### 2.7.1 Range Validation — Only Accept 1–100
 
-```rust
+```rust,no_run
 // src/main.rs  —  extra: validate range before comparing
 use std::io;
 use std::cmp::Ordering;
@@ -504,7 +504,7 @@ fn main() {
 
 ### 2.7.2 Tracking All Previous Guesses
 
-```rust
+```rust,no_run
 // src/main.rs  —  extra: display guess history
 use std::io;
 use std::cmp::Ordering;
@@ -563,7 +563,7 @@ New concepts here:
 
 ### 2.7.3 Difficulty Levels
 
-```rust
+```rust,no_run
 // src/main.rs  —  extra: difficulty levels
 use std::io;
 use std::cmp::Ordering;
@@ -649,7 +649,7 @@ New patterns introduced:
 
 ### 2.7.4 Play-Again Loop
 
-```rust
+```rust,no_run
 // src/main.rs  —  extra: play again loop
 use std::io;
 use std::cmp::Ordering;
@@ -735,7 +735,7 @@ New patterns introduced:
 
 ### 2.7.5 Full-Featured Game (All Extensions Combined)
 
-```rust
+```rust,no_run
 // src/main.rs  —  full-featured guessing game
 use std::io;
 use std::cmp::Ordering;
@@ -887,7 +887,7 @@ fn main() {
 
 ### Mistake 1 — Forgetting `mut`
 
-```rust
+```rust,no_run
 // ❌ WRONG — variable is immutable by default
 let guess = String::new();
 io::stdin().read_line(&mut guess).expect("...");
@@ -911,7 +911,7 @@ Java has one string type: `String`. Rust has two main kinds:
 | Heap-allocated, owned | `String` | `String` |
 | Borrowed slice | *(no equivalent)* | `&str` |
 
-```rust
+```rust,no_run
 // ❌ WRONG — trying to match a String against &str without converting
 let input = String::from("hello");
 if input == "hello" {  // This actually works! Rust auto-deref compares String == &str
@@ -938,7 +938,7 @@ match input.as_str() {
 }
 ```
 
-```rust
+```rust,no_run
 // ❌ WRONG — returning a &str that references a local String (dangling reference)
 fn get_name() -> &str {        // error: missing lifetime specifier
     let name = String::from("Alice");
@@ -962,7 +962,7 @@ fn get_name() -> &'static str {
 
 `.expect()` panics on error — it is fine for prototypes and tutorials but inappropriate in production:
 
-```rust
+```rust,no_run
 // ❌ WRONG in production — panics on bad input
 let n: u32 = input.trim().parse().expect("bad input");
 
@@ -985,7 +985,7 @@ let n: u32 = match input.trim().parse() {
 
 ### Mistake 4 — Forgetting to `.trim()` Before `.parse()`
 
-```rust
+```rust,no_run
 // ❌ WRONG — read_line includes a trailing newline
 let mut input = String::new();
 io::stdin().read_line(&mut input).expect("...");
@@ -1000,7 +1000,7 @@ let n: u32 = input.trim().parse().expect("...");
 
 ### Mistake 5 — Trying to Print a Type Without `Display`
 
-```rust
+```rust,no_run
 // ❌ WRONG — Vec does not implement Display
 let v = vec![1, 2, 3];
 println!("{}", v);
@@ -1018,7 +1018,7 @@ println!("{}", s.join(", "));   // 1, 2, 3
 
 ### Mistake 6 — Thinking `loop` Needs a Condition
 
-```rust
+```rust,no_run
 // ❌ JAVA INSTINCT — a Java developer writes:
 // while (true) { ... }   // works in Rust too, but...
 
@@ -1039,7 +1039,7 @@ while count < 10 {
 
 ### Mistake 7 — Shadowing vs. Mutability
 
-```rust
+```rust,no_run
 // These are NOT the same thing:
 
 // Shadowing — creates a new binding with a new type
@@ -1059,7 +1059,7 @@ y = 10;   // same binding, new value, same type
 
 ### `use` — Importing Names
 
-```rust
+```rust,no_run
 use std::io;                  // import the io module
 use std::cmp::Ordering;       // import the Ordering enum
 use std::collections::HashMap; // import HashMap
@@ -1076,7 +1076,7 @@ use std::cmp::*;
 
 ### `let` vs `let mut`
 
-```rust
+```rust,no_run
 let x = 5;        // immutable — x cannot be reassigned
 // x = 6;         // error[E0384]: cannot assign twice to immutable variable
 
@@ -1092,7 +1092,7 @@ println!("{x}");  // 12
 
 ### `match` — Exhaustive Pattern Matching
 
-```rust
+```rust,no_run
 use std::cmp::Ordering;
 
 let result = 3u32.cmp(&5u32);  // Ordering::Less
@@ -1133,7 +1133,7 @@ match n {
 
 ### `Result<T, E>` — Error Handling Without Exceptions
 
-```rust
+```rust,no_run
 // Result is defined as:
 // enum Result<T, E> { Ok(T), Err(E) }
 
@@ -1161,7 +1161,7 @@ let n: u32 = "abc".parse().unwrap_or_else(|_| {
 
 ### `loop` and `break`
 
-```rust
+```rust,no_run
 // Infinite loop
 loop {
     // ...
@@ -1196,7 +1196,7 @@ loop {
 
 ### `String` vs `&str` — Quick Reference
 
-```rust
+```rust,no_run
 // String — heap-allocated, owned, growable
 let mut s: String = String::new();          // empty
 let s: String = String::from("hello");      // from a literal
@@ -1242,7 +1242,7 @@ fn greet(name: &str) -> String {           // &str in, String out — idiomatic
 
 ## Common Pitfalls at a Glance
 
-```rust
+```rust,no_run
 fn main() {
     // ❌ WRONG: immutable String passed to read_line
     let guess = String::new();

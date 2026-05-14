@@ -34,7 +34,7 @@ In Java, you only have the first two (in weaker form). Rust's lifetime system re
 
 Without generics, you duplicate logic for every type:
 
-```rust
+```rust,no_run
 // Without generics — repeated for every type
 fn largest_i32(list: &[i32]) -> &i32 {
     let mut largest = &list[0];
@@ -63,7 +63,7 @@ That's the same logic twice. Generics eliminate this duplication.
 
 The type parameter goes between the function name and the parameter list, inside `<>`:
 
-```rust
+```rust,no_run
 // First attempt — won't compile yet
 fn largest<T>(list: &[T]) -> &T {
     let mut largest = &list[0];
@@ -164,7 +164,7 @@ This is **conditional method implementation** — a feature Java interfaces cann
 
 You've already used generic enums: `Option<T>` and `Result<T, E>` from the standard library are defined exactly this way:
 
-```rust
+```rust,no_run
 // From the standard library (shown for illustration)
 enum Option<T> {
     Some(T),
@@ -215,7 +215,7 @@ This is where Rust diverges fundamentally from Java.
 
 **Rust (monomorphization):** The compiler generates a completely separate, fully specialized version of the code for each concrete type used. For `largest`:
 
-```rust
+```rust,no_run
 fn largest<T: PartialOrd>(list: &[T]) -> &T { ... }
 
 // You call:
@@ -241,7 +241,7 @@ The generated machine code is **identical to what you'd write by hand**. No boxi
 
 Move constraints to a `where` clause when the inline form becomes hard to read:
 
-```rust
+```rust,no_run
 use std::fmt::{Debug, Display};
 
 // Inline — cluttered with multiple parameters and bounds
@@ -336,7 +336,7 @@ A trait defines a set of method signatures that a type must implement. Think of 
 - Extension-style implementations on types you don't own
 - Blanket implementations across entire families of types
 
-```rust
+```rust,no_run
 // Define a trait
 pub trait Summary {
     // Required method — implementors must provide this
@@ -366,7 +366,7 @@ The syntax is different but the semantics of required vs. default methods are ne
 
 ### 10.4.2 Implementing Traits for Types
 
-```rust
+```rust,no_run
 pub struct NewsArticle {
     pub headline: String,
     pub author: String,
@@ -423,7 +423,7 @@ fn main() {
 
 Rust enforces the **orphan rule**: you can implement a trait for a type only if either the trait **or** the type is defined in your crate.
 
-```rust
+```rust,no_run
 // Your crate defines MyType
 struct MyType;
 
@@ -448,7 +448,7 @@ impl MyTrait for Vec<i32> {}  // Vec is foreign, but MyTrait is yours
 
 Traits become powerful when used as constraints on generic types. The `impl Trait` and `<T: Trait>` forms are equivalent in parameter position — use `impl Trait` for simple cases and the full form when `T` must be the same type in multiple positions:
 
-```rust
+```rust,no_run
 use std::fmt::Display;
 
 // impl Trait — concise, type can differ per parameter
@@ -475,7 +475,7 @@ where
 
 You can use `impl Trait` in return position to return a type that implements a trait without naming the concrete type:
 
-```rust
+```rust,no_run
 fn returns_summarizable() -> impl Summary {
     SocialPost {
         username: String::from("horse_ebooks"),
@@ -486,7 +486,7 @@ fn returns_summarizable() -> impl Summary {
 
 **Important limitation:** The function must return **one concrete type**. You cannot conditionally return different types:
 
-```rust
+```rust,no_run
 // ❌ Won't compile — two different concrete types
 fn returns_summarizable_broken(switch: bool) -> impl Summary {
     if switch {
@@ -637,7 +637,7 @@ fn main() {
 ```
 
 The blanket impl in the standard library is:
-```rust
+```rust,no_run
 // Provided automatically — you don't write this
 impl<T, U: From<T>> Into<U> for T {
     fn into(self) -> U {
@@ -811,7 +811,7 @@ Not every trait can be used as `dyn Trait`. A trait is **object-safe** only if:
 1. It has no methods that return `Self` by value (because the size is unknown at compile time)
 2. It has no generic methods (because generics need to be monomorphized, but the concrete type is unknown)
 
-```rust
+```rust,no_run
 trait NotObjectSafe {
     fn clone_self(&self) -> Self;   // ❌ returns Self by value
     fn generic_method<T>(&self, t: T); // ❌ generic method
@@ -887,7 +887,7 @@ The standard library uses this extensively. The `ToString` trait is implemented 
 
 Java developers never think about this because the GC keeps objects alive as long as any reference to them exists. Rust has no GC. If a reference outlives the value it points to, the program reads freed memory — a dangling pointer. Rust's lifetime system makes this impossible at compile time.
 
-```rust
+```rust,no_run
 // ❌ This won't compile
 fn dangling_reference() {
     let r;
@@ -920,7 +920,7 @@ The borrow checker uses a **borrow scope graph** to verify every reference. For 
 
 Think of a lifetime `'a` as a **label for a scope**. When you write:
 
-```rust
+```rust,no_run
 fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
 ```
 
@@ -937,7 +937,7 @@ The compiler then checks: is there actually a scope `'a` that satisfies those co
 
 The classic example: a function that returns the longer of two string slices.
 
-```rust
+```rust,no_run
 // Without lifetime annotation — won't compile
 // error[E0106]: missing lifetime specifier
 fn longest_broken(x: &str, y: &str) -> &str {
@@ -947,7 +947,7 @@ fn longest_broken(x: &str, y: &str) -> &str {
 // so it can't verify the return value's validity.
 ```
 
-```rust
+```rust,no_run
 // With lifetime annotation — compiles
 fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
     if x.len() > y.len() { x } else { y }
@@ -956,7 +956,7 @@ fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
 
 Now the return reference's lifetime is tied to the shorter of `x` and `y`:
 
-```rust
+```rust,no_run
 fn main() {
     let string1 = String::from("long string is long");
     let result;
@@ -1014,7 +1014,7 @@ The Rust compiler applies three rules to infer lifetimes. When the rules fully d
 
 **Rule 1:** Each reference parameter gets its own distinct lifetime.
 
-```rust
+```rust,no_run
 // You write:
 fn foo(x: &str, y: &str) -> &str { ... }
 // Compiler assigns:
@@ -1023,7 +1023,7 @@ fn foo<'a, 'b>(x: &'a str, y: &'b str) -> &str { ... }
 
 **Rule 2:** If there is exactly one input lifetime parameter, that lifetime is assigned to all output lifetime parameters.
 
-```rust
+```rust,no_run
 // You write:
 fn first_word(s: &str) -> &str { ... }
 // Compiler applies rule 1, then rule 2:
@@ -1033,7 +1033,7 @@ fn first_word<'a>(s: &'a str) -> &'a str { ... }
 
 **Rule 3:** If there are multiple input lifetime parameters, but one of them is `&self` or `&mut self`, the lifetime of `self` is assigned to all output lifetime parameters.
 
-```rust
+```rust,no_run
 impl<'a> Excerpt<'a> {
     // You write:
     fn announce_and_return_part(&self, announcement: &str) -> &str {
@@ -1048,7 +1048,7 @@ impl<'a> Excerpt<'a> {
 
 When these three rules **don't** fully determine the output lifetime, the compiler requires explicit annotations:
 
-```rust
+```rust,no_run
 // Two input refs, no &self — rules 1 and 2 give two lifetimes 'a and 'b
 // but the output lifetime is ambiguous. You must annotate.
 fn longest<'a>(x: &'a str, y: &'a str) -> &'a str { ... }
@@ -1058,13 +1058,13 @@ fn longest<'a>(x: &'a str, y: &'a str) -> &'a str { ... }
 
 `'static` means the reference is valid for the **entire program duration**. String literals are `'static` because they're baked into the program binary:
 
-```rust
+```rust,no_run
 let s: &'static str = "I am baked into the binary";
 ```
 
 Common `'static` uses:
 
-```rust
+```rust,no_run
 // String literals are always 'static
 fn get_greeting() -> &'static str {
     "Hello, world!"
@@ -1219,7 +1219,7 @@ error[E0106]: missing lifetime specifier
 
 **Fix:** Apply elision rule 2 (only one input) or add explicit `'a`:
 
-```rust
+```rust,no_run
 // If returning a slice of x (single input ref pattern):
 fn first_word(s: &str) -> &str { /* elision handles this */ ... }
 

@@ -103,7 +103,7 @@ fn main() {
 
 **Why the borrow checker matters here:** holding an immutable reference to a vector element prevents mutation of the vector until the reference is dropped. The following does NOT compile:
 
-```rust
+```rust,compile_fail
 fn main() {
     let mut v = vec![1, 2, 3];
     let first = &v[0];  // immutable borrow

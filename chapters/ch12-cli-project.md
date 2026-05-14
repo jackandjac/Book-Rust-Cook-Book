@@ -185,7 +185,7 @@ struct Config {
 
 ### Step 2 — `Config::new` (first pass, panics on bad input)
 
-```rust
+```rust,no_run
 impl Config {
     fn new(args: &[String]) -> Config {
         if args.len() < 3 {
@@ -204,7 +204,7 @@ We `clone()` here because `Config` needs to *own* its strings; the slice only bo
 
 `panic!` is the right choice for programmer errors (bugs). Bad user input is not a bug — it deserves a graceful message. The idiomatic approach is to return a `Result`:
 
-```rust
+```rust,no_run
 impl Config {
     pub fn build(args: &[String]) -> Result<Config, &'static str> {
         if args.len() < 3 {
@@ -221,7 +221,7 @@ The error type `&'static str` works because the string literal `"not enough argu
 
 ### Step 4 — Extract a `run()` function
 
-```rust
+```rust,no_run
 use std::error::Error;
 use std::fs;
 
@@ -297,6 +297,8 @@ fn main() {
 You just saw `Box<dyn Error>` in `run()`. It also works as the return type of `main()` itself:
 
 ```rust
+use std::error::Error;
+
 fn main() -> Result<(), Box<dyn Error>> {
     // ...
     Ok(())
@@ -397,7 +399,7 @@ pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a st
 
 ### `src/main.rs`
 
-```rust
+```rust,no_run
 // src/main.rs
 use std::env;
 use std::process;
@@ -429,6 +431,15 @@ Now that `search` is in `lib.rs`, we can write unit tests for it without needing
 
 ```rust
 // src/lib.rs  — add inside mod tests
+
+pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    contents.lines().filter(|line| line.contains(query)).collect()
+}
+
+pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    let query = query.to_lowercase();
+    contents.lines().filter(|line| line.to_lowercase().contains(&query)).collect()
+}
 
 #[cfg(test)]
 mod tests {
@@ -487,7 +498,7 @@ test result: ok. 2 passed; 0 failed
 
 You already wired this in `Config::build` above:
 
-```rust
+```rust,no_run
 let ignore_case = std::env::var("IGNORE_CASE").is_ok();
 ```
 
@@ -576,7 +587,7 @@ pub fn print_help() {
 
 Update `Config::build` to detect `--help` / `-h`:
 
-```rust
+```rust,no_run
 pub fn build(args: &[String]) -> Result<Config, &'static str> {
     // Check for help flag before anything else
     if args.iter().any(|a| a == "--help" || a == "-h") {
@@ -626,7 +637,7 @@ pub fn search_with_line_numbers<'a>(
 
 Update `run()` to use it:
 
-```rust
+```rust,no_run
 pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(&config.file_path)?;
 
@@ -660,7 +671,7 @@ Sample output with `--line-numbers`:
 
 Add a `count` field to `Config` and a branch in `run()`:
 
-```rust
+```rust,no_run
 // In Config
 pub count: bool,
 pub show_line_numbers: bool,
@@ -668,7 +679,7 @@ pub show_line_numbers: bool,
 
 In `run()`, before the existing match branches:
 
-```rust
+```rust,no_run
 if config.count {
     let n = if config.ignore_case {
         search_case_insensitive(&config.query, &contents).len()
@@ -707,7 +718,7 @@ clap = { version = "4", features = ["derive"] }
 
 ### Replace arg parsing with `clap`
 
-```rust
+```rust,no_run
 // src/main.rs  (clap version)
 use clap::Parser;
 use std::process;
@@ -985,7 +996,7 @@ Trust me.";
 
 ### `src/main.rs`
 
-```rust
+```rust,no_run
 use std::env;
 use std::process;
 

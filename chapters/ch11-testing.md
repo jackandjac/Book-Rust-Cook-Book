@@ -31,7 +31,7 @@ The single most important difference: **there is no framework to install or conf
 
 ### Anatomy of a test function
 
-```rust
+```rust,no_run
 // src/lib.rs
 
 pub fn add(a: i32, b: i32) -> i32 {
@@ -77,7 +77,7 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 
 ### `assert!` — boolean condition
 
-```rust
+```rust,no_run
 #[test]
 fn assert_basic() {
     let v = vec![1, 2, 3];
@@ -88,7 +88,7 @@ fn assert_basic() {
 
 ### `assert_eq!` and `assert_ne!`
 
-```rust
+```rust,no_run
 #[test]
 fn assert_eq_and_ne() {
     let result = 2 + 2;
@@ -107,7 +107,7 @@ fn assert_eq_and_ne() {
 
 All three macros accept an optional format string after the required arguments:
 
-```rust
+```rust,no_run
 #[test]
 fn custom_message() {
     let name = "Ferris";
@@ -136,7 +136,7 @@ The format string uses `{}` placeholders — the same syntax as `println!`. This
 
 ### Basic usage
 
-```rust
+```rust,no_run
 pub fn divide(a: i32, b: i32) -> i32 {
     if b == 0 {
         panic!("division by zero");
@@ -162,7 +162,7 @@ This test *passes* if `divide(10, 0)` panics. It *fails* if no panic occurs.
 
 Use `expected = "..."` to require that the panic message **contains** a specific substring (substring match, not equality):
 
-```rust
+```rust,no_run
 #[test]
 #[should_panic(expected = "division by zero")]
 fn divide_by_zero_correct_message() {
@@ -188,7 +188,7 @@ fn divide_by_zero_wrong_expected() {
 
 Using `?` inside tests is idiomatic for functions that can fail:
 
-```rust
+```rust,no_run
 use std::num::ParseIntError;
 
 fn parse_port(s: &str) -> Result<u16, ParseIntError> {
@@ -230,7 +230,7 @@ mod tests {
 
 Mark expensive or environment-dependent tests with `#[ignore]`:
 
-```rust
+```rust,no_run
 #[test]
 #[ignore]
 fn slow_integration_against_real_database() {
@@ -325,7 +325,7 @@ Then create `benches/my_bench.rs` following the criterion documentation. `cargo 
 
 This is the flagship example for this chapter. It demonstrates every assertion macro, `should_panic`, `Result`-based tests, ignored tests, and custom failure messages in one cohesive struct.
 
-```rust
+```rust,no_run
 // src/lib.rs
 
 /// A simple calculator that returns Results instead of panicking.
@@ -492,7 +492,7 @@ src/
 
 Unlike Java (where you need package-private access or reflection to test private methods), Rust's module system allows child modules to access items from their parent module that are not `pub`. The `#[cfg(test)] mod tests` block is a child module, so it can call private functions directly:
 
-```rust
+```rust,no_run
 // src/lib.rs
 
 fn private_helper(x: u32) -> u32 {
@@ -533,7 +533,7 @@ my_project/
         └── mod.rs          ← shared test helpers
 ```
 
-```rust
+```rust,no_run
 // tests/calculator_integration.rs
 use my_project::Calculator;
 
@@ -558,7 +558,7 @@ cargo test --test calculator_integration
 
 To share utility functions across multiple integration test files, place them in `tests/common/mod.rs` (not `tests/common.rs` — the latter would be treated as its own test suite):
 
-```rust
+```rust,no_run
 // tests/common/mod.rs
 
 use my_project::Calculator;
@@ -570,7 +570,7 @@ pub fn fresh_calc_with_initial_add() -> Calculator {
 }
 ```
 
-```rust
+```rust,no_run
 // tests/calculator_integration.rs
 mod common;   // declare the module
 
@@ -589,7 +589,7 @@ fn history_starts_with_one_entry() {
 
 Rust's documentation comments support embedded runnable examples. Any triple-backtick Rust block inside a `///` comment is compiled and executed as a test:
 
-```rust
+```rust,no_run
 // In src/lib.rs — doc comment on the real Calculator::divide method:
 
 impl Calculator {
@@ -633,7 +633,7 @@ Doc tests serve double duty: they verify examples in the docs stay correct, and 
 
 Prefix a line with `# ` (hash + space) to include it in the compiled test without showing it in rendered documentation:
 
-```rust
+```rust,no_run
 /// ```
 /// # use my_project::Calculator;
 /// # let mut calc = Calculator::new();
@@ -659,7 +659,7 @@ tempfile = "3"
 
 ### Pattern: temporary directory fixture
 
-```rust
+```rust,no_run
 // src/lib.rs
 
 use std::path::Path;
@@ -716,7 +716,7 @@ mod tests {
 
 Rust has no built-in parametrized test runner like JUnit's `@ParameterizedTest`. The idiomatic substitute is a table-driven loop inside a single test:
 
-```rust
+```rust,no_run
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -770,7 +770,7 @@ mod tests {
 
 Testing a binary (not a library) means spawning a child process and checking its output. The `std::process::Command` API handles this cleanly.
 
-```rust
+```rust,no_run
 // tests/cli_test.rs
 
 use std::process::Command;
@@ -820,7 +820,7 @@ Add to `Cargo.toml`:
 tokio = { version = "1", features = ["rt", "macros"] }
 ```
 
-```rust
+```rust,no_run
 // src/lib.rs
 
 pub async fn fetch_greeting(name: &str) -> String {
@@ -860,7 +860,7 @@ For the `async-std` runtime, the equivalent is `#[async_std::test]` from the `as
 
 The `matches!` macro tests a value against a pattern without binding — useful for enum variants with data you don't care about:
 
-```rust
+```rust,no_run
 #[test]
 fn sqrt_negative_is_correct_variant() {
     let mut calc = Calculator::new();
@@ -873,7 +873,7 @@ fn sqrt_negative_is_correct_variant() {
 
 The standard library's `assert_matches!` macro (in `std::assert_matches`) is cleaner but requires nightly Rust:
 
-```rust
+```rust,no_run
 // Requires: #![feature(assert_matches)] and a nightly toolchain
 #![feature(assert_matches)]
 use std::assert_matches::assert_matches;
@@ -892,7 +892,7 @@ fn nightly_assert_matches() {
 assert_matches = "1.5"
 ```
 
-```rust
+```rust,no_run
 use assert_matches::assert_matches;
 
 #[test]
@@ -906,7 +906,7 @@ fn stable_assert_matches() {
 
 Rust has no bytecode runtime, so Mockito-style runtime mock injection is impossible. The Rust approach uses trait objects and manual test doubles:
 
-```rust
+```rust,no_run
 // production code
 pub trait EmailSender {
     fn send(&self, to: &str, body: &str) -> Result<(), String>;
@@ -980,7 +980,7 @@ For richer mock generation (argument matchers, call count assertions, return val
 mockall = "0.13"
 ```
 
-```rust
+```rust,no_run
 use mockall::automock;
 
 #[automock]
@@ -1019,7 +1019,7 @@ Property-based tests generate random inputs and assert invariants rather than te
 proptest = "1"
 ```
 
-```rust
+```rust,no_run
 use proptest::prelude::*;
 
 proptest! {

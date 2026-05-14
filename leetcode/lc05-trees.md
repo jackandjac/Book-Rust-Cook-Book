@@ -151,7 +151,64 @@ Recurse into both subtrees first (postorder), then swap the children of the curr
 ```rust
 use std::cell::RefCell;
 use std::rc::Rc;
-// uses TreeNode / TreeNodeRef from §intro
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -216,7 +273,66 @@ The depth of a node is `1 + max(depth(left), depth(right))`. An absent node cont
 ### Solution
 
 ```rust
-// uses TreeNode / TreeNodeRef from §intro
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -275,7 +391,66 @@ At each node the longest path *through* that node has length `depth(left) + dept
 ### Solution
 
 ```rust
-// uses TreeNode / TreeNodeRef from §intro
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -347,7 +522,66 @@ Return the height if the subtree is balanced, or `-1` as a sentinel meaning "alr
 ### Solution
 
 ```rust
-// uses TreeNode / TreeNodeRef from §intro
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -422,7 +656,66 @@ Match on the pair `(p, q)`. Four cases: both `None` (equal), both `Some` with sa
 ### Solution
 
 ```rust
-// uses TreeNode / TreeNodeRef from §intro
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -491,7 +784,67 @@ At each node of `root`, check if `is_same_tree(root, subRoot)`. If not, recurse 
 ### Solution
 
 ```rust
-// uses TreeNode / TreeNodeRef from §intro
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
+
 // is_same_tree reused from Problem 5
 
 pub struct Solution;
@@ -577,7 +930,66 @@ BST ordering means: if both `p` and `q` are less than the current node, the LCA 
 ### Solution
 
 ```rust
-// uses TreeNode / TreeNodeRef from §intro
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -663,8 +1075,66 @@ BFS using a `VecDeque`. At each iteration, snapshot the current queue length —
 ### Solution
 
 ```rust
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::collections::VecDeque;
-// uses TreeNode / TreeNodeRef from §intro
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -738,8 +1208,66 @@ BFS level order, same batching trick as LC #102. The rightmost node of each leve
 ### Solution
 
 ```rust
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::collections::VecDeque;
-// uses TreeNode / TreeNodeRef from §intro
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -814,7 +1342,66 @@ DFS, threading the maximum value seen so far on the current root-to-node path. A
 ### Solution
 
 ```rust
-// uses TreeNode / TreeNodeRef from §intro
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -897,7 +1484,66 @@ Propagate valid ranges down the tree. The left child must be strictly less than 
 ### Solution
 
 ```rust
-// uses TreeNode / TreeNodeRef from §intro
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -976,7 +1622,66 @@ Inorder traversal of a BST visits nodes in ascending order. Count nodes as they 
 ### Solution
 
 ```rust
-// uses TreeNode / TreeNodeRef from §intro
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -1047,8 +1752,67 @@ The first element of `preorder` is always the root. Find that value in `inorder`
 ### Solution
 
 ```rust
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
 use std::collections::HashMap;
-// uses TreeNode / TreeNodeRef from §intro
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -1136,7 +1900,66 @@ At each node, the path can either extend through both the left and right child a
 ### Solution
 
 ```rust
-// uses TreeNode / TreeNodeRef from §intro
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Solution;
 impl Solution {
@@ -1219,8 +2042,66 @@ Preorder traversal with a sentinel `"N"` for absent nodes uniquely encodes any b
 ### Solution
 
 ```rust
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::collections::VecDeque;
-// uses TreeNode / TreeNodeRef from §intro
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut queue: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    queue.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !queue.is_empty() && i < vals.len() {
+        let node = queue.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                queue.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn to_vec(root: &TreeNodeRef) -> Vec<Option<i32>> {
+    let mut result = Vec::new();
+    let mut queue: VecDeque<TreeNodeRef> = VecDeque::new();
+    queue.push_back(root.clone());
+    while let Some(node) = queue.pop_front() {
+        match node {
+            None => result.push(None),
+            Some(n) => {
+                result.push(Some(n.borrow().val));
+                queue.push_back(n.borrow().left.clone());
+                queue.push_back(n.borrow().right.clone());
+            }
+        }
+    }
+    while result.last() == Some(&None) { result.pop(); }
+    result
+}
 
 pub struct Codec;
 

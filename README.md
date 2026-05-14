@@ -180,14 +180,17 @@ The official book ([doc.rust-lang.org/book](https://doc.rust-lang.org/book)) rem
 | LC-08 | [Dynamic Programming](leetcode/lc08-dynamic-programming.md) | LC #70, #746, #198, #213, #5, #647, #91, #322, #152, #139, #300, #416, #62, #1143, #309, #518, #494, #97, #329, #115, #72, #312, #10 | 1-D DP, 2-D DP, state + transition | lc08 |
 | LC-09 | [Greedy, Intervals, Math & Bits](leetcode/lc09-greedy-intervals-math-bits.md) | LC #53, #55, #45, #134, #846, #1899, #763, #678, #57, #56, #435, #252, #253, #2285, #48, #54, #73, #202, #66, #50, #43, #2013, #136, #191, #338, #190, #268, #371, #7 | Kadane, interval sort/merge, XOR tricks | lc09 |
 | LC-10 | [Binary Search Deep Dive](leetcode/lc10-binary-search-deep-dive.md) | LC #374, #702, #278, #69, #34, #154, #81, #162, #436, #1011, #410, #1552, #1283, #2064, #240, #378 | T1/T2/T3 templates, answer-space search | lc10 |
+| LC-11 | [DFS Deep Dive](leetcode/lc11-dfs-deep-dive.md) | LC #200, #695, #733, #130, #417, #329, #323, #261, #207, #210, #797, #332, #113, #257, #129, #114, #79, #212, #301, #282 | 6 DFS templates, grid/graph/tree/backtrack | lc11 |
+| LC-12 | [BFS Deep Dive](leetcode/lc12-bfs-deep-dive.md) | LC #102, #103, #111, #127, #126, #1306, #752, #994, #542, #1091, #909, #133, #1971, #1926, #1345, #815, #934, #675 | Level/multi-source/bidirectional BFS | lc12 |
+| LC-13 | [Advanced Graphs](leetcode/lc13-advanced-graphs.md) | LC #743, #1631, #787, #778, #1334, #1514, #269, #444, #310, #1136, #547, #721, #684, #827, #990, #1584, #1168, #1192, #1976, #1129 | Dijkstra, Bellman-Ford, Floyd-Warshall, Kruskal, Prim, Tarjan | lc13 |
 
 ### Problems by Difficulty
 
 | Difficulty | Count | Chapters |
 |---|---|---|
-| Easy | ~45 | LC-01, LC-02, LC-03, LC-04, LC-05, LC-09, LC-10 |
-| Medium | ~95 | All chapters |
-| Hard | ~20 | LC-03 (#84, #4), LC-05 (#124, #297), LC-06 (#295, #51), LC-07 (#212, #127), LC-08 (#312, #10, #329, #72, #115), LC-09 (#2285), LC-10 (#410) |
+| Easy | ~55 | LC-01, LC-02, LC-03, LC-04, LC-05, LC-09, LC-10, LC-11, LC-12 |
+| Medium | ~130 | All chapters |
+| Hard | ~30 | LC-03 (#84, #4), LC-05 (#124, #297), LC-06 (#295, #51), LC-07 (#212, #127), LC-08 (#312, #10, #329, #72, #115), LC-09 (#2285), LC-10 (#410), LC-11 (#282, #301, #332), LC-12 (#126, #675), LC-13 (#1192, #827, #778) |
 
 ### Key Rust Patterns for Competitive Programming
 
@@ -225,6 +228,76 @@ let popped = stack.pop();     // pop (Option<T>)
 // Char operations
 let bytes = s.as_bytes();     // for ASCII problems (fastest)
 let chars: Vec<char> = s.chars().collect();  // for Unicode
+```
+
+### DFS / BFS / Graph Algorithm Quick Reference
+
+```rust
+// ── DFS on grid (recursive, in-place marking) ──────────────────────────
+fn dfs(grid: &mut Vec<Vec<char>>, r: i32, c: i32) {
+    let rows = grid.len() as i32;
+    let cols = grid[0].len() as i32;
+    if r < 0 || r >= rows || c < 0 || c >= cols { return; }
+    if grid[r as usize][c as usize] != '1' { return; }
+    grid[r as usize][c as usize] = '0';   // mark visited
+    for (dr, dc) in [(-1,0),(1,0),(0,-1),(0,1)] {
+        dfs(grid, r + dr, c + dc);
+    }
+}
+
+// ── BFS on grid (VecDeque, level-aware) ────────────────────────────────
+use std::collections::VecDeque;
+const DIRS: [(i32,i32); 4] = [(-1,0),(1,0),(0,-1),(0,1)];
+let mut queue: VecDeque<(i32,i32)> = VecDeque::new();
+let mut dist = vec![vec![i32::MAX; cols]; rows];
+dist[sr][sc] = 0;
+queue.push_back((sr as i32, sc as i32));
+while let Some((r, c)) = queue.pop_front() {
+    for (dr, dc) in DIRS {
+        let nr = r + dr; let nc = c + dc;
+        if nr < 0 || nr >= rows as i32 || nc < 0 || nc >= cols as i32 { continue; }
+        let (nr, nc) = (nr as usize, nc as usize);
+        if dist[nr][nc] == i32::MAX {
+            dist[nr][nc] = dist[r as usize][c as usize] + 1;
+            queue.push_back((nr as i32, nc as i32));
+        }
+    }
+}
+
+// ── Dijkstra (min-heap, weighted graph) ────────────────────────────────
+use std::collections::BinaryHeap;
+use std::cmp::Reverse;
+let mut dist = vec![u64::MAX; n];
+let mut heap: BinaryHeap<Reverse<(u64, usize)>> = BinaryHeap::new();
+dist[src] = 0;
+heap.push(Reverse((0, src)));
+while let Some(Reverse((cost, u))) = heap.pop() {
+    if cost > dist[u] { continue; }   // stale entry
+    for &(v, w) in &adj[u] {
+        let next = cost + w;
+        if next < dist[v] { dist[v] = next; heap.push(Reverse((next, v))); }
+    }
+}
+
+// ── Union-Find (path compression + union by rank) ──────────────────────
+struct UnionFind { parent: Vec<usize>, rank: Vec<usize>, count: usize }
+impl UnionFind {
+    fn new(n: usize) -> Self { Self { parent: (0..n).collect(), rank: vec![0;n], count: n } }
+    fn find(&mut self, x: usize) -> usize {
+        if self.parent[x] != x { self.parent[x] = self.find(self.parent[x]); }
+        self.parent[x]
+    }
+    fn union(&mut self, x: usize, y: usize) -> bool {
+        let (px, py) = (self.find(x), self.find(y));
+        if px == py { return false; }
+        match self.rank[px].cmp(&self.rank[py]) {
+            std::cmp::Ordering::Less => self.parent[px] = py,
+            std::cmp::Ordering::Greater => self.parent[py] = px,
+            std::cmp::Ordering::Equal => { self.parent[py] = px; self.rank[px] += 1; }
+        }
+        self.count -= 1; true
+    }
+}
 ```
 
 ### LeetCode Node Types in Rust
