@@ -1129,6 +1129,8 @@ Process edges in order using Union-Find. The first edge where both endpoints are
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
     static class UnionFind {
         private final int[] parent, rank;
