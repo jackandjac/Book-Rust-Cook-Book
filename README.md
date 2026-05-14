@@ -327,4 +327,101 @@ pub struct TreeNode {
 
 ---
 
-*Rust 2024 Edition · Rust 1.85+ · May 2026*
+## Part III: LeetCode Problem Solving in Java
+
+> Same problems as Part II — Java 17+ solutions for side-by-side comparison
+
+### Why the Java companion chapters?
+
+For teams migrating Java → Rust, seeing the same algorithm expressed in both languages is the fastest path to fluency. Each Java chapter:
+- Solves **the same problems** as its Rust counterpart
+- Uses **Java 17+ idioms** (records, var, switch expressions)
+- Highlights **where Java and Rust diverge** (ownership, generics, heap direction)
+- Follows the same **critical review rules** (third-person review, no bare `assert`, `throw new AssertionError`)
+
+### Java Chapter Overview
+
+| # | Chapter | Problems Covered | Key Java Patterns | File |
+|---|---------|-----------------|------------------|------|
+| JLC-01 | [Arrays & Hashing (Java)](leetcode-java/lc01-arrays-hashing-java.md) | LC #217, #242, #1, #49, #347, #238, #36, #271, #128 | `HashMap`, sorted-string key for anagrams, `LinkedHashMap` | jlc01 |
+| JLC-02 | [Two Pointers & Sliding Window (Java)](leetcode-java/lc02-two-pointers-sliding-window-java.md) | LC #125, #167, #15, #11, #42, #121, #3, #424, #567, #76, #239 | `ArrayDeque` as sliding window deque, Integer boxing trap | jlc02 |
+| JLC-03 | [Stack & Binary Search (Java)](leetcode-java/lc03-stack-binary-search-java.md) | LC #20, #155, #150, #22, #739, #853, #84, #704, #74, #875, #153, #33, #981, #4 | `Deque<T> = new ArrayDeque<>()`, Java 17 records for TimeMap | jlc03 |
+| JLC-04 | [Linked Lists (Java)](leetcode-java/lc04-linked-lists-java.md) | LC #206, #21, #143, #19, #138, #2, #287, #146, #23, #25 | `LinkedHashMap` for LRU, `PriorityQueue<ListNode>` for merge-k | jlc04 |
+| JLC-05 | [Trees (Java)](leetcode-java/lc05-trees-java.md) | LC #226, #104, #543, #110, #100, #572, #235, #102, #199, #1448, #98, #230, #105, #124, #297 | `TreeNode` helpers, `ArrayDeque` BFS, simple object refs vs `Rc<RefCell<>>` | jlc05 |
+| JLC-06 | [Heap & Backtracking (Java)](leetcode-java/lc06-heap-backtracking-java.md) | LC #703, #1046, #973, #215, #621, #355, #295, #78, #39, #40, #46, #90, #79, #131, #17, #51 | `PriorityQueue` min/max, `Collections.reverseOrder()`, backtrack `remove()` | jlc06 |
+| JLC-07 | [Tries & Graphs (Java)](leetcode-java/lc07-tries-graphs-java.md) | LC #208, #211, #212, #200, #133, #695, #417, #130, #994, #207, #210, #684, #323, #261, #127 | `TrieNode[26]`, `UnionFind` with path compression, `ArrayDeque` BFS | jlc07 |
+| JLC-08 | [Dynamic Programming (Java)](leetcode-java/lc08-dynamic-programming-java.md) | LC #70, #746, #198, #213, #5, #647, #91, #322, #152, #139, #300, #416, #62, #1143, #309, #518, #494, #97, #329, #115, #72, #312, #10 | `int[]` / `long[]` dp, `HashMap` memo, `record` as memo key | jlc08 |
+| JLC-09 | [Greedy, Intervals, Math & Bits (Java)](leetcode-java/lc09-greedy-intervals-math-bits-java.md) | LC #53, #55, #45, #134, #846, #1899, #763, #678, #57, #56, #435, #252, #253, #2285, #48, #54, #73, #202, #66, #50, #43, #2013, #136, #191, #338, #190, #268, #371, #7 | `Integer.compare` in sort, `Integer.bitCount()`, `>>>` unsigned shift | jlc09 |
+| JLC-10 | [Binary Search Deep Dive (Java)](leetcode-java/lc10-binary-search-deep-dive-java.md) | LC #704, #374, #702, #278, #69, #34, #154, #81, #162, #436, #875, #1011, #410, #1552, #1283, #2064, #240, #378 | `lo + (hi-lo)/2` overflow-safe mid, answer-space BS, `record` for index | jlc10 |
+| JLC-11 | [DFS Deep Dive (Java)](leetcode-java/lc11-dfs-deep-dive-java.md) | LC #200, #695, #733, #130, #417, #329, #323, #261, #207, #210, #797, #332, #113, #257, #129, #114, #79, #212, #301, #282 | `ArrayDeque` iterative DFS, board restore, `static class TreeNode` | jlc11 |
+| JLC-12 | [BFS Deep Dive (Java)](leetcode-java/lc12-bfs-deep-dive-java.md) | LC #102, #103, #111, #127, #126, #1306, #752, #994, #542, #1091, #909, #133, #1971, #1926, #1345, #815, #934, #675 | `ArrayDeque` queue/deque, mark-at-enqueue, level-order snapshot | jlc12 |
+| JLC-13 | [Advanced Graphs (Java)](leetcode-java/lc13-advanced-graphs-java.md) | LC #743, #1631, #787, #778, #1334, #1514, #269, #444, #310, #1136, #547, #721, #684, #827, #990, #1584, #1168, #1192, #1976, #1129 | Dijkstra `PriorityQueue`, `MAX_VALUE/2` infinity, Kahn's + DFS topo | jlc13 |
+| JLC-14a | [Advanced DP Part 1 (Java)](leetcode-java/lc14-advanced-dp-part1-java.md) | LC #516, #1039, #1000, #312, #664, #1547, #546, #1312, #877, #1140, #1406, #1510, #375, #486, #464, #233, #357, #902, #1012, #2376 | Interval DP, Game Theory DP, Digit DP with `long` | jlc14a |
+| JLC-14b | [Advanced DP Part 2 (Java)](leetcode-java/lc14-advanced-dp-part2-java.md) | LC #337, #968, #124, #1372, #2246, #1519, #526, #1986, #1494, #2305, #847, #1125, #1434, #943, #309, #188, #123, #1911, #2826 | Tree DP (`int[2]`), `1L<<j` bitmask, State Machine DP | jlc14b |
+| JLC-14c | [Advanced DP Part 3 (Java)](leetcode-java/lc14-advanced-dp-part3-java.md) | LC #10, #44, #1458, #1092, #1062, #718, #1035, #837, #688, #576, #1230, #808, #1278, #1335, #410, #813, #879, #956, #1049, #474, #1066, #1981 | String DP, Probability `double[][]`, D&C Optimization | jlc14c |
+| JLC-14d | [Advanced DP Part 4 (Java)](leetcode-java/lc14-advanced-dp-part4-java.md) | LC #1696, #1425, #2944, #862, #907, #2212, #1994, #2572, #329, #1857, #2050, #1697, #188, #2218, #2209, #2370, #2707, #2463, #2809, #3041 | Monotone Deque DP, SOS/Bitmask DP, DAG DP, Grandmaster Problems | jlc14d |
+
+### Java Quick Reference: LeetCode Patterns
+
+```java
+// Min-heap (default PriorityQueue)
+PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+
+// Max-heap
+PriorityQueue<Integer> maxHeap = new PriorityQueue<>(Collections.reverseOrder());
+
+// Heap of arrays (by first element, ascending)
+PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[0]));
+
+// ArrayDeque as stack (never use Stack class)
+Deque<Integer> stack = new ArrayDeque<>();
+stack.push(1);          // addFirst
+int top = stack.peek(); // peekFirst
+int val = stack.pop();  // removeFirst
+
+// ArrayDeque as queue
+Deque<Integer> queue = new ArrayDeque<>();
+queue.offer(1);         // addLast
+int front = queue.poll(); // removeFirst
+
+// Binary search — overflow-safe mid
+int lo = 0, hi = n - 1;
+while (lo <= hi) {
+    int mid = lo + (hi - lo) / 2;
+    if (check(mid)) hi = mid - 1;
+    else lo = mid + 1;
+}
+
+// Frequency map
+Map<Integer, Integer> freq = new HashMap<>();
+freq.merge(val, 1, Integer::sum);
+
+// Sorted intervals
+Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
+
+// Bit operations
+Integer.bitCount(n)               // count set bits
+Integer.numberOfTrailingZeros(n)  // index of lowest set bit
+n & (n - 1)                       // clear lowest set bit
+n >>> 1                           // unsigned right shift (important!)
+```
+
+### Java vs Rust: Key Algorithm Differences
+
+| Topic | Java | Rust |
+|-------|------|------|
+| Heap direction | `PriorityQueue` = **min-heap** | `BinaryHeap` = **max-heap** |
+| Max-heap | `Collections.reverseOrder()` | `BinaryHeap<T>` directly |
+| Min-heap | Default | `BinaryHeap<Reverse<T>>` |
+| Stack | `Deque<T> = new ArrayDeque<>()` | `Vec<T>` |
+| Queue | `Deque<T> = new ArrayDeque<>()` | `VecDeque<T>` |
+| Tree nodes | Simple `TreeNode left, right` | `Option<Rc<RefCell<TreeNode>>>` |
+| Linked lists | Simple `ListNode next` | `Option<Box<ListNode>>` |
+| Unsigned shift | `>>>` operator | All shift on unsigned types |
+| Overflow | Silent (use `Math.addExact` or `long`) | Debug panic, release wrap |
+| HashMap key | Any object with `hashCode`/`equals` | Must implement `Hash + Eq` |
+| Infinity sentinel | `Integer.MAX_VALUE / 2` | `i32::MAX / 2` or `u64::MAX` |
+
+---
+
+*Rust 2024 Edition · Java 17+ · Rust 1.85+ · May 2026*
