@@ -183,6 +183,10 @@ The official book ([doc.rust-lang.org/book](https://doc.rust-lang.org/book)) rem
 | LC-11 | [DFS Deep Dive](leetcode/lc11-dfs-deep-dive.md) | LC #200, #695, #733, #130, #417, #329, #323, #261, #207, #210, #797, #332, #113, #257, #129, #114, #79, #212, #301, #282 | 6 DFS templates, grid/graph/tree/backtrack | lc11 |
 | LC-12 | [BFS Deep Dive](leetcode/lc12-bfs-deep-dive.md) | LC #102, #103, #111, #127, #126, #1306, #752, #994, #542, #1091, #909, #133, #1971, #1926, #1345, #815, #934, #675 | Level/multi-source/bidirectional BFS | lc12 |
 | LC-13 | [Advanced Graphs](leetcode/lc13-advanced-graphs.md) | LC #743, #1631, #787, #778, #1334, #1514, #269, #444, #310, #1136, #547, #721, #684, #827, #990, #1584, #1168, #1192, #1976, #1129 | Dijkstra, Bellman-Ford, Floyd-Warshall, Kruskal, Prim, Tarjan | lc13 |
+| LC-14a | [Advanced DP Part 1](leetcode/lc14-advanced-dp-part1.md) | LC #516, #1039, #1000, #312, #664, #1547, #546, #1312, #877, #1140, #1406, #1510, #375, #486, #464, #233, #357, #902, #1012, #2376 | Interval DP, Game Theory, Digit DP | lc14a |
+| LC-14b | [Advanced DP Part 2](leetcode/lc14-advanced-dp-part2.md) | LC #337, #968, #124, #1372, #2246, #1519, #526, #1986, #1494, #2305, #847, #1125, #1434, #943, #309, #188, #123, #1911, #2826 | Tree DP, Bitmask DP, State Machine DP | lc14b |
+| LC-14c | [Advanced DP Part 3](leetcode/lc14-advanced-dp-part3.md) | LC #10, #44, #1458, #1092, #1062, #718, #1035, #837, #688, #576, #1230, #808, #1278, #1335, #410, #813, #879, #956, #1049, #474, #1066, #1981 | String DP, Probability DP, D&C Optimization, Advanced Knapsack | lc14c |
+| LC-14d | [Advanced DP Part 4](leetcode/lc14-advanced-dp-part4.md) | LC #1696, #1425, #2944, #862, #907, #2212, #1994, #2572, #329, #1857, #2050, #1697, #188, #2218, #2209, #2370, #2707, #2463, #2809, #3041 | Monotone Stack DP, SOS DP, DAG DP, Grandmaster Problems | lc14d |
 
 ### Problems by Difficulty
 
