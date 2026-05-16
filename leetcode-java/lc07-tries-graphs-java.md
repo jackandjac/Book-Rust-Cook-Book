@@ -1027,6 +1027,53 @@ class Solution {
 
 **Java notes:** `ArrayList<List<Integer>>` with pre-sized capacity avoids rehashing. `--inDegree[next] == 0` decrements in-place and checks in one expression. Using `ArrayDeque<Integer>` for the BFS queue auto-boxes `int` to `Integer` — acceptable here; for ultra-hot code, a library like Eclipse Collections provides primitive deques.
 
+**Approach 2 — DFS with Three-Color Cycle Detection (O(V+E) time, O(V) space).** Color each node: 0 = unvisited, 1 = currently on DFS stack, 2 = fully processed. Encountering a node marked 1 during DFS means a back edge (cycle). This avoids building an in-degree array and is often preferred when you need to detect *which* cycle exists.
+
+```java
+import java.util.*;
+
+class Solution2 {
+    public boolean canFinish(int numCourses, int[][] prerequisites) {
+        var adj = new ArrayList<List<Integer>>(numCourses);
+        for (int i = 0; i < numCourses; i++) adj.add(new ArrayList<>());
+        for (int[] pre : prerequisites) adj.get(pre[1]).add(pre[0]);
+
+        int[] color = new int[numCourses]; // 0=unvisited,1=visiting,2=done
+        for (int i = 0; i < numCourses; i++) {
+            if (color[i] == 0 && hasCycle(adj, i, color)) return false;
+        }
+        return true;
+    }
+
+    private boolean hasCycle(List<List<Integer>> adj, int node, int[] color) {
+        color[node] = 1;
+        for (int next : adj.get(node)) {
+            if (color[next] == 1) return true;          // back edge → cycle
+            if (color[next] == 0 && hasCycle(adj, next, color)) return true;
+        }
+        color[node] = 2;
+        return false;
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution2();
+
+        if (!sol.canFinish(2, new int[][]{{1,0}}))
+            throw new AssertionError("DFS canFinish 2 courses: expected true");
+        if (sol.canFinish(2, new int[][]{{1,0},{0,1}}))
+            throw new AssertionError("DFS canFinish cycle: expected false");
+        if (!sol.canFinish(5, new int[][]{}))
+            throw new AssertionError("DFS canFinish no prereqs: expected true");
+        if (!sol.canFinish(4, new int[][]{{1,0},{2,1},{3,2}}))
+            throw new AssertionError("DFS canFinish chain: expected true");
+
+        System.out.println("LC207 Course Schedule Approach 2 (DFS): all tests passed");
+    }
+}
+```
+
+> **Java vs Rust:** Both approaches translate cleanly. Java's `int[]` color array maps to Rust's `Vec<u8>`. The three-value encoding (0/1/2) is identical in both. In Java the mutual recursion is natural; in Rust, the borrow checker requires passing `&mut Vec<u8>` explicitly, which adds one parameter to `has_cycle` — a syntactic difference, not an algorithmic one.
+
 ---
 
 ## 12. Course Schedule II (LC #210)

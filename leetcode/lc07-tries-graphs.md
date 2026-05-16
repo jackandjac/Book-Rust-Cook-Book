@@ -1181,6 +1181,68 @@ mod tests_lc207 {
 
 **Rust notes:** `(0..n).filter(|&i| indegree[i] == 0).collect::<VecDeque<usize>>()` seeds the BFS queue in one line using iterator chaining. The closure receives `&i` (a reference to `usize`) and the `&` in the pattern destructures it to `i: usize`. `indegree[next] -= 1` is safe because in-degree only reaches zero after all prerequisite edges are processed.
 
+**Approach 2 — DFS with Three-Color Cycle Detection (O(V+E) time, O(V) space).** Mark each node as unvisited (0), currently on the DFS stack (1 — back edge would mean cycle), or fully processed (2). A back edge to a node still on the stack means a cycle exists.
+
+```rust
+#[allow(dead_code)]
+struct Solution2;
+
+impl Solution2 {
+    pub fn can_finish(num_courses: i32, prerequisites: Vec<Vec<i32>>) -> bool {
+        let n = num_courses as usize;
+        let mut adj: Vec<Vec<usize>> = vec![vec![]; n];
+        for prereq in &prerequisites {
+            adj[prereq[1] as usize].push(prereq[0] as usize);
+        }
+        // 0 = unvisited, 1 = on stack (visiting), 2 = done
+        let mut color = vec![0u8; n];
+        for start in 0..n {
+            if color[start] == 0 && Self::has_cycle(&adj, start, &mut color) {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn has_cycle(adj: &[Vec<usize>], node: usize, color: &mut Vec<u8>) -> bool {
+        color[node] = 1; // mark as visiting
+        for &next in &adj[node] {
+            if color[next] == 1 { return true; }  // back edge → cycle
+            if color[next] == 0 && Self::has_cycle(adj, next, color) { return true; }
+        }
+        color[node] = 2; // fully processed
+        false
+    }
+}
+
+#[cfg(test)]
+mod tests_lc207_dfs {
+    use super::Solution2;
+
+    #[test]
+    fn dfs_possible() {
+        assert!(Solution2::can_finish(2, vec![vec![1, 0]]));
+    }
+
+    #[test]
+    fn dfs_cycle() {
+        assert!(!Solution2::can_finish(2, vec![vec![1, 0], vec![0, 1]]));
+    }
+
+    #[test]
+    fn dfs_no_prereqs() {
+        assert!(Solution2::can_finish(5, vec![]));
+    }
+
+    #[test]
+    fn dfs_longer_chain() {
+        assert!(Solution2::can_finish(4, vec![vec![1,0],vec![2,1],vec![3,2]]));
+    }
+}
+```
+
+> **Java vs Rust:** The DFS coloring is a direct translation — `u8` array in Rust, `int[]` or `byte[]` in Java. The `color[node] = 1` / `color[node] = 2` assignments and recursion structure are identical. Rust adds no meaningful overhead here; the difference is purely syntactic.
+
 ---
 
 ## 12 — Course Schedule II (LC #210)

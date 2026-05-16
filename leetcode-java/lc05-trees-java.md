@@ -6,81 +6,16 @@
 
 ---
 
-## Shared Setup (used in all solutions)
+## Shared Helpers Reference
 
-The following `TreeNode` definition and helper methods appear once here and are assumed to be in scope in every solution below.
+Every solution class in this chapter is **self-contained**: each embeds its own `TreeNode` inner class and the `buildTree` / `toLevelOrder` / `isSameTree` static helpers. This means you can copy any single Java block and compile it independently with `javac --release 17`.
 
-```java
-import java.util.*;
+The four helpers embedded in each class are:
 
-// ── TreeNode ─────────────────────────────────────────────────────────────────
-static class TreeNode {
-    int val;
-    TreeNode left, right;
-    TreeNode(int val) { this.val = val; }
-    TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
-}
-
-// ── buildTree ─────────────────────────────────────────────────────────────────
-// Constructs a tree from a level-order (BFS) array.
-// Pass null entries for absent nodes.
-// Example: buildTree(new Integer[]{1, 2, 3}) → root=1, left=2, right=3
-static TreeNode buildTree(Integer[] vals) {
-    if (vals == null || vals.length == 0 || vals[0] == null) return null;
-    TreeNode root = new TreeNode(vals[0]);
-    Deque<TreeNode> q = new ArrayDeque<>();
-    q.offer(root);
-    int i = 1;
-    while (!q.isEmpty() && i < vals.length) {
-        TreeNode node = q.poll();
-        if (i < vals.length && vals[i] != null) {
-            node.left = new TreeNode(vals[i]);
-            q.offer(node.left);
-        }
-        i++;
-        if (i < vals.length && vals[i] != null) {
-            node.right = new TreeNode(vals[i]);
-            q.offer(node.right);
-        }
-        i++;
-    }
-    return root;
-}
-
-// ── toLevelOrder ─────────────────────────────────────────────────────────────
-// Serialises a tree to a level-order list for easy test assertions.
-// Trailing nulls are stripped, matching LeetCode's convention.
-static List<Integer> toLevelOrder(TreeNode root) {
-    List<Integer> result = new ArrayList<>();
-    Deque<TreeNode> q = new ArrayDeque<>();
-    q.offer(root);             // null root is handled below
-    while (!q.isEmpty()) {
-        TreeNode node = q.poll();
-        if (node == null) {
-            result.add(null);
-        } else {
-            result.add(node.val);
-            q.offer(node.left);    // may be null — handled next iteration
-            q.offer(node.right);
-        }
-    }
-    // strip trailing nulls
-    while (!result.isEmpty() && result.get(result.size() - 1) == null) {
-        result.remove(result.size() - 1);
-    }
-    return result;
-}
-
-// ── isSameTree ───────────────────────────────────────────────────────────────
-// Structural equality check reused by several test drivers.
-static boolean isSameTree(TreeNode p, TreeNode q) {
-    if (p == null && q == null) return true;
-    if (p == null || q == null) return false;
-    return p.val == q.val
-        && isSameTree(p.left,  q.left)
-        && isSameTree(p.right, q.right);
-}
-```
+- **`static class TreeNode`** — plain node with `val`, `left`, `right`.
+- **`static TreeNode buildTree(Integer[] vals)`** — BFS-order level-array constructor (nulls for absent nodes).
+- **`static List<Integer> toLevelOrder(TreeNode root)`** — BFS serializer with trailing-null stripping (used in test assertions).
+- **`static boolean isSameTree(TreeNode p, TreeNode q)`** — structural equality (included only in classes whose `main` calls it directly; LC #100 and LC #572 omit it because those classes define their own `isSameTree` as an instance method).
 
 > **Java vs Rust:** In Rust `buildTree` must wrap each created node in `Rc::new(RefCell::new(...))` and maintain a `VecDeque<Rc<RefCell<TreeNode>>>`. In Java the same function is plain Java — `new TreeNode(val)` and `ArrayDeque<TreeNode>`. There is no borrow counting, no interior-mutability ceremony.
 
@@ -106,7 +41,41 @@ Recurse into both subtrees first (postorder), then swap the two child references
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    static List<Integer> toLevelOrder(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        while (!q.isEmpty()) {
+            TreeNode n = q.poll();
+            if (n == null) { res.add(null); }
+            else { res.add(n.val); q.offer(n.left); q.offer(n.right); }
+        }
+        while (!res.isEmpty() && res.get(res.size()-1) == null) res.remove(res.size()-1);
+        return res;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     public TreeNode invertTree(TreeNode root) {
         if (root == null) return null;
         TreeNode left  = invertTree(root.left);
@@ -153,7 +122,7 @@ class Solution {
 
 ### Problem Statement
 
-Given the root of a binary tree, return its maximum depth — the number of nodes along the longest root-to-leaf path.
+Given the root of a binary tree, return its maximum depth: the number of nodes along the longest path from the root down to the farthest leaf. The empty tree has depth 0; a single-node tree has depth 1. Constraints: the number of nodes is in `[0, 10^4]` and node values are in `[-100, 100]`.
 
 ### Key Insight
 
@@ -162,7 +131,41 @@ The depth of a node is `1 + max(depth(left), depth(right))`. A null node contrib
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    static List<Integer> toLevelOrder(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        while (!q.isEmpty()) {
+            TreeNode n = q.poll();
+            if (n == null) { res.add(null); }
+            else { res.add(n.val); q.offer(n.left); q.offer(n.right); }
+        }
+        while (!res.isEmpty() && res.get(res.size()-1) == null) res.remove(res.size()-1);
+        return res;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     public int maxDepth(TreeNode root) {
         if (root == null) return 0;
         return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
@@ -196,6 +199,69 @@ class Solution {
 
 **Java notes:** The entire algorithm is one line: `1 + Math.max(...)`. Rust's `match` on `Option` adds a structural wrapper, but the logic is identical. Java's `null` is conceptually `None`; `Math.max` maps to `.max()` on integers.
 
+**Approach 2 — Iterative BFS (O(n) time, O(n) space).** Count the number of levels in a BFS traversal. Each level popped off the queue increments the depth. This avoids recursion entirely and is safe for very deep trees (no stack overflow risk). Space is O(w) where w is the maximum level width — O(n) for a complete tree.
+
+```java
+import java.util.*;
+
+class Solution2 {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public int maxDepth(TreeNode root) {
+        if (root == null) return 0;
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        int depth = 0;
+        while (!q.isEmpty()) {
+            int levelSize = q.size();
+            depth++;
+            for (int i = 0; i < levelSize; i++) {
+                TreeNode node = q.poll();
+                if (node.left  != null) q.offer(node.left);
+                if (node.right != null) q.offer(node.right);
+            }
+        }
+        return depth;
+    }
+
+    public static void main(String[] args) {
+        var s = new Solution2();
+
+        // [3,9,20,null,null,15,7] → depth 3
+        if (s.maxDepth(buildTree(new Integer[]{3, 9, 20, null, null, 15, 7})) != 3)
+            throw new AssertionError("BFS maxDepth: expected 3");
+
+        if (s.maxDepth(buildTree(new Integer[]{1, 2})) != 2)
+            throw new AssertionError("BFS left-skewed: expected 2");
+
+        if (s.maxDepth(null) != 0)
+            throw new AssertionError("BFS empty: expected 0");
+
+        System.out.println("LC#104 Approach 2 (BFS): all tests passed");
+    }
+}
+```
+
+> **Java vs Rust:** The BFS approach maps cleanly to Java's `ArrayDeque`. In Rust, the BFS approach requires `VecDeque<Rc<RefCell<TreeNode>>>` and `.clone()` on each child — adding several lines of boilerplate that don't change the algorithm. For this problem the recursive DFS approach is idiomatic in both languages; BFS is shown here as a stack-overflow-safe alternative.
+
 ---
 
 ## Problem 3 — Diameter of Binary Tree (LC #543)
@@ -213,7 +279,29 @@ At each node, the longest path *through* that node has length `depth(left) + dep
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     private int maxDiameter = 0;    // accumulator — equivalent to &mut i32 in Rust
 
     public int diameterOfBinaryTree(TreeNode root) {
@@ -266,7 +354,7 @@ class Solution {
 
 ### Problem Statement
 
-Determine whether a binary tree is height-balanced: for every node, the height difference between its left and right subtrees is at most 1.
+Given the root of a binary tree, determine if it is height-balanced: for every node in the tree, the height difference between its left and right subtrees is at most 1. An empty tree is considered balanced. Constraints: the number of nodes is in `[0, 5000]`, and node values are in `[-10^4, 10^4]`.
 
 ### Key Insight
 
@@ -275,7 +363,29 @@ Return the subtree height if balanced, or `-1` as a sentinel meaning "already un
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     public boolean isBalanced(TreeNode root) {
         return checkHeight(root) >= 0;
     }
@@ -325,7 +435,7 @@ class Solution {
 
 ### Problem Statement
 
-Given the roots of two binary trees, determine whether they are structurally identical with the same node values at every position.
+Given the roots of two binary trees `p` and `q`, return `true` if they are structurally identical and every corresponding node has the same value. Both shape and values must match exactly — a left child in one tree must be a left child in the other. Two empty trees are considered equal. Constraints: each tree has at most 100 nodes, and node values are in `[-10^4, 10^4]`.
 
 ### Key Insight
 
@@ -334,7 +444,30 @@ Four cases on the pair `(p, q)`: both null (equal); both non-null with same valu
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // Note: no static isSameTree helper — this class defines it as a public instance method below.
+    // ─────────────────────────────────────────────────────────────────────────
+
     public boolean isSameTree(TreeNode p, TreeNode q) {
         if (p == null && q == null) return true;
         if (p == null || q == null) return false;
@@ -382,7 +515,7 @@ class Solution {
 
 ### Problem Statement
 
-Given two trees `root` and `subRoot`, return `true` if `subRoot` is a subtree of `root` (i.e., there exists a node in `root` such that the subtree rooted there is structurally identical to `subRoot`).
+Given the roots of two binary trees `root` and `subRoot`, return `true` if there exists a node in `root` such that the subtree rooted at that node is structurally identical to `subRoot` (same shape and values at every position). A subtree includes the node and all of its descendants. Constraints: `root` has 1–2000 nodes; `subRoot` has 1–1000 nodes; node values are in `[-10^4, 10^4]`.
 
 ### Key Insight
 
@@ -391,7 +524,30 @@ At each node of `root`, check `isSameTree(root, subRoot)`. If false, recurse int
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // Note: no static isSameTree helper — this class defines it as a private method below.
+    // ─────────────────────────────────────────────────────────────────────────
+
     public boolean isSubtree(TreeNode root, TreeNode subRoot) {
         if (root == null) return subRoot == null;
         if (isSameTree(root, subRoot)) return true;
@@ -443,7 +599,7 @@ class Solution {
 
 ### Problem Statement
 
-Given a BST and two nodes `p` and `q` (guaranteed to exist in the tree), find their lowest common ancestor (LCA) — the deepest node that is an ancestor of both.
+Given a Binary Search Tree and two nodes `p` and `q` (both guaranteed to exist in the BST), return their lowest common ancestor (LCA) — the deepest node that is an ancestor of both `p` and `q`. A node is considered an ancestor of itself. Constraints: the BST has 2–10^5 nodes; all node values are unique; `p ≠ q`. The BST ordering property enables an O(h) iterative solution.
 
 ### Key Insight
 
@@ -452,7 +608,29 @@ BST ordering decides direction in O(1): if both `p.val` and `q.val` are less tha
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
         TreeNode cur = root;
         while (cur != null) {
@@ -526,7 +704,7 @@ class Solution {
 
 ### Problem Statement
 
-Given the root of a binary tree, return the node values level by level (left to right) as a `List<List<Integer>>`.
+Given the root of a binary tree, return all node values grouped by level from top to bottom, left to right within each level, as a `List<List<Integer>>`. The outer list has one entry per depth level; each inner list contains all values at that depth. An empty tree returns an empty list. Constraints: the number of nodes is in `[0, 2000]`, and node values are in `[-1000, 1000]`.
 
 ### Key Insight
 
@@ -535,7 +713,29 @@ BFS using `ArrayDeque`. At the start of each level, snapshot `queue.size()` — 
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     public List<List<Integer>> levelOrder(TreeNode root) {
         List<List<Integer>> result = new ArrayList<>();
         if (root == null) return result;
@@ -593,7 +793,7 @@ class Solution {
 
 ### Problem Statement
 
-Given the root of a binary tree, return the values of the nodes visible when looking from the right side — one value per level (the rightmost node at each depth).
+Given the root of a binary tree, imagine standing on its right side and looking at the tree. Return the values of the nodes you can see, listed from top to bottom. Each level contributes exactly one visible node — the rightmost node at that depth. Constraints: the number of nodes is in `[0, 100]`, and node values are in `[-100, 100]`.
 
 ### Key Insight
 
@@ -602,7 +802,29 @@ BFS level order with the same level-batching trick as LC #102. The answer for ea
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     public List<Integer> rightSideView(TreeNode root) {
         List<Integer> result = new ArrayList<>();
         if (root == null) return result;
@@ -671,7 +893,29 @@ DFS, threading the maximum value seen so far on the current root-to-node path. A
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     public int goodNodes(TreeNode root) {
         return dfs(root, Integer.MIN_VALUE);
     }
@@ -724,7 +968,7 @@ class Solution {
 
 ### Problem Statement
 
-Given the root of a binary tree, determine if it is a valid BST: every node's value must be strictly greater than all values in its left subtree and strictly less than all values in its right subtree.
+Given the root of a binary tree, determine if it is a valid Binary Search Tree: for every node, all values in its left subtree are strictly less than the node's value, and all values in its right subtree are strictly greater. Equality is not allowed. Constraints: the number of nodes is in `[1, 10^4]`, and node values are in `[-2^31, 2^31 - 1]` (the full `int` range). Using `Integer.MIN_VALUE` and `Integer.MAX_VALUE` as sentinels will fail for trees containing those boundary values — use `long` instead.
 
 ### Key Insight
 
@@ -735,7 +979,29 @@ Propagate valid `(min, max)` ranges downward. Initially unbounded. Tighten the u
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     public boolean isValidBST(TreeNode root) {
         return validate(root, Long.MIN_VALUE, Long.MAX_VALUE);
     }
@@ -788,7 +1054,7 @@ class Solution {
 
 ### Problem Statement
 
-Given the root of a BST and an integer `k`, return the `k`th smallest element (1-indexed).
+Given the root of a Binary Search Tree and an integer `k` (1-indexed), return the `k`th smallest value among all node values. The BST has between `k` and `10^4` nodes, and node values are in `[0, 10^4]`. You are guaranteed `k` is valid. BST inorder traversal visits nodes in ascending sorted order, making this problem a natural application of early-exit DFS.
 
 ### Key Insight
 
@@ -797,7 +1063,29 @@ Inorder traversal of a BST visits nodes in ascending order. Count nodes as they 
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     private int count  = 0;
     private int result = 0;
 
@@ -846,6 +1134,68 @@ class Solution {
 
 **Java notes:** `private int count` and `result` as instance fields replace Rust's `&mut i32` pattern. The early-exit guard `if (count >= k) return` prunes the entire remaining subtree. Reset both fields at the top of `kthSmallest` so the object can be safely reused across test invocations — a real LeetCode submission creates a fresh `Solution` each time, but test drivers may reuse the same instance.
 
+**Approach 2 — Iterative Inorder with Explicit Stack (O(h + k) time, O(h) space).** Use an `ArrayDeque` as an explicit stack to simulate the recursive inorder traversal without recursion. Push left children until hitting null, then pop and count, then move to the right child. This is production-safe for large trees and avoids deep recursion.
+
+```java
+import java.util.*;
+
+class Solution2 {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public int kthSmallest(TreeNode root, int k) {
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        TreeNode cur = root;
+        int count = 0;
+        while (cur != null || !stack.isEmpty()) {
+            // push all left children
+            while (cur != null) { stack.push(cur); cur = cur.left; }
+            cur = stack.pop();          // visit in-order node
+            if (++count == k) return cur.val;
+            cur = cur.right;            // move to right subtree
+        }
+        throw new IllegalStateException("k out of range");
+    }
+
+    public static void main(String[] args) {
+        var s = new Solution2();
+
+        // BST [3,1,4,null,2] → k=1 gives 1
+        if (s.kthSmallest(buildTree(new Integer[]{3, 1, 4, null, 2}), 1) != 1)
+            throw new AssertionError("iterative kth k=1: expected 1");
+
+        // BST [5,3,6,2,4,null,null,1] → k=3 gives 3
+        if (s.kthSmallest(buildTree(new Integer[]{5, 3, 6, 2, 4, null, null, 1}), 3) != 3)
+            throw new AssertionError("iterative kth k=3: expected 3");
+
+        // k equals tree size
+        if (s.kthSmallest(buildTree(new Integer[]{2, 1, 3}), 3) != 3)
+            throw new AssertionError("iterative kth k=n: expected 3");
+
+        System.out.println("LC#230 Approach 2 (iterative inorder): all tests passed");
+    }
+}
+```
+
+> **Java vs Rust:** In Rust the iterative inorder requires `VecDeque<Rc<RefCell<TreeNode>>>` as the stack, with `.clone()` calls at each push. In Java the same stack is `Deque<TreeNode>` with `stack.push(cur)` — three words vs twelve. The iterative approach is more useful in Java (where deep trees risk `StackOverflowError`); Rust's compiled recursion typically handles deeper stacks without issue.
+
 ---
 
 ## Problem 13 — Construct Binary Tree from Preorder and Inorder Traversal (LC #105)
@@ -854,7 +1204,7 @@ class Solution {
 
 ### Problem Statement
 
-Given `preorder` and `inorder` traversal arrays of a binary tree (with distinct values), construct and return the tree.
+Given the `preorder` and `inorder` traversal arrays of a binary tree with `n` distinct values, construct and return the original tree. The first element of `preorder` is always the root; its position in `inorder` splits the tree into left and right subtrees. Constraints: `1 ≤ n ≤ 3000`, all values are unique and fit in `int`, and both arrays are valid traversals of the same tree.
 
 ### Key Insight
 
@@ -863,11 +1213,48 @@ The first element of `preorder` is always the root. Find that value in `inorder`
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    // buildTree(Integer[]) builds from BFS level-order array (test helper)
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    static List<Integer> toLevelOrder(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        while (!q.isEmpty()) {
+            TreeNode n = q.poll();
+            if (n == null) { res.add(null); }
+            else { res.add(n.val); q.offer(n.left); q.offer(n.right); }
+        }
+        while (!res.isEmpty() && res.get(res.size()-1) == null) res.remove(res.size()-1);
+        return res;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     private int[] preIdx = {0};     // mutable cursor — equivalent to &mut usize in Rust
     private Map<Integer, Integer> inMap;
 
-    public TreeNode buildTreeFromTraversals(int[] preorder, int[] inorder) {
+    // buildTree(int[], int[]) reconstructs a tree from preorder + inorder arrays (the LeetCode solution)
+    // Distinct from the static buildTree(Integer[]) helper above — Java allows overloads on param type.
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
         preIdx[0] = 0;
         inMap = new HashMap<>();
         for (int i = 0; i < inorder.length; i++) inMap.put(inorder[i], i);
@@ -888,7 +1275,7 @@ class Solution {
         Solution s = new Solution();
 
         // preorder [3,9,20,15,7], inorder [9,3,15,20,7] → [3,9,20,null,null,15,7]
-        TreeNode t1 = s.buildTreeFromTraversals(
+        TreeNode t1 = s.buildTree(
             new int[]{3, 9, 20, 15, 7},
             new int[]{9, 3, 15, 20, 7}
         );
@@ -898,7 +1285,7 @@ class Solution {
             throw new AssertionError("buildTree basic: expected " + exp1 + " got " + got1);
 
         // single element
-        TreeNode t2 = s.buildTreeFromTraversals(new int[]{-1}, new int[]{-1});
+        TreeNode t2 = s.buildTree(new int[]{-1}, new int[]{-1});
         if (t2 == null || t2.val != -1)
             throw new AssertionError("buildTree single: expected -1");
 
@@ -928,7 +1315,29 @@ At each node, the longest path *through* that node is `node.val + max(0, leftGai
 ### Solution
 
 ```java
+import java.util.*;
+
 class Solution {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     private int globalMax;
 
     public int maxPathSum(TreeNode root) {
@@ -1002,7 +1411,33 @@ Preorder traversal with sentinel `"N"` for null nodes uniquely encodes any binar
 ### Solution
 
 ```java
+import java.util.*;
+
 class Codec {
+    // ── tree helpers ──────────────────────────────────────────────────────────
+    static class TreeNode {
+        int val; TreeNode left, right;
+        TreeNode(int val) { this.val = val; }
+        TreeNode(int val, TreeNode l, TreeNode r) { this.val = val; left = l; right = r; }
+    }
+    static TreeNode buildTree(Integer[] v) {
+        if (v == null || v.length == 0 || v[0] == null) return null;
+        TreeNode root = new TreeNode(v[0]);
+        Deque<TreeNode> q = new ArrayDeque<>();
+        q.offer(root);
+        for (int i = 1; i < v.length; ) {
+            TreeNode n = q.poll();
+            if (i < v.length && v[i] != null) { n.left  = new TreeNode(v[i]); q.offer(n.left);  } i++;
+            if (i < v.length && v[i] != null) { n.right = new TreeNode(v[i]); q.offer(n.right); } i++;
+        }
+        return root;
+    }
+    static boolean isSameTree(TreeNode p, TreeNode q) {
+        if (p == null && q == null) return true;
+        if (p == null || q == null) return false;
+        return p.val == q.val && isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     // Serialize: preorder traversal, comma-separated, "N" for null.
     // Example: [1,2,3] → "1,2,N,N,3,N,N"
@@ -1129,7 +1564,7 @@ class Codec {
 | LC #14 all-negative two-node test | Low | Added test `[-2, null, -1]` → expected -1 to confirm negative-subtree pruning works when the root is not the answer. |
 | LC #297 empty-string deserialization | Low | Guarded `if (data == null || data.isEmpty()) return null` before split. Without this, `"".split(",")` returns `[""]`, and `desHelper` would attempt `Integer.parseInt("N")` incorrectly. |
 | LC #98 duplicate-value boundary | Low | Added test `[3,1,5,null,null,3,6]` (where right child value equals root value) to confirm strict inequality is enforced. |
-| `buildTreeFromTraversals` method name collision | Low | LC #105's `Solution` method is named `buildTreeFromTraversals` instead of `buildTree` to avoid shadowing the shared helper `buildTree(Integer[])`. Noted inline. |
+| `buildTree` method overloading | Low | LC #105's `Solution.buildTree(int[], int[])` is a distinct overload from the static `buildTree(Integer[])` helper — Java resolves by parameter type. Both names can coexist; no rename needed. |
 | `toLevelOrder` handling of null root | Low | `q.offer(root)` with `root == null` adds null to the queue. The `if (node == null)` branch handles it, producing an empty list after stripping trailing nulls. Verified: `toLevelOrder(null)` returns `[]`. |
 
 ### What This Chapter Does Well
@@ -1150,6 +1585,6 @@ class Codec {
 
 2. **No `record` usage despite Java 17+ target.** The chapter includes `var` but misses an opportunity to demonstrate `record` for the DFS-with-multiple-returns pattern. For example, LC #110's `checkHeight` could return `record HeightResult(boolean balanced, int height)` instead of the `-1` sentinel, making the invariant explicit. This was a design trade-off — the sentinel matches the Rust chapter's approach and is concise — but a record-based version as an "alternative approach" callout would add pedagogic value.
 
-3. **`buildTree` and `toLevelOrder` live in prose, not in a compiled file.** Since this is a Markdown chapter, readers who copy-paste individual solution blocks will need to manually add the shared helpers. A note at the top of each solution block pointing back to the "Shared Setup" section would prevent confusion, especially for LC #297 whose test calls `isSameTree` without defining it locally.
+3. **Self-contained embedding adds boilerplate.** Each class embeds ~15 lines of helper code. This is intentional — every block compiles independently — but it means the helper code appears 15 times in the chapter. For a printed or PDFed book this is slightly verbose; for a reader who copy-pastes one class to a file, it is essential.
 
-4. **LC #105 method naming.** The method is called `buildTreeFromTraversals` to avoid shadowing the `buildTree(Integer[])` helper, which is a pragmatic but slightly awkward workaround. In a real LeetCode submission, `buildTree(int[], int[])` is the expected signature, and the helper would not exist — calling this out in the problem header would make the renaming rationale clearer.
+4. **LC #105 method naming.** The public method is `buildTree(int[], int[])` — the standard LeetCode signature. It coexists with the static `buildTree(Integer[])` test-helper as a Java overload; the compiler resolves them by parameter type (primitive `int[]` vs boxed `Integer[]`) with no ambiguity.

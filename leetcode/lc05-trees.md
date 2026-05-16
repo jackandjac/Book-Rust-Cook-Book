@@ -264,7 +264,7 @@ mod tests {
 
 ### Problem Statement
 
-Given the root of a binary tree, return its maximum depth (number of nodes along the longest root-to-leaf path).
+Given the root of a binary tree, return its maximum depth: the number of nodes along the longest path from the root down to the farthest leaf. The empty tree has depth 0; a single-node tree has depth 1. Constraints: the number of nodes is in `[0, 10^4]` and node values are in `[-100, 100]`. Depth equals the number of edges on the longest root-to-leaf path plus one.
 
 ### Key Insight
 
@@ -374,6 +374,95 @@ mod tests {
 
 **Rust notes:** `match root { None => 0, Some(node) => ... }` is idiomatic. Because `match` consumes `root`, there is no need for the `ref` keyword — the node is owned inside the `Some` arm. This is shorter than Java's `if (root == null) return 0;` pattern and the compiler proves exhaustiveness.
 
+**Approach 2 — Iterative BFS (O(n) time, O(n) space).** Count the number of BFS levels. Each completed level increments the depth counter. Avoids recursion entirely and is safe for arbitrarily deep trees. Space cost is O(w) where w is the maximum level width.
+
+```rust
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut q: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    q.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !q.is_empty() && i < vals.len() {
+        let node = q.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                q.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                q.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn max_depth_bfs(root: TreeNodeRef) -> i32 {
+    let Some(root) = root else { return 0; };
+    let mut q: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    q.push_back(root);
+    let mut depth = 0;
+    while !q.is_empty() {
+        let level_size = q.len();
+        depth += 1;
+        for _ in 0..level_size {
+            let node = q.pop_front().unwrap();
+            let left  = node.borrow().left.clone();
+            let right = node.borrow().right.clone();
+            if let Some(l) = left  { q.push_back(l); }
+            if let Some(r) = right { q.push_back(r); }
+        }
+    }
+    depth
+}
+
+#[cfg(test)]
+mod tests_bfs_depth {
+    use super::*;
+
+    #[test]
+    fn bfs_depth_balanced() {
+        let tree = build(&[Some(3), Some(9), Some(20), None, None, Some(15), Some(7)]);
+        assert_eq!(max_depth_bfs(tree), 3);
+    }
+
+    #[test]
+    fn bfs_depth_left_skewed() {
+        assert_eq!(max_depth_bfs(build(&[Some(1), Some(2)])), 2);
+    }
+
+    #[test]
+    fn bfs_depth_empty() {
+        assert_eq!(max_depth_bfs(None), 0);
+    }
+}
+```
+
+> **Java vs Rust:** The BFS approach works identically in both languages. In Rust, each node pushed to the queue must be `Rc::clone`'d or moved out; the `let Some(l) = left { q.push_back(l) }` pattern moves the owned `Rc` directly without a clone call. Java's GC-managed references make the same step invisible.
+
 ---
 
 ## Problem 3 — Diameter of Binary Tree (LC #543)
@@ -382,7 +471,7 @@ mod tests {
 
 ### Problem Statement
 
-Given the root of a binary tree, return the length of the diameter — the longest path between any two nodes (the path need not pass through the root).
+Given the root of a binary tree, return the length of the diameter — the longest path between any two nodes measured in number of edges. The path does not need to pass through the root; it can start and end anywhere in the tree. A single node has diameter 0. Constraints: the number of nodes is in `[1, 10^4]`, and node values are in `[-100, 100]`.
 
 ### Key Insight
 
@@ -513,7 +602,7 @@ mod tests {
 
 ### Problem Statement
 
-Given a binary tree, determine if it is height-balanced: every node's left and right subtree heights differ by at most 1.
+Given the root of a binary tree, determine if it is height-balanced: for every node in the tree, the height difference between its left and right subtrees is at most 1. An empty tree is considered balanced. Constraints: the number of nodes is in `[0, 5000]`, and node values are in `[-10^4, 10^4]`. Height is defined as the number of nodes on the longest path from a given node down to a leaf.
 
 ### Key Insight
 
@@ -647,7 +736,7 @@ mod tests {
 
 ### Problem Statement
 
-Given the roots of two binary trees, determine if they are structurally identical with the same node values at every position.
+Given the roots of two binary trees `p` and `q`, return `true` if they are structurally identical and every corresponding node has the same value. Both shape and values must match exactly — a left child in one tree must be a left child in the other. Constraints: each tree has at most 100 nodes, and node values are in `[-10^4, 10^4]`. Two empty trees are considered equal.
 
 ### Key Insight
 
@@ -775,7 +864,7 @@ mod tests {
 
 ### Problem Statement
 
-Given two trees `root` and `subRoot`, return `true` if `subRoot` is a subtree of `root` (a subtree is a node and all of its descendants).
+Given the roots of two binary trees `root` and `subRoot`, return `true` if there exists a node in `root` such that the subtree rooted at that node is structurally identical to `subRoot` (same shape and values). A subtree of a tree `T` consists of a node in `T` and all of its descendants. Constraints: `root` has 1–2000 nodes; `subRoot` has 1–1000 nodes; node values are in `[-10^4, 10^4]`.
 
 ### Key Insight
 
@@ -921,7 +1010,7 @@ mod tests {
 
 ### Problem Statement
 
-Given a BST and two nodes `p` and `q`, find their lowest common ancestor (LCA) — the deepest node that is an ancestor of both.
+Given a Binary Search Tree and two nodes `p` and `q` (guaranteed to exist in the tree), find their lowest common ancestor (LCA) — the deepest node that is an ancestor of both `p` and `q`. A node is considered an ancestor of itself. Constraints: the BST has 2–10^5 nodes; all node values are unique; `p != q`. The BST property (left subtree values < node < right subtree values) enables an O(h) solution without exploring the full tree.
 
 ### Key Insight
 
@@ -1066,7 +1155,7 @@ mod tests {
 
 ### Problem Statement
 
-Given the root of a binary tree, return the node values level by level (left to right), as a `Vec<Vec<i32>>`.
+Given the root of a binary tree, return all node values grouped by level from top to bottom, left to right within each level. The result is a list of lists: the outer list has one entry per depth level, and each inner list contains the values of all nodes at that depth. An empty tree returns an empty list. Constraints: the number of nodes is in `[0, 2000]`, and node values are in `[-1000, 1000]`.
 
 ### Key Insight
 
@@ -1199,7 +1288,7 @@ mod tests {
 
 ### Problem Statement
 
-Given the root of a binary tree, return the values of the nodes you can see when looking from the right side — one value per level, the rightmost visible node.
+Given the root of a binary tree, imagine standing on its right side and looking at the tree from that vantage point. Return the values of the nodes you can see, ordered from top to bottom. Each level contributes exactly one visible node — the rightmost node at that depth. Constraints: the number of nodes is in `[0, 100]`, and node values are in `[-100, 100]`.
 
 ### Key Insight
 
@@ -1473,7 +1562,7 @@ mod tests {
 
 ### Problem Statement
 
-Given the root of a binary tree, determine if it is a valid BST: each node's value must be strictly greater than all values in its left subtree and strictly less than all values in its right subtree.
+Given the root of a binary tree, determine if it is a valid Binary Search Tree: for every node, all values in its left subtree are strictly less than the node's value, and all values in its right subtree are strictly greater. Equality is not permitted. Constraints: the number of nodes is in `[1, 10^4]`, and node values are in `[-2^31, 2^31 - 1]` (the full `i32` range). The full-range constraint is the classic trap — naive bounds using `i32::MIN` and `i32::MAX` fail for boundary nodes.
 
 ### Key Insight
 
@@ -1613,7 +1702,7 @@ mod tests {
 
 ### Problem Statement
 
-Given the root of a BST and an integer `k`, return the `k`th smallest element (1-indexed).
+Given the root of a Binary Search Tree and an integer `k` (1-indexed), return the `k`th smallest value among all node values. The BST has between `k` and `10^4` nodes, and node values are in `[0, 10^4]`. You are guaranteed that `k` is valid (1 ≤ k ≤ n). The key insight is that BST inorder traversal yields sorted ascending order, so the k-th visited node is the answer.
 
 ### Key Insight
 
@@ -1735,6 +1824,94 @@ mod tests {
 
 **Rust notes:** Two `&mut i32` accumulator references thread through the recursion — `count` tracks visits and `result` stores the answer. The early-exit guard `if *count >= k { return; }` short-circuits the entire remaining subtree once the answer is found. In Java you would typically use an instance field or a `int[]` wrapper for this.
 
+**Approach 2 — Iterative Inorder with Explicit Stack (O(h + k) time, O(h) space).** Simulate inorder traversal with a `Vec` as an explicit stack. Push left children until exhausted, then pop and count, then process the right child. No recursion — safe for deep trees regardless of stack size.
+
+```rust
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::collections::VecDeque;
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+impl TreeNode {
+    pub fn new(val: i32) -> Self { TreeNode { val, left: None, right: None } }
+}
+pub type TreeNodeRef = Option<Rc<RefCell<TreeNode>>>;
+
+pub fn build(vals: &[Option<i32>]) -> TreeNodeRef {
+    if vals.is_empty() || vals[0].is_none() { return None; }
+    let root = Rc::new(RefCell::new(TreeNode::new(vals[0].unwrap())));
+    let mut q: VecDeque<Rc<RefCell<TreeNode>>> = VecDeque::new();
+    q.push_back(Rc::clone(&root));
+    let mut i = 1;
+    while !q.is_empty() && i < vals.len() {
+        let node = q.pop_front().unwrap();
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().left = Some(Rc::clone(&child));
+                q.push_back(child);
+            }
+            i += 1;
+        }
+        if i < vals.len() {
+            if let Some(v) = vals[i] {
+                let child = Rc::new(RefCell::new(TreeNode::new(v)));
+                node.borrow_mut().right = Some(Rc::clone(&child));
+                q.push_back(child);
+            }
+            i += 1;
+        }
+    }
+    Some(root)
+}
+
+pub fn kth_smallest_iterative(root: TreeNodeRef, k: i32) -> i32 {
+    let mut stack: Vec<Rc<RefCell<TreeNode>>> = Vec::new();
+    let mut cur = root;
+    let mut count = 0i32;
+    loop {
+        // push all left children onto stack
+        while let Some(node) = cur {
+            cur = node.borrow().left.clone();
+            stack.push(node);
+        }
+        let node = stack.pop().expect("k out of range");
+        count += 1;
+        if count == k { return node.borrow().val; }
+        cur = node.borrow().right.clone();
+    }
+}
+
+#[cfg(test)]
+mod tests_iter_kth {
+    use super::*;
+
+    #[test]
+    fn iter_kth_first() {
+        let tree = build(&[Some(3), Some(1), Some(4), None, Some(2)]);
+        assert_eq!(kth_smallest_iterative(tree, 1), 1);
+    }
+
+    #[test]
+    fn iter_kth_third() {
+        let tree = build(&[Some(5), Some(3), Some(6), Some(2), Some(4), None, None, Some(1)]);
+        assert_eq!(kth_smallest_iterative(tree, 3), 3);
+    }
+
+    #[test]
+    fn iter_kth_last() {
+        assert_eq!(kth_smallest_iterative(build(&[Some(2), Some(1), Some(3)]), 3), 3);
+    }
+}
+```
+
+> **Java vs Rust:** In Java the stack holds `TreeNode` references and `cur` is a nullable `TreeNode`. In Rust, `cur` is `TreeNodeRef` (`Option<Rc<RefCell<TreeNode>>>`); the `while let Some(node) = cur` loop destructures the Option cleanly, and moving `node` into the stack avoids any clone. The `.clone()` on `.left` / `.right` bumps only the Rc count — it does not copy the node data.
+
 ---
 
 ## Problem 13 — Construct Binary Tree from Preorder and Inorder Traversal (LC #105)
@@ -1743,7 +1920,7 @@ mod tests {
 
 ### Problem Statement
 
-Given `preorder` and `inorder` traversal arrays of a binary tree, construct and return the tree.
+Given the `preorder` and `inorder` traversal arrays of a binary tree with `n` distinct values, construct and return the original tree. The first element of `preorder` is always the root. The inorder array partitions into a left subtree and right subtree relative to the root's position. Constraints: `1 ≤ n ≤ 3000`, all values are unique and fit in `i32`, and it is guaranteed that `preorder` and `inorder` are valid traversals of the same tree.
 
 ### Key Insight
 
