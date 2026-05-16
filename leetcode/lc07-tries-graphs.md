@@ -995,7 +995,7 @@ mod tests_lc994 {
     use super::Solution;
 
     #[test]
-    fn two_minutes() {
+    fn four_minutes() {
         assert_eq!(Solution::oranges_rotting(vec![vec![2,1,1],vec![1,1,0],vec![0,1,1]]), 4);
     }
 
