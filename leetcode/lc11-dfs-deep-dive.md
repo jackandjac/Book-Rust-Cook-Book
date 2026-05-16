@@ -167,15 +167,20 @@ For very deep graphs, spawn a thread with a larger stack or use iterative DFS.
 
 ---
 
-### 1. Number of Islands — LC #200
+## LC200. Number of Islands
 
-**Problem:** Given a 2-D binary grid of `'1'`s (land) and `'0'`s (water), count the number of
-islands (connected groups of `'1'`s).
+**Problem.** Given a 2-D binary grid of `'1'`s (land) and `'0'`s (water), count the number of
+islands. An island is a maximal group of `'1'`s connected 4-directionally (up, down, left, right).
+The grid is surrounded by water on all sides. You may assume land cells are never diagonally adjacent
+to each other (i.e., only 4-directional connectivity counts). Constraints: 1 ≤ rows, cols ≤ 300.
 
-**DFS insight:** Each cell is the root of a DFS. Mark visited cells `'#'` in-place; the number
-of DFS invocations that actually start (grid cell was `'1'`) is the island count.
-
-**Template:** Pattern 1 (recursive, in-place marking).
+**Approach 1 — Recursive Grid DFS with In-Place Marking (O(R×C) time, O(R×C) space).**
+Iterate every cell; when a `'1'` is found, increment the island count and launch a DFS that
+flood-fills the entire island with `'#'`. Each DFS call checks bounds and exits immediately if the
+cell is out-of-range or not `'1'`, so every cell is visited at most once. The in-place marking
+avoids a separate `visited` array; Rust's ownership model makes consuming and mutating the grid
+natural. Recursion depth is bounded by the number of land cells, at most R×C in the worst case
+(all land), giving O(R×C) stack space.
 
 ```rust
 #[allow(dead_code)]
@@ -232,23 +237,25 @@ mod tests_lc200 {
 }
 ```
 
-**Complexity:** Time O(R×C), Space O(R×C) worst-case recursion stack (all land).
-
 **Rust note:** `grid` is consumed (`Vec<Vec<char>>` by value). The in-place `'#'` marking avoids a
 separate `visited` allocation. Java developers would typically clone the grid to avoid mutation; here
 Rust's ownership model makes consuming and mutating it natural.
 
 ---
 
-### 2. Max Area of Island — LC #695
+## LC695. Max Area of Island
 
-**Problem:** Find the island (connected group of `1`s) with the maximum area. The grid uses `i32`
-values `0` and `1`.
+**Problem.** Find the island (connected group of `1`s) with the maximum area. The grid uses `i32`
+values `0` (water) and `1` (land), with 4-directional connectivity. Return the size of the largest
+island, or 0 if all cells are water. The grid dimensions are at most 50×50, and each cell's value
+is exactly 0 or 1.
 
-**DFS insight:** DFS returns the total cells in the current island. Accumulate the count as you
-mark cells visited.
-
-**Template:** Pattern 1 modified to return `i32`.
+**Approach 1 — Recursive Grid DFS Returning Area (O(R×C) time, O(R×C) space).**
+For each unvisited land cell, launch a DFS that marks visited cells with `-1` and returns the count
+of cells in the connected component. The DFS return-value accumulation (`area += dfs(...)`) is the
+idiomatic Rust way to propagate computed values up the recursion without instance variables. After
+visiting all cells, the maximum area across all DFS calls is returned. The `-1` sentinel preserves
+the `Vec<Vec<i32>>` type without allocating a separate `visited` grid.
 
 ```rust
 #[allow(dead_code)]
@@ -308,8 +315,6 @@ mod tests_lc695 {
 }
 ```
 
-**Complexity:** Time O(R×C), Space O(R×C) recursion stack.
-
 **Rust note:** Using `-1` as a visited marker keeps the grid as `Vec<Vec<i32>>` without a
 type change. The return-value-accumulation pattern (`area += dfs(...)`) is the natural Rust way
 to propagate computed values up the recursion — no instance variables needed (unlike Java where
@@ -317,15 +322,20 @@ you might write to `this.area`).
 
 ---
 
-### 3. Flood Fill — LC #733
+## LC733. Flood Fill
 
-**Problem:** Starting from pixel `(sr, sc)`, replace its color and all 4-directionally connected
-pixels of the same original color with `newColor`.
+**Problem.** Starting from pixel `(sr, sc)` in an `m×n` grid of integers, replace its color and
+the colors of all 4-directionally connected pixels that have the same original color with `newColor`.
+The operation is equivalent to a paint-bucket fill in image editors. Return the modified image.
+A special case arises when `newColor` equals the original color — no change should be made.
+Grid dimensions and pixel values are bounded by the problem constraints (1 ≤ m, n ≤ 50; 0 ≤ color ≤ 65535).
 
-**DFS insight:** Classic DFS flood fill. Guard against the case where `newColor == original_color`
-to avoid infinite recursion.
-
-**Template:** Pattern 1, returns the modified grid.
+**Approach 1 — Recursive Grid DFS (O(R×C) time, O(R×C) space).**
+DFS from the source pixel, replacing all reachable same-colored cells with `newColor`. The
+critical guard is to exit early when `newColor == original_color` — without this check, the DFS
+would infinitely revisit cells that were just painted. After the guard, every cell is visited at
+most once (the color change serves as the visited marker). The image is returned by value after
+in-place modification, which is idiomatic Rust for transform functions.
 
 ```rust
 #[allow(dead_code)]
@@ -372,22 +382,24 @@ mod tests_lc733 {
 }
 ```
 
-**Complexity:** Time O(R×C), Space O(R×C) recursion stack.
-
 **Rust note:** Ownership makes the early-return on `original == color` clear. The image is returned
 by value after in-place modification, which is idiomatic Rust for transform functions.
 
 ---
 
-### 4. Surrounded Regions — LC #130
+## LC130. Surrounded Regions
 
-**Problem:** Flip all `'O'`s that are not connected to any border cell to `'X'`. Border-connected
-`'O'`s survive.
+**Problem.** Given an `m×n` grid of `'X'` and `'O'`, capture all regions surrounded by `'X'`
+by flipping all enclosed `'O'`s to `'X'`. A region is enclosed if it has no `'O'` cell touching
+the border (top row, bottom row, left column, or right column). `'O'`s on the border and any
+`'O'` 4-directionally connected to a border `'O'` are never flipped. The modification is in-place.
 
-**DFS insight:** Reverse the problem. DFS from every border `'O'`, mark reachable `'O'`s as `'S'`
-(safe). Then sweep: `'O'` → `'X'`, `'S'` → `'O'`.
-
-**Template:** Pattern 1 from border cells.
+**Approach 1 — Reverse DFS from Border Cells (O(R×C) time, O(R×C) space).**
+Directly identifying enclosed `'O'`s is hard. The reverse approach is elegant: DFS from every
+border `'O'`, marking reachable `'O'`s as `'S'` (safe). After all border DFS calls complete, a
+single sweep converts remaining `'O'`s (enclosed) to `'X'` and `'S'` (safe) back to `'O'`.
+This three-phase approach (mark safe → sweep → restore) is the key insight and works identically
+in Rust and Java. The DFS stack depth is at most R×C in the worst case.
 
 ```rust
 #[allow(dead_code)]
@@ -457,24 +469,27 @@ mod tests_lc130 {
 }
 ```
 
-**Complexity:** Time O(R×C), Space O(R×C) recursion stack.
-
 **Java comparison:** Java developers often use a `Queue` for BFS here. The DFS approach is
 equivalent and often shorter. The three-phase approach (mark safe → sweep → restore) is the key
 insight regardless of language.
 
 ---
 
-### 5. Pacific Atlantic Water Flow — LC #417
+## LC417. Pacific Atlantic Water Flow
 
-**Problem:** Return all cells from which water can flow to both the Pacific and Atlantic oceans.
-Water flows to neighbors with equal or lesser height.
+**Problem.** Given an `m×n` grid of non-negative integers representing heights, return all cells
+`[r, c]` from which rainwater can flow to both the Pacific Ocean (top and left borders) and the
+Atlantic Ocean (bottom and right borders). Water can flow from a cell to an adjacent 4-directional
+neighbor if the neighbor's height is less than or equal to the current cell's height. Cells on the
+border touch their respective ocean directly. Grid dimensions are at most 200×200.
 
-**DFS insight:** Reverse the flow direction. DFS from Pacific border cells (top row + left col)
-marking cells reachable by flowing upward (neighbors >= current height). Repeat for Atlantic. The
-answer is the intersection.
-
-**Template:** Pattern 3 (graph DFS) on a grid, using two separate `visited` matrices.
+**Approach 1 — Reverse DFS from Each Ocean's Border (O(R×C) time, O(R×C) space).**
+Forward reachability (from each cell, can water reach both oceans?) is expensive. The reverse
+approach is efficient: DFS from Pacific border cells (top row + left column), marking cells reachable
+by flowing *upward* — i.e., visiting a neighbor only if `neighbor_height >= current_height`. This
+identifies all cells that can drain to the Pacific. Repeat for Atlantic border cells. The answer
+is the intersection of the two boolean matrices. Using `i32::MIN` as the initial `prev_height`
+sentinel ensures every border cell passes the height check unconditionally.
 
 ```rust
 #[allow(dead_code)]
@@ -554,24 +569,27 @@ mod tests_lc417 {
 }
 ```
 
-**Complexity:** Time O(R×C), Space O(R×C) for the two visited matrices.
-
 **Rust note:** `i32::MIN` is used as the initial `prev_height` sentinel so any starting cell
 passes the height check. Using two separate `visited` matrices instead of a bitfield is idiomatic
 and clear; `Vec<Vec<bool>>` has negligible overhead for LC constraints.
 
 ---
 
-### 6. Longest Increasing Path in a Matrix — LC #329
+## LC329. Longest Increasing Path in a Matrix
 
-**Problem:** Find the length of the longest strictly increasing path in a matrix, moving in 4
-directions.
+**Problem.** Given an `m×n` integer matrix, find the length of the longest strictly increasing
+path. From each cell you may move in 4 directions to an adjacent cell, but only if the destination
+is strictly greater than the source. You cannot move outside the grid or wrap around edges.
+Return the length of the longest such path. Grid dimensions are at most 200×200 and values are
+in [0, 2^31 - 1].
 
-**DFS insight:** DFS from each cell, but memoize the result. Because the path must be strictly
-increasing, there are no cycles, so we do not need a `visited` array — memoization alone prevents
-redundant work.
-
-**Template:** Pattern 6 (DFS with memoization).
+**Approach 1 — Memoized DFS (O(R×C) time, O(R×C) space).**
+DFS from each cell computes the longest increasing path starting there. Because the path must be
+*strictly* increasing, the graph of valid moves is a DAG — there are no cycles, so memoization
+alone prevents redundant work (no separate `visited` array needed). A sentinel value of `0` in
+the memo array signals "not yet computed" because valid path lengths are always ≥ 1. Each cell
+is computed exactly once and its result is cached, giving O(R×C) total time. The `prev` parameter
+enforces the strictly-increasing constraint at each DFS step.
 
 ```rust
 #[allow(dead_code)]
@@ -629,8 +647,6 @@ mod tests_lc329 {
 }
 ```
 
-**Complexity:** Time O(R×C) — each cell is computed once via memoization. Space O(R×C) for memo.
-
 **Rust note:** `memo[r][c] == 0` serves as "not computed" sentinel because valid answers are >= 1.
 The strictly-increasing constraint breaks cycles, making this safe for recursive memoized DFS.
 
@@ -640,15 +656,25 @@ The strictly-increasing constraint breaks cycles, making this safe for recursive
 
 ---
 
-### 7. Number of Connected Components — LC #323
+## LC323. Number of Connected Components in an Undirected Graph
 
-**Problem:** Given `n` nodes (0 to n-1) and a list of undirected edges, return the number of
-connected components.
+**Problem.** Given `n` nodes labeled 0 to n-1 and a list of undirected edges, count the number of
+connected components. Two nodes are in the same component if and only if there is a path between
+them using the given edges. Isolated nodes (no edges) each form their own component. Constraints:
+1 ≤ n ≤ 2000; 0 ≤ edges.length ≤ 5000; each edge is unique.
 
-**DFS insight:** Build an adjacency list, then count DFS calls from unvisited nodes. Compare with
-Union-Find for the same problem.
+**Approach 1 — Graph DFS with Visited Array (O(V+E) time, O(V+E) space).**
+Build an undirected adjacency list, then iterate over all nodes. For each unvisited node, launch a
+DFS that marks every reachable node as visited; each such DFS corresponds to one connected component.
+The `Vec<bool>` visited array is O(V) space; the adjacency list is O(V+E). The code also includes
+a Union-Find alternative below, which is superior for incremental edge additions.
 
-**Template:** Pattern 3 (graph DFS with `visited` array).
+**Approach 2 — Union-Find with Path Compression and Union by Rank (O(E·α(V)) time, O(V) space).**
+Initialize each node as its own component. For each edge, union the two endpoints; if they were
+already in the same component (same root), skip. The component count starts at `n` and decrements
+on each successful union. Path compression + union by rank keeps `find` nearly O(1) amortized.
+Union-Find outperforms DFS when edges arrive incrementally (online) and you need repeated
+connectivity queries.
 
 ```rust
 #[allow(dead_code)]
@@ -735,9 +761,6 @@ mod tests_lc323 {
 }
 ```
 
-**Complexity (DFS):** Time O(V+E), Space O(V+E).  
-**Complexity (Union-Find):** Time O(E·α(V)), Space O(V).
-
 **DFS vs Union-Find:** DFS is O(V+E) and works well for one-shot queries. Union-Find shines when
 edges are added incrementally (online) and you need repeated connectivity queries. In Rust, both
 are idiomatic; Union-Find's path-compression with `self.parent[x] = self.find(...)` requires
@@ -745,16 +768,20 @@ careful ownership since `find` takes `&mut self`.
 
 ---
 
-### 8. Graph Valid Tree — LC #261
+## LC261. Graph Valid Tree
 
-**Problem:** Given `n` nodes and `edges`, determine whether they form a valid tree (connected,
-no cycles).
+**Problem.** Given `n` nodes labeled 0 to n-1 and a list of undirected edges, determine whether
+they form a valid tree. A valid tree is connected (all nodes reachable from any node) and acyclic
+(exactly n-1 edges, no back edges). Return `true` if the given graph is a valid tree, `false`
+otherwise. Constraints: 1 ≤ n ≤ 2000; 0 ≤ edges.length ≤ 5000.
 
-**DFS insight:** A valid tree has exactly `n-1` edges AND is connected. Check both conditions,
-or use DFS cycle detection: a tree has no back edges.
-
-**Template:** Pattern 5 (cycle detection) adapted for undirected graphs (track parent to avoid
-false back-edges).
+**Approach 1 — DFS Cycle Detection with Parent Tracking (O(V+E) time, O(V+E) space).**
+A valid tree requires exactly `n-1` edges (necessary condition checked first, enabling fast rejection)
+AND full connectivity from any starting node. DFS from node 0 detects back edges: for each neighbor,
+skip the edge we came from (the parent), but return `true` (cycle found) if we reach an already-visited
+neighbor. After DFS completes, check that all nodes were visited (i.e., the graph is connected).
+Using `usize::MAX` as the "no parent" sentinel is safe since valid node indices are bounded well below
+`usize::MAX` by problem constraints.
 
 ```rust
 #[allow(dead_code)]
@@ -816,24 +843,31 @@ mod tests_lc261 {
 }
 ```
 
-**Complexity:** Time O(V+E), Space O(V+E).
-
 **Rust note:** `usize::MAX` is used as the "no parent" sentinel. This is safe because a node
 index is never `usize::MAX` in practice. An `Option<usize>` would be more semantically correct
 but adds verbosity. Both are valid Rust.
 
 ---
 
-### 9. Course Schedule — LC #207
+## LC207. Course Schedule
 
-**Problem:** Given `numCourses` and `prerequisites` (directed edges `[a, b]` meaning "take b
-before a"), determine if all courses can be finished (no cycle in the DAG).
+**Problem.** You have `numCourses` courses labeled 0 to numCourses-1. Each `prerequisites[i] = [a, b]`
+means you must take course `b` before course `a`. Determine if it is possible to finish all courses,
+i.e., whether the prerequisite graph contains a directed cycle. Return `true` if all courses can be
+finished, `false` if there is a cycle. Constraints: 1 ≤ numCourses ≤ 2000; 0 ≤ prerequisites.length ≤ 5000.
 
-**DFS insight:** Cycle detection in a directed graph. A cycle means some course is a prerequisite
-of itself. Use the three-color (0/1/2) DFS state: `0` = unvisited, `1` = in current stack, `2`
-= done.
+**Approach 1 — DFS Three-Color Cycle Detection (O(V+E) time, O(V+E) space).**
+Use a `state: Vec<u8>` where `0` = unvisited, `1` = currently in the DFS stack (gray), `2` = fully
+processed (black). When a DFS call reaches a gray node, a back edge is found and a cycle exists.
+When all neighbors are fully processed, mark the node black. This is the directed-graph generalization
+of the undirected cycle detection: the parent-skip trick does not work for directed graphs, so we
+must track the in-stack state explicitly. If any starting node finds a cycle, return `false`.
 
-**Template:** Pattern 5.
+**Approach 2 — Kahn's Algorithm / Topological BFS (O(V+E) time, O(V+E) space).**
+Count in-degrees for all nodes. Enqueue all nodes with in-degree 0 (no prerequisites). Process each
+node by decrementing neighbors' in-degrees; enqueue those that reach 0. If all nodes are processed,
+no cycle exists. If the processed count is less than `numCourses`, a cycle was present. This BFS
+approach trades the DFS state array for an in-degree array and a queue, but has identical complexity.
 
 ```rust
 #[allow(dead_code)]
@@ -889,8 +923,6 @@ mod tests_lc207 {
 }
 ```
 
-**Complexity:** Time O(V+E), Space O(V+E).
-
 **Java comparison:** Java developers often use `Map<Integer, List<Integer>>` for the adjacency
 list. In Rust, `Vec<Vec<usize>>` is more efficient: nodes are integers 0..n, so indexing directly
 avoids hashing. The `state: Vec<u8>` avoids a `HashMap<Integer, State>` and packs three states
@@ -898,15 +930,20 @@ into a single byte.
 
 ---
 
-### 10. Course Schedule II — LC #210
+## LC210. Course Schedule II
 
-**Problem:** Same setup as LC #207. Return a topological ordering of courses, or an empty array
-if a cycle exists.
+**Problem.** Same setup as LC #207: `numCourses` courses with prerequisite pairs `[a, b]` meaning
+`b` must precede `a`. Return a valid topological ordering (any valid order of taking all courses),
+or an empty array if a cycle makes completion impossible. If multiple valid orderings exist, any
+one is acceptable. Constraints: 1 ≤ numCourses ≤ 2000; 0 ≤ prerequisites.length ≤ 5000.
 
-**DFS insight:** Topological sort via DFS post-order. After fully processing a node (state 2),
-push it to the result. Reverse at the end.
-
-**Template:** Pattern 5 extended with post-order collection.
+**Approach 1 — DFS Post-Order Topological Sort (O(V+E) time, O(V+E) space).**
+Extend the cycle-detection DFS from LC #207: when a node is fully processed (state set to 2), push
+it to a result vector. After all DFS calls, reverse the vector to obtain topological order (nodes
+are pushed in the reverse of the order they need to appear). If any cycle is detected, return an
+empty vector immediately. The `order: &mut Vec<i32>` accumulator is threaded down the call stack —
+no instance variables, no global state. This is the standard Rust pattern for collecting results
+during recursive DFS.
 
 ```rust
 #[allow(dead_code)]
@@ -975,23 +1012,25 @@ mod tests_lc210 {
 }
 ```
 
-**Complexity:** Time O(V+E), Space O(V+E).
-
 **Rust note:** `order: &mut Vec<i32>` is threaded down the call stack as a mutable accumulator.
 This avoids returning values from recursive functions and is the standard Rust pattern for
 collecting results during DFS.
 
 ---
 
-### 11. All Paths From Source to Target — LC #797
+## LC797. All Paths From Source to Target
 
-**Problem:** Given a DAG (0-indexed, node `n-1` is the target), return all paths from node 0 to
-node `n-1`.
+**Problem.** Given a directed acyclic graph (DAG) of `n` nodes where `graph[i]` lists all nodes
+reachable directly from node `i`, find all paths from node `0` (source) to node `n-1` (target).
+Return the paths in any order. Because the graph is a DAG, no cycle can occur so a `visited` set
+is not needed. Constraints: 2 ≤ n ≤ 15; 0 ≤ graph[i].length ≤ n.
 
-**DFS insight:** DFS with backtracking. Push current node to `path`, recurse; pop when done.
-No `visited` array needed — it's a DAG.
-
-**Template:** Pattern 4 (DFS collecting paths).
+**Approach 1 — Backtracking DFS (O(2^V · V) time, O(V) stack + O(2^V · V) result space).**
+DFS with an explicit `path: Vec<i32>` accumulator. Push the current node before recursing, clone
+the path into result when the target is reached, then pop after returning. Because it's a DAG, no
+back edges can occur — no visited array is needed. In the worst case (complete DAG) there are 2^(n-1)
+paths each of length n, giving the exponential complexity bound. The `path.clone()` at leaves is
+unavoidable since `path` is mutated throughout.
 
 ```rust
 #[allow(dead_code)]
@@ -1053,25 +1092,33 @@ mod tests_lc797 {
 }
 ```
 
-**Complexity:** Time O(2^V × V) worst case (exponential paths in a DAG). Space O(V) for path
-stack + O(2^V × V) for result.
-
 **Rust note:** `path.clone()` at the leaf is necessary because `path` is mutated. This is the
 canonical backtracking idiom in Rust: `push` before recursing, `pop` after. The borrow checker
 ensures `path` and `result` are not aliased.
 
 ---
 
-### 12. Reconstruct Itinerary — LC #332
+## LC332. Reconstruct Itinerary
 
-**Problem:** Given airline tickets as `[from, to]` pairs, reconstruct the itinerary starting
-from `"JFK"` in lexicographic order. Use all tickets exactly once.
+**Problem.** Given a list of airline tickets represented as `[from, to]` pairs, reconstruct the
+itinerary in lexicographic order starting from `"JFK"`. All tickets must be used exactly once.
+It is guaranteed that a valid itinerary exists. If multiple valid itineraries exist, return the
+one with the smallest lexicographic order (e.g., `"JFK" → "ATL"` before `"JFK" → "SFO"`).
+Constraints: 1 ≤ tickets.length ≤ 300; each airport code is a 3-letter uppercase string.
 
-**DFS insight:** Hierholzer's algorithm for an Eulerian path. DFS using a min-heap (or sorted
-adjacency list) to always pick the lexicographically smallest destination. Push to result after
-all neighbors are exhausted (post-order).
+**Approach 1 — Iterative Hierholzer's Algorithm (O(E log E) time, O(V+E) space).**
+Hierholzer's algorithm finds an Eulerian path in a graph where every edge is visited exactly once.
+Sort each airport's destination list lexicographically; use a `BTreeMap<String, VecDeque<String>>`
+to keep destinations sorted. The iterative post-order DFS: while the current airport has outgoing
+tickets, push the next destination and continue; when stuck, pop the airport into the result.
+Reverse the result at the end. Iterative DFS is preferred here because the graph can have up to
+300 edges and iterative avoids potential recursion depth issues.
 
-**Template:** Iterative DFS post-order (avoids deep recursion for large inputs).
+**Approach 2 — Recursive Post-Order DFS (O(E log E) time, O(V+E) space).**
+The recursive version of Hierholzer's is shorter: `dfs(src)` pops the smallest unvisited
+destination from `src`'s sorted list, recurses, then appends `src` to the front of the result
+after all neighbors are exhausted. Both approaches produce identical results; the iterative version
+is shown in the code below for safety with large inputs.
 
 ```rust
 #[allow(dead_code)]
@@ -1137,8 +1184,6 @@ mod tests_lc332 {
 }
 ```
 
-**Complexity:** Time O(E log E) for sorting + O(E) for Hierholzer's. Space O(V+E).
-
 **Java comparison:** Java uses `PriorityQueue<String>` or sorted `TreeMap<String, PriorityQueue<String>>`.
 Rust's `BTreeMap` keeps keys sorted automatically. `VecDeque` with pre-sorted values acts like a
 priority queue for sequential consumption. The iterative post-order pattern is the same in both
@@ -1180,15 +1225,20 @@ macro_rules! node {
 
 ---
 
-### 13. Path Sum II — LC #113
+## LC113. Path Sum II
 
-**Problem:** Find all root-to-leaf paths where the sum of node values equals `targetSum`.
-Return each path as a `Vec<i32>`.
+**Problem.** Given the root of a binary tree and an integer `targetSum`, return all root-to-leaf
+paths where the sum of node values along the path equals `targetSum`. A leaf is a node with no
+children. Return each valid path as a list of node values from root to leaf. Multiple paths may
+satisfy the condition; return all of them. Node values may be negative.
 
-**DFS insight:** DFS with backtracking. Carry `path: &mut Vec<i32>` and `remaining: i32`.
-When reaching a leaf with `remaining == 0`, clone path into result.
-
-**Template:** Pattern 4 (accumulator) on a tree.
+**Approach 1 — Backtracking DFS with Mutable Path (O(N²) time, O(N) stack space).**
+DFS carries a mutable `path: &mut Vec<i32>` accumulator and a `remaining: i32` counter. At each
+node, push the value and subtract it from remaining. When reaching a leaf with `remaining == 0`,
+clone the path into the result. The critical `path.pop()` at the end of the function body (not in
+a branch) ensures backtracking occurs regardless of the leaf condition — this is safer than Java's
+`path.remove(path.size()-1)` because the pop always executes. The O(N²) time comes from cloning
+paths at each of up to N leaves, where each path can be O(N) long.
 
 ```rust
 #[allow(dead_code)]
@@ -1267,22 +1317,25 @@ mod tests_lc113 {
 }
 ```
 
-**Complexity:** Time O(N²) worst case (balanced tree: N leaf paths × O(N) clone each). Space O(N).
-
 **Rust note:** `path.pop()` at the end of the function body — not in an `else` branch — ensures
 backtracking happens regardless of whether we hit a leaf. This is safer than Java's
 `path.remove(path.size()-1)` because the pop always executes (no `if/else` leakage).
 
 ---
 
-### 14. Binary Tree Paths — LC #257
+## LC257. Binary Tree Paths
 
-**Problem:** Return all root-to-leaf paths as strings in the format `"1->2->5"`.
+**Problem.** Given the root of a binary tree, return all root-to-leaf paths as strings. Each path
+should be represented in the format `"val1->val2->...->leaf_val"` where `->` separates consecutive
+nodes. A leaf is a node with no children. Return the paths in any order.
+Node values may be any integer. The tree can have at most 100 nodes.
 
-**DFS insight:** DFS with path accumulation. Build the string as we go down; no backtracking
-needed if we pass the current path string by value (immutable clone on each call).
-
-**Template:** Functional recursive DFS, passing path string by value.
+**Approach 1 — DFS Passing Path String by Value (O(N²) time, O(N²) space).**
+Instead of backtracking a mutable path, pass the current path string by value at each call. Each
+recursive call receives its own copy — the left subtree gets `path.clone()` and the right subtree
+gets the original `path`. This avoids an explicit `pop` but does more string cloning (one clone
+per non-leaf node). At leaf nodes, push the completed path string into the result. The O(N²)
+time comes from string concatenation at each of N nodes where strings can grow to O(N) length.
 
 ```rust
 #[allow(dead_code)]
@@ -1352,8 +1405,6 @@ mod tests_lc257 {
 }
 ```
 
-**Complexity:** Time O(N²) — string cloning at each node. Space O(N) depth + O(N²) result strings.
-
 **Rust note:** Passing `path: String` by value (not `&mut`) means each recursive call gets its
 own copy. The right-child call can reuse the value directly (`Self::dfs(right, path, result)`)
 because the left-child call already consumed `path.clone()`. This avoids an explicit `pop` but
@@ -1361,15 +1412,21 @@ does more cloning.
 
 ---
 
-### 15. Sum Root to Leaf Numbers — LC #129
+## LC129. Sum Root to Leaf Numbers
 
-**Problem:** Each root-to-leaf path in the tree forms a decimal number (root digit is most
-significant). Return the total sum of all these numbers.
+**Problem.** Given a binary tree where each node contains a single digit (0-9), each root-to-leaf
+path defines a decimal number by concatenating digits from root to leaf (the root digit is most
+significant). Return the total sum of all numbers formed by root-to-leaf paths. For example, the
+path 1→2→3 represents the number 123. The tree has at most 1000 nodes and the sum is guaranteed
+to fit in a 32-bit signed integer.
 
-**DFS insight:** DFS accumulating a running number. Multiply by 10 and add the current value.
-No backtracking needed — just return the sum from both subtrees.
-
-**Template:** Recursive DFS returning `i32`.
+**Approach 1 — DFS with Running Accumulated Number (O(N) time, O(H) space).**
+DFS carries a `current: i32` value that is updated at each node as `current * 10 + node.val`.
+At a leaf node, return `current` as the number formed by this path. At internal nodes, return the
+sum of the left and right subtree results. No path accumulator or backtracking is needed — the
+current value is passed by value (as a parameter shadow) so each frame has its own copy.
+`let current = current * 10 + n.val` uses Rust's variable shadowing to avoid a `mut` declaration,
+treating the value as logically immutable within each stack frame.
 
 ```rust
 #[allow(dead_code)]
@@ -1434,22 +1491,31 @@ mod tests_lc129 {
 }
 ```
 
-**Complexity:** Time O(N), Space O(H) where H is the tree height.
-
 **Rust note:** `let current = current * 10 + n.val` shadows the parameter `current`. This is
 idiomatic Rust — shadowing avoids a `mut` declaration for a value that is logically immutable
 within each stack frame.
 
 ---
 
-### 16. Flatten Binary Tree to Linked List — LC #114
+## LC114. Flatten Binary Tree to Linked List
 
-**Problem:** Flatten the binary tree to a linked list in-place, using the right child pointers
-in preorder order. Left child pointers should be `None`.
+**Problem.** Given the root of a binary tree, flatten it in-place into a linked list using the
+right child pointers. The linked list should follow preorder traversal order of the original tree
+(root, left subtree, right subtree). After flattening, all left pointers must be `None`.
+The operation modifies the tree in-place; you must not create a new tree. Node count is at most 2000.
 
-**DFS insight:** Reverse post-order DFS (right, left, root). Thread a `prev: Option<Box<TreeNode>>`
-pointer — but Rust's ownership makes in-place pointer manipulation on trees very constrained.
-The cleanest Rust approach collects the preorder traversal and rebuilds the right-linked list.
+**Approach 1 — Preorder Collect-and-Rebuild (O(N) time, O(N) space).**
+In safe Rust, true in-place pointer threading on `Box<TreeNode>` is impractical: you cannot hold
+a mutable reference to a node while simultaneously accessing its children due to ownership rules.
+The clean Rust approach collects preorder node values into a `Vec<i32>`, then rebuilds the tree
+as a right-linked chain by reassigning `*root`. This is O(N) time and O(N) space. The O(1)-space
+approach (reverse post-order with a `prev` pointer as in Java) requires `unsafe` raw pointers in
+Rust and is not recommended for interview use or production code.
+
+**Approach 2 (Java-style description) — Reverse Post-Order with `prev` Pointer (O(N) time, O(H) space).**
+In Java, the classic approach traverses in reverse preorder (right → left → root), threads each
+node's right pointer to the previously seen node, and sets the left to null. In safe Rust this is
+impractical (see Approach 1 discussion). In Java: `flatten(root.right); flatten(root.left); root.right = prev; root.left = null; prev = root;`.
 
 ```rust
 #[allow(dead_code)]
@@ -1542,8 +1608,6 @@ mod tests_lc114 {
 }
 ```
 
-**Complexity:** Time O(N), Space O(N) for the values buffer.
-
 **Java comparison:** In Java, the classic O(1) space approach uses a `prev` pointer and traverses
 right → left → root. Rust makes true in-place pointer threading on `Box<TreeNode>` very difficult
 due to ownership rules — you cannot hold a mutable reference to a node while also following its
@@ -1556,15 +1620,20 @@ Rust, use `unsafe` pointer manipulation (not recommended for LeetCode).
 
 ---
 
-### 17. Word Search — LC #79
+## LC79. Word Search
 
-**Problem:** Given a 2-D board of characters and a word, determine whether the word exists in
-the grid. Letters must be adjacent (4 directions) and each cell can only be used once per path.
+**Problem.** Given an `m×n` board of characters and a string `word`, return `true` if `word` can
+be constructed by following a path of adjacent cells in the grid. Letters in the path must be
+4-directionally adjacent, and the same cell cannot be used more than once in a single path.
+No diagonal moves are allowed. Constraints: 1 ≤ m, n ≤ 6; 1 ≤ word.length ≤ 15.
 
-**DFS insight:** DFS with backtracking. Mark cells visited by temporarily replacing them with a
-sentinel character (`'#'`). Restore after the recursive call.
-
-**Template:** Pattern 1 with backtracking (restore cell after recursion).
+**Approach 1 — DFS Backtracking with In-Place Marking (O(R×C × 4^L) time, O(L) space).**
+Try starting the word from every cell. At each DFS step, check if the current cell matches the
+next character of the word; if yes, mark the cell `'#'` (visited), recurse for the next character,
+then restore the cell (backtrack). The marking prevents revisiting the same cell in a single path.
+The backtracking restore (`board[r][c] = original`) is the key DFS idiom: `.any(...)` short-circuits
+on the first successful branch. Time is O(R×C × 4^L) because from each of R×C starting cells,
+the DFS branches at most 4 ways per step for L steps.
 
 ```rust
 #[allow(dead_code)]
@@ -1628,23 +1697,32 @@ mod tests_lc79 {
 }
 ```
 
-**Complexity:** Time O(R×C × 4^L) where L = word length. Space O(L) recursion depth.
-
 **Rust note:** `.iter().any(...)` is used instead of a manual early-return loop. This is idiomatic
 and works well here because `any` short-circuits. The `original`/restore pattern is the Rust
 equivalent of Java's `board[r][c] = '#'; ... board[r][c] = temp;` backtracking idiom.
 
 ---
 
-### 18. Word Search II — LC #212
+## LC212. Word Search II
 
-**Problem:** Given a board and a list of words, return all words that exist in the grid
-(same movement rules as LC #79).
+**Problem.** Given an `m×n` board of characters and a list of words, find all words that can be
+constructed using the same movement rules as LC #79 (4-directional adjacency, no cell reuse per path).
+Return all words from the list that can be found on the board. A word may appear multiple times on
+the board but should only be reported once. Constraints: m, n ≤ 12; total characters in all words ≤ 6×10^4.
 
-**DFS insight:** Brute-force DFS for each word is O(W × R×C × 4^L) — too slow. Build a Trie
-of all words; during DFS, traverse the trie in parallel to prune paths that don't match any word.
+**Approach 1 — Trie-Guided DFS Backtracking (O(R×C × 4^L + W×L) time, O(W×L) space).**
+Brute-force DFS for each word independently is O(W × R×C × 4^L) — too slow for large word lists.
+Instead, build a Trie of all words and DFS the board with the Trie in parallel: at each cell, check
+if the current character exists in the current Trie node; if not, prune immediately. When a Trie node
+has a non-None `word` field, a complete word has been found — `Option::take()` removes it to prevent
+duplicates. After the board DFS, all found words are in the result. The Trie acts as a shared prefix
+tree across all words, sharing common prefixes and enabling powerful early pruning.
 
-**Template:** Trie-guided DFS with backtracking.
+**Approach 2 — Optimized Trie with Backlink Pruning (same complexity, faster in practice).**
+After finding a word, prune empty Trie branches by checking if the node has no children and
+removing it from its parent. This reduces the Trie size over time and speeds up subsequent DFS
+calls. In this implementation `Option::take()` on `word` is sufficient for small word counts;
+full backlink pruning is left as an optimization for production code.
 
 ```rust
 #[allow(dead_code)]
@@ -1729,9 +1807,6 @@ mod tests_lc212 {
 }
 ```
 
-**Complexity:** Time O(R×C × 4^L + W×L) where W = number of words, L = max word length.
-Space O(W×L) for trie + O(L) recursion depth.
-
 **Rust note:** `child.word.take()` removes the word from the trie once found, preventing
 duplicates without a separate `HashSet`. This is a Rust-idiomatic optimization: `Option::take`
 returns the value and leaves `None` in its place in a single operation. The `TrieNode` uses
@@ -1740,14 +1815,17 @@ avoiding an extra Box indirection — but this disables the `Default` derive tri
 
 ---
 
-### 19. Remove Invalid Parentheses — LC #301
+## LC301. Remove Invalid Parentheses
 
-**Problem:** Remove the minimum number of invalid parentheses to make the input string valid.
-Return all possible results.
+**Problem.** Given a string containing parentheses and letters, remove the minimum number of
+invalid parentheses to make the string valid. Return all possible valid results. Duplicates must
+not appear in the output. The string length is at most 25 and contains only letters and `(` / `)`.
 
-**DFS insight:** BFS level-by-level (each level removes one more character) finds minimum
-removals naturally. DFS (backtracking) works too but needs pruning. The BFS approach is shown
-here as it guarantees minimum removals.
+**Approach 1 — BFS Level-by-Level Removal (O(2^n · n) time, O(2^n) space).**
+BFS processes all strings at "removal distance 0" (the input itself), then distance 1 (all strings
+with one character removed), and so on. The first BFS level where any valid string is found gives
+exactly the minimum-removal results. A `HashSet` tracks already-seen strings to avoid redundant
+work. This guarantees minimum removals because BFS explores shorter paths first.
 
 ```rust
 #[allow(dead_code)]
@@ -1837,14 +1915,18 @@ many removal sequences produce the same string.
 
 ---
 
-### 20. Expression Add Operators — LC #282
+## LC282. Expression Add Operators
 
-**Problem:** Given a string of digits and a target, return all expressions that can be formed
-by inserting `+`, `-`, or `*` between digits to evaluate to the target.
+**Problem.** Given a string `num` of digits (no leading zeros, except "0" itself) and an integer
+`target`, return all expressions built by inserting `+`, `-`, or `*` operators between digits that
+evaluate to `target`. Numbers in the expression cannot have leading zeros. The string length is at
+most 10 and all digit values fit in a 32-bit integer.
 
-**DFS insight:** DFS with expression building. Track the current value, the last operand (for
-handling multiplication undo), and the running string. This is pure backtracking over the
-operator choices.
+**Approach 1 — DFS Backtracking with Multiplication Tracking (O(4^n · n) time, O(n) space).**
+Recursively try inserting each operator at each position, building an expression string. Multiplication
+requires special handling: to correctly apply operator precedence when `*` follows `+`, track the
+`last_operand` separately. When a `*` is encountered, undo the addition of `last_operand` and replace
+with `prev_value * curr_operand`. This single-pass DFS avoids re-parsing the expression.
 
 ```rust
 #[allow(dead_code)]

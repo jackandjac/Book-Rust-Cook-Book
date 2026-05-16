@@ -221,11 +221,13 @@ static int bidirectionalBfs(String start, String end,
 
 ---
 
-### LC #102 — Binary Tree Level Order Traversal
+## LC102. Binary Tree Level Order Traversal
 
-**Problem:** Given the root of a binary tree, return the node values grouped by level (list of lists).
+**Problem.** Given the root of a binary tree, return the node values grouped by level (list of lists).
 
-**Key insight:** Level-order BFS — snapshot `queue.size()` before consuming each level.
+**Approach 1 — Level-Order BFS with Queue Size Snapshot (O(n) time, O(n) space).**
+Level-order BFS: snapshot `queue.size()` before consuming each level to know how many nodes
+belong to the current level. Drain exactly that many nodes and enqueue their children.
 
 ```java
 import java.util.ArrayDeque;
@@ -299,12 +301,13 @@ class Solution102 {
 
 ---
 
-### LC #103 — Binary Tree Zigzag Level Order Traversal
+## LC103. Binary Tree Zigzag Level Order Traversal
 
-**Problem:** Same as #102 but alternate each level between left-to-right and right-to-left.
+**Problem.** Same as #102 but alternate each level between left-to-right and right-to-left.
 
-**Key insight:** Pre-allocate the level array and write into it using a direction-dependent index,
-avoiding a post-level `Collections.reverse()` call.
+**Approach 1 — Level-Order BFS with Direction-Indexed Insertion (O(n) time, O(n) space).**
+Pre-allocate the level `ArrayList` with `addFirst`/`addLast` based on the current direction flag,
+avoiding a post-level `Collections.reverse()` call. Toggle the direction after each level.
 
 ```java
 import java.util.ArrayDeque;
@@ -368,11 +371,13 @@ write that Rust does with `vec![0; level_size]` + direct index. One allocation, 
 
 ---
 
-### LC #111 — Minimum Depth of Binary Tree
+## LC111. Minimum Depth of Binary Tree
 
-**Problem:** Find the number of nodes on the shortest root-to-leaf path.
+**Problem.** Find the number of nodes on the shortest root-to-leaf path.
 
-**Key insight:** BFS guarantees the first leaf encountered is at minimum depth — return immediately.
+**Approach 1 — Level-Order BFS with Early Leaf Termination (O(n) time, O(n) space).**
+BFS guarantees the first leaf node encountered is at minimum depth — return the BFS depth
+immediately when a leaf (both children null) is dequeued.
 DFS must traverse the whole tree; BFS stops at the shallowest leaf.
 
 ```java
@@ -432,13 +437,15 @@ class Solution111 {
 
 ---
 
-### LC #127 — Word Ladder
+## LC127. Word Ladder
 
-**Problem:** Transform `beginWord` into `endWord` one letter at a time. Every intermediate word must
+**Problem.** Transform `beginWord` into `endWord` one letter at a time. Every intermediate word must
 exist in `wordList`. Return the length of the shortest sequence, or 0 if none exists.
 
-**Key insight:** Pattern-bucket optimization — pre-group words by wildcard pattern (e.g., `"hit"` →
-`["*it", "h*t", "hi*"]`) so neighbor lookup is O(L) per word instead of O(N*L).
+**Approach 1 — BFS with Pattern-Bucket Neighbor Lookup (O(N·L²) time, O(N·L) space).**
+Pattern-bucket optimization: pre-group words by wildcard patterns (e.g., `"hit"` → `["*it",
+"h*t", "hi*"]`) so neighbor lookup is O(L) per word instead of O(N·L). BFS on the word graph
+gives shortest transformation sequence length.
 
 ```java
 import java.util.ArrayDeque;
@@ -522,12 +529,14 @@ Java's negative modulo behavior.
 
 ---
 
-### LC #126 — Word Ladder II
+## LC126. Word Ladder II
 
-**Problem:** Like #127 but return ALL shortest transformation sequences.
+**Problem.** Like #127 but return ALL shortest transformation sequences.
 
-**Key insight:** BFS builds a shortest-path DAG (recording parents per BFS level), then DFS/backtrack
-enumerates all paths through that DAG from `endWord` back to `beginWord`.
+**Approach 1 — BFS for Shortest-Path DAG + DFS Path Enumeration (O(N·L²) time, O(N·P) space).**
+BFS builds a shortest-path DAG by recording parent word lists per BFS level. Then DFS/backtracking
+enumerates all paths through the DAG from `endWord` back to `beginWord`. Reverse each path at
+collection time. N is word count, L is word length, P is number of shortest paths.
 
 ```java
 import java.util.ArrayDeque;
@@ -637,13 +646,15 @@ multiple parent additions within one level while preventing re-processing in fut
 
 ---
 
-### LC #1306 — Jump Game III
+## LC1306. Jump Game III
 
-**Problem:** From index `i` you can jump to `i + arr[i]` or `i - arr[i]`. Return `true` if any index
+**Problem.** From index `i` you can jump to `i + arr[i]` or `i - arr[i]`. Return `true` if any index
 with value `0` is reachable from `start`.
 
-**Key insight:** Standard BFS reachability on an index graph. Mark visited before enqueuing to
-prevent re-processing.
+**Approach 1 — Standard BFS on Index State Space (O(n) time, O(n) space).**
+Standard BFS: from index `i`, enqueue `i + arr[i]` and `i - arr[i]` if in bounds and unvisited.
+Mark visited before enqueuing to prevent re-processing. Return true as soon as an index with
+value 0 is reached.
 
 ```java
 import java.util.ArrayDeque;
@@ -685,12 +696,14 @@ class Solution1306 {
 
 ---
 
-### LC #752 — Open the Lock
+## LC752. Open the Lock
 
-**Problem:** A 4-wheel lock starts at `"0000"`. Reach `target` in minimum turns while avoiding
+**Problem.** A 4-wheel lock starts at `"0000"`. Reach `target` in minimum turns while avoiding
 `deadends`. Each turn rotates one wheel by one digit (wraps: 0↔9). Return minimum turns or -1.
 
-**Key insight:** BFS on a 10^4 = 10,000-state string space. Level-order BFS gives the minimum turns.
+**Approach 1 — BFS on 4-Digit State Space (O(10^4 · L) time, O(10^4) space).**
+BFS on the 10,000-state lock string space. Each state has 8 transitions (4 wheels × 2 directions).
+Skip deadend states. Return BFS depth when the target state is first dequeued.
 
 ```java
 import java.util.ArrayDeque;
@@ -767,12 +780,15 @@ result is in `[0, 9]`. Rust's `.rem_euclid(10)` does the same thing more ergonom
 
 ---
 
-### LC #994 — Rotting Oranges
+## LC994. Rotting Oranges
 
-**Problem:** Grid of 0 (empty), 1 (fresh), 2 (rotten). Each minute, rotten oranges infect adjacent
+**Problem.** Grid of 0 (empty), 1 (fresh), 2 (rotten). Each minute, rotten oranges infect adjacent
 fresh ones. Return total minutes until no fresh remain, or -1 if impossible.
 
-**Key insight:** Multi-source BFS — seed the queue with ALL initially rotten oranges simultaneously.
+**Approach 1 — Multi-Source BFS from All Rotten Oranges (O(R×C) time, O(R×C) space).**
+Multi-source BFS: seed the `ArrayDeque` with ALL initially rotten oranges simultaneously.
+Spread contamination level by level; count fresh oranges that turn rotten. Return -1 if any
+fresh orange remains unreachable.
 
 ```java
 import java.util.ArrayDeque;
@@ -837,11 +853,14 @@ class Solution994 {
 
 ---
 
-### LC #542 — 01 Matrix
+## LC542. 01 Matrix
 
-**Problem:** Binary matrix — return a matrix where each cell contains the distance to the nearest 0.
+**Problem.** Binary matrix — return a matrix where each cell contains the distance to the nearest 0.
 
-**Key insight:** Multi-source BFS starting from ALL zeros simultaneously. Distance propagates outward.
+**Approach 1 — Multi-Source BFS from All Zeros (O(R×C) time, O(R×C) space).**
+Multi-source BFS from all zero cells simultaneously. Initialize `dist[r][c] = 0` for zeros and
+`Integer.MAX_VALUE` for ones, enqueue all zeros. BFS propagates `dist[neighbor] = dist[curr] + 1`
+outward, guaranteeing shortest distance from each cell to its nearest zero.
 Cells with value 1 start unvisited (distance = MAX); seeded zeros start at distance 0.
 
 ```java
@@ -901,13 +920,15 @@ class Solution542 {
 
 ---
 
-### Walls and Gates (LC #286 equivalent)
+## LC286. Walls and Gates
 
-**Problem:** Grid contains walls (-1), gates (0), and empty rooms (`Integer.MAX_VALUE`). Fill each
+**Problem.** Grid contains walls (-1), gates (0), and empty rooms (`Integer.MAX_VALUE`). Fill each
 empty room with its distance to the nearest gate in-place.
 
-**Key insight:** Multi-source BFS from ALL gates. Identical structure to LC #542 — mark by mutating
-the grid itself.
+**Approach 1 — Multi-Source BFS from All Gates (O(R×C) time, O(R×C) space).**
+Multi-source BFS from all gate cells (value 0) simultaneously. The grid itself is mutated to
+store distances as BFS propagates — this is structurally identical to LC542 but with gates as
+sources instead of zeros.
 
 ```java
 import java.util.ArrayDeque;
@@ -962,12 +983,14 @@ class SolutionWG {
 
 ---
 
-### LC #1091 — Shortest Path in Binary Matrix
+## LC1091. Shortest Path in Binary Matrix
 
-**Problem:** In an n×n binary matrix, find the shortest clear path (all 0s) from top-left `(0,0)` to
+**Problem.** In an n×n binary matrix, find the shortest clear path (all 0s) from top-left `(0,0)` to
 bottom-right `(n-1,n-1)` using 8-directional movement. Return length or -1.
 
-**Key insight:** Standard BFS with 8-directional neighbors. Mark visited by writing `1` into the grid.
+**Approach 1 — Standard BFS with 8-Directional Neighbors (O(n²) time, O(n²) space).**
+Standard BFS from `(0,0)` using all 8 neighbors. Return -1 immediately if start or end is blocked.
+Mark visited cells by writing `1` into the grid. Return BFS depth when `(n-1,n-1)` is reached.
 
 ```java
 import java.util.ArrayDeque;
@@ -1021,13 +1044,15 @@ class Solution1091 {
 
 ---
 
-### LC #909 — Snakes and Ladders
+## LC909. Snakes and Ladders
 
-**Problem:** On an n×n Boustrophedon board, find the minimum dice rolls to reach the last square.
+**Problem.** On an n×n Boustrophedon board, find the minimum dice rolls to reach the last square.
 Cells may redirect via snakes or ladders.
 
-**Key insight:** BFS on 1-indexed square numbers. The coordinate mapping is the tricky part —
-alternating row directions from the bottom.
+**Approach 1 — BFS on Board Square State Space (O(n²) time, O(n²) space).**
+BFS on 1-indexed square numbers `1..n²`. The tricky part is the Boustrophedon coordinate mapping
+from square number to `(row, col)` — rows alternate direction from the bottom of the board.
+Apply snake/ladder destination before enqueuing each square.
 
 ```java
 import java.util.ArrayDeque;
@@ -1092,14 +1117,16 @@ class Solution909 {
 
 ---
 
-### LC #1210 — Minimum Moves to Reach Target (Snake in Grid)
+## LC1210. Minimum Moves to Reach Target (Snake in Grid)
 
-**Note:** The Rust chapter substituted this problem for LC #2617 (whose name/number mapping is
-ambiguous). LC #1210 is a well-defined BFS state-space problem — a snake of length 2 in an n×n
-grid, reaching bottom-right in minimum moves.
+**Problem.** A length-2 snake in an n×n grid starts horizontal at `(0,0)-(0,1)`. Move it right,
+down, or rotate in valid empty cells. Find the minimum moves to reach `(n-1,n-2)-(n-1,n-1)`, or
+-1 if impossible.
 
-**Key insight:** BFS over the state space `(tailRow, tailCol, isHorizontal)`. Each state encodes
-the snake's position and orientation uniquely.
+**Approach 1 — BFS on Compressed State (O(n²) time, O(n²) space).**
+BFS over the state space `(tailRow, tailCol, isHorizontal)`: each state encodes the snake's
+position and orientation uniquely. A `HashSet` of visited states prevents revisiting. Return
+BFS depth when the target state is dequeued.
 
 ```java
 import java.util.ArrayDeque;
@@ -1191,11 +1218,14 @@ boxing a three-element tuple — `HashSet<Integer>` is significantly faster than
 
 ---
 
-### LC #133 — Clone Graph
+## LC133. Clone Graph
 
-**Problem:** Deep-clone a connected undirected graph. Each node has a `val` and a list of neighbors.
+**Problem.** Deep-clone a connected undirected graph. Each node has a `val` and a list of neighbors.
 
-**Key insight:** BFS + `HashMap<Node, Node>` using reference identity (default Java `Object.hashCode`)
+**Approach 1 — BFS with HashMap Clone Registry (O(V+E) time, O(V+E) space).**
+BFS using a `HashMap<Node, Node>` (reference identity, default `Object.hashCode`) to map original
+nodes to their clones. When a neighbor is first encountered, create its clone and enqueue the
+original. The map ensures each node is cloned exactly once.
 to map original nodes to their clones.
 
 ```java
@@ -1264,11 +1294,13 @@ class Solution133 {
 
 ---
 
-### LC #1971 — Find if Path Exists in Graph
+## LC1971. Find if Path Exists in Graph
 
-**Problem:** Given n nodes and undirected edges, determine if a path exists from `source` to `destination`.
+**Problem.** Given n nodes and undirected edges, determine if a path exists from `source` to `destination`.
 
-**Key insight:** Standard BFS reachability. Mark visited before enqueue to avoid revisiting.
+**Approach 1 — Standard BFS Reachability (O(V+E) time, O(V+E) space).**
+Standard BFS from source: mark visited before enqueue to avoid revisiting. Return true as soon
+as the destination node is dequeued.
 
 ```java
 import java.util.ArrayDeque;
@@ -1316,12 +1348,14 @@ class Solution1971 {
 
 ---
 
-### LC #1926 — Nearest Exit from Entrance in Maze
+## LC1926. Nearest Exit from Entrance in Maze
 
-**Problem:** Grid of `'+'` (walls) and `'.'` (empty). Find shortest path from `entrance` to any
+**Problem.** Grid of `'+'` (walls) and `'.'` (empty). Find shortest path from `entrance` to any
 non-entrance border cell. Return steps or -1.
 
-**Key insight:** BFS from the entrance; return distance the first time a border empty cell is reached.
+**Approach 1 — Standard BFS from Entrance (O(R×C) time, O(R×C) space).**
+Standard BFS from the entrance cell; return the BFS distance the first time a non-entrance border
+empty cell is reached. Skip walls and the entrance itself.
 Mark the entrance as a wall before starting to exclude it from exit candidates.
 
 ```java
@@ -1379,13 +1413,15 @@ class Solution1926 {
 
 ---
 
-### LC #1345 — Jump Game IV
+## LC1345. Jump Game IV
 
-**Problem:** From index `i`, jump to `i+1`, `i-1`, or any index `j` where `arr[i] == arr[j]`.
+**Problem.** From index `i`, jump to `i+1`, `i-1`, or any index `j` where `arr[i] == arr[j]`.
 Return minimum jumps to reach the last index.
 
-**Key insight:** BFS with pre-grouped value buckets. Crucially, remove a value bucket from the map
-after processing it — without this, all same-value nodes re-enqueue each other causing O(n^2).
+**Approach 1 — BFS with Value-Bucket Neighbor Groups (O(n) time, O(n) space).**
+BFS with a `HashMap<Integer, List<Integer>>` grouping indices by value. Neighbors of `i` are
+`i-1`, `i+1`, and all indices sharing `arr[i]`'s value. Critically, remove the value bucket from
+the map after processing it — without this, same-value nodes re-enqueue each other causing O(n²).
 
 ```java
 import java.util.ArrayDeque;
@@ -1462,13 +1498,15 @@ class Solution1345 {
 
 ---
 
-### LC #815 — Bus Routes
+## LC815. Bus Routes
 
-**Problem:** Bus routes are arrays of stops. Start at `source`, reach `target`. You may board any
+**Problem.** Bus routes are arrays of stops. Start at `source`, reach `target`. You may board any
 bus at any of its stops. Return the minimum number of buses to take, or -1.
 
-**Key insight:** BFS on routes, not stops. Each BFS level represents one additional bus boarded.
-Track both visited stops and visited routes to avoid re-processing.
+**Approach 1 — BFS on Route Graph (O(total stops²) time, O(total stops) space).**
+BFS where nodes are bus routes, not stops. Build a stop-to-routes map; from each route's stops,
+find and enqueue all unvisited connecting routes. Each BFS level represents one additional bus
+boarded. Track both visited stops and visited routes to avoid re-processing.
 
 ```java
 import java.util.ArrayDeque;
@@ -1534,13 +1572,15 @@ class Solution815 {
 
 ---
 
-### LC #934 — Shortest Bridge
+## LC934. Shortest Bridge
 
-**Problem:** Binary grid with exactly two islands. Find the minimum number of 0s to flip to connect
+**Problem.** Binary grid with exactly two islands. Find the minimum number of 0s to flip to connect
 them (shortest bridge).
 
-**Key insight:** DFS to identify and mark the first island; multi-source BFS expanding from all its
-cells outward until the second island is touched.
+**Approach 1 — DFS to Mark Island 1, then Multi-Source BFS to Bridge (O(n²) time, O(n²) space).**
+DFS identifies and marks all cells of the first island with a sentinel value (2). Then multi-source
+BFS expands outward from all first-island cells until a cell of the second island (value 1) is
+reached. The BFS depth at that point is the minimum bridge length.
 
 ```java
 import java.util.ArrayDeque;
@@ -1620,13 +1660,15 @@ large inputs; for production code, convert to iterative DFS using an explicit `A
 
 ---
 
-### LC #675 — Cut Off Trees for Golf Event
+## LC675. Cut Off Trees for Golf Event
 
-**Problem:** Grid where each cell is 0 (obstacle), 1 (flat), or >1 (tree height). Cut all trees in
+**Problem.** Grid where each cell is 0 (obstacle), 1 (flat), or >1 (tree height). Cut all trees in
 increasing height order, starting at `(0,0)`. Return total steps, or -1 if any tree is unreachable.
 
-**Key insight:** Sort trees by height, then BFS repeatedly for the shortest path from the current
-position to each next tree in order.
+**Approach 1 — Sort by Height + Repeated BFS (O(T · R×C) time, O(R×C) space).**
+Sort all trees by height, then BFS from the current position to each tree in sorted order,
+accumulating the total step count. Return -1 if any BFS cannot reach the next tree. T is the
+number of trees; each BFS is O(R×C).
 
 ```java
 import java.util.ArrayDeque;

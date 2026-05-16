@@ -226,11 +226,14 @@ static int prim(int n, List<int[]>[] graph) {
 
 ---
 
-## 1. Network Delay Time (LC #743)
+## LC743. Network Delay Time
 
-**Problem:** Directed weighted graph with `n` nodes. Signal sent from `k`. Return the minimum time for all nodes to receive it, or `-1` if any node is unreachable.
+**Problem.** Directed weighted graph with `n` nodes. Signal sent from `k`. Return the minimum time for all nodes to receive it, or `-1` if any node is unreachable.
 
-**Key insight:** Dijkstra from `k`; answer is the maximum of all shortest distances. If any distance remains `Integer.MAX_VALUE`, return `-1`.
+**Approach 1 — Dijkstra's Shortest Path (O((V+E) log V) time, O(V+E) space).**
+Dijkstra from `k`; the answer is the maximum of all shortest distances to other nodes. Java's
+`PriorityQueue<int[]>` with `Comparator.comparingInt(a -> a[0])` gives a min-heap by distance.
+Return -1 if any distance remains `Integer.MAX_VALUE` (unreachable).
 
 ```java
 import java.util.*;
@@ -293,11 +296,13 @@ class Solution743 {
 
 ---
 
-## 2. Path with Minimum Effort (LC #1631)
+## LC1631. Path with Minimum Effort
 
-**Problem:** `m×n` grid. Find path top-left to bottom-right minimising the *maximum absolute difference* between consecutive cells.
+**Problem.** `m×n` grid. Find path top-left to bottom-right minimising the *maximum absolute difference* between consecutive cells.
 
-**Key insight:** Dijkstra where edge weight between adjacent cells is `|h[r1][c1] - h[r2][c2]|` and the path cost is the running maximum, not sum.
+**Approach 1 — Dijkstra as Bottleneck Shortest Path (O(R·C·log(R·C)) time, O(R·C) space).**
+Dijkstra where the edge weight between adjacent cells is `|h[r1][c1] - h[r2][c2]|` and the
+path cost is the running maximum (not sum). The `PriorityQueue` is keyed by this max effort.
 
 ```java
 import java.util.*;
@@ -356,11 +361,14 @@ class Solution1631 {
 
 ---
 
-## 3. Cheapest Flights Within K Stops (LC #787)
+## LC787. Cheapest Flights Within K Stops
 
-**Problem:** Cheapest flight from `src` to `dst` using at most `k` stops. Return `-1` if no path exists.
+**Problem.** Cheapest flight from `src` to `dst` using at most `k` stops. Return `-1` if no path exists.
 
-**Key insight:** Bellman-Ford with exactly `k+1` rounds. The snapshot clone prevents within-round chaining, enforcing the hop constraint correctly.
+**Approach 1 — Bellman-Ford with Snapshot Clone (O(k·E) time, O(V) space).**
+Bellman-Ford with exactly `k+1` relaxation rounds. Clone the distance array before each round
+(`int[] prev = dist.clone()`) to prevent within-round chaining — otherwise a multi-hop path
+could be relaxed in a single round, violating the `k`-stop constraint.
 
 ```java
 import java.util.*;
@@ -408,11 +416,13 @@ class Solution787 {
 
 ---
 
-## 4. Swim in Rising Water (LC #778)
+## LC778. Swim in Rising Water
 
-**Problem:** Grid where `grid[r][c]` is elevation. Find minimum time `t` so a path from `(0,0)` to `(n-1,n-1)` exists where every cell on the path has elevation <= `t`.
+**Problem.** Grid where `grid[r][c]` is elevation. Find minimum time `t` so a path from `(0,0)` to `(n-1,n-1)` exists where every cell on the path has elevation <= `t`.
 
-**Key insight:** Dijkstra where the cost to reach a cell is `max(cost_so_far, grid[nr][nc])`.
+**Approach 1 — Dijkstra as Minimax Path (O(n² log n) time, O(n²) space).**
+Dijkstra where the cost to reach a cell is `max(cost_so_far, grid[nr][nc])`. The shortest-path
+distance from `(0,0)` to `(n-1,n-1)` equals the minimum possible peak water level on any path.
 
 ```java
 import java.util.*;
@@ -471,11 +481,13 @@ class Solution778 {
 
 ---
 
-## 5. Find the City With the Smallest Number of Neighbors (LC #1334)
+## LC1334. Find the City With the Smallest Number of Neighbors
 
-**Problem:** Find the city with fewest reachable neighbors within `distanceThreshold`. Tie-break: largest index.
+**Problem.** Find the city with fewest reachable neighbors within `distanceThreshold`. Tie-break: largest index.
 
-**Key insight:** Floyd-Warshall for all-pairs shortest paths, then count reachable cities per node.
+**Approach 1 — Floyd-Warshall All-Pairs Shortest Paths (O(V³) time, O(V²) space).**
+Floyd-Warshall for all-pairs shortest paths, then count cities reachable within `distanceThreshold`
+for each city. Return the city with the fewest reachable neighbors (ties broken by highest index).
 
 ```java
 import java.util.*;
@@ -532,11 +544,14 @@ class Solution1334 {
 
 ---
 
-## 6. Path with Maximum Probability (LC #1514)
+## LC1514. Path with Maximum Probability
 
-**Problem:** Find the maximum probability path from `start` to `end`. Edge weights are probabilities in `[0,1]`.
+**Problem.** Find the maximum probability path from `start` to `end`. Edge weights are probabilities in `[0,1]`.
 
-**Key insight:** Dijkstra with a *max-heap* — maximize probability instead of minimizing distance. Java's `PriorityQueue` supports this naturally via a reversed comparator.
+**Approach 1 — Dijkstra with Max-Heap (O((V+E) log V) time, O(V+E) space).**
+Maximize probability using Dijkstra with a max-heap. Java's default `PriorityQueue` is a min-heap,
+so use `(a, b) -> Double.compare(b[0], a[0])` to invert ordering. Multiply probabilities along
+edges instead of summing costs.
 
 ```java
 import java.util.*;
@@ -599,11 +614,13 @@ class Solution1514 {
 
 ---
 
-## 7. Course Schedule (LC #207)
+## LC207. Course Schedule
 
-**Problem:** Given `numCourses` and prerequisite pairs, determine if all courses can be finished (no cycle).
+**Problem.** Given `numCourses` and prerequisite pairs, determine if all courses can be finished (no cycle).
 
-**Key insight:** Kahn's BFS — if the processed count equals `n`, the graph is a DAG.
+**Approach 1 — Kahn's BFS Cycle Detection (O(V+E) time, O(V+E) space).**
+Kahn's BFS topological sort: if the total processed node count equals `n`, the graph is a DAG
+(no cycle). Otherwise a cycle exists and not all courses can be finished.
 
 ```java
 import java.util.*;
@@ -653,11 +670,13 @@ class Solution207 {
 
 ---
 
-## 8. Course Schedule II (LC #210)
+## LC210. Course Schedule II
 
-**Problem:** Return a valid course ordering, or an empty array if a cycle exists.
+**Problem.** Return a valid course ordering, or an empty array if a cycle exists.
 
-**Key insight:** Kahn's BFS — collect nodes in dequeue order; check total equals `n`.
+**Approach 1 — Kahn's BFS Topological Order (O(V+E) time, O(V+E) space).**
+Kahn's BFS collecting nodes in dequeue order gives one valid topological ordering. Return an
+empty array if fewer than `n` nodes are dequeued (cycle detected).
 
 ```java
 import java.util.*;
@@ -711,11 +730,14 @@ class Solution210 {
 
 ---
 
-## 9. Alien Dictionary (LC #269)
+## LC269. Alien Dictionary
 
-**Problem:** Given a sorted list of alien-language words, determine the character ordering. Return `""` if invalid.
+**Problem.** Given a sorted list of alien-language words, determine the character ordering. Return `""` if invalid.
 
-**Key insight:** Extract ordering constraints by comparing adjacent word pairs at the first differing character. Then run Kahn's BFS on the 26-character alphabet graph.
+**Approach 1 — Graph Construction + Kahn's BFS Topological Sort (O(C + U) time, O(U) space).**
+Extract ordering constraints by comparing adjacent word pairs at the first differing character.
+Run Kahn's BFS on the 26-character graph. Return `""` if a cycle is detected or if a longer
+word precedes a prefix word (invalid input).
 
 ```java
 import java.util.*;
@@ -791,11 +813,14 @@ class Solution269 {
 
 ---
 
-## 10. Sequence Reconstruction (LC #444)
+## LC444. Sequence Reconstruction
 
-**Problem:** Determine if `nums` is the *only* sequence reconstructible from `sequences`. Requires a unique topological ordering.
+**Problem.** Determine if `nums` is the *only* sequence reconstructible from `sequences`. Requires a unique topological ordering.
 
-**Key insight:** Kahn's BFS must never have more than one node in the queue at any step — multiple candidates mean multiple valid orderings.
+**Approach 1 — Kahn's BFS with Uniqueness Check (O(V+E) time, O(V+E) space).**
+Kahn's BFS uniqueness check: at each step, if more than one node has in-degree 0, there are
+multiple valid orderings, so `nums` is not the unique reconstruction. Also verify all `1..=n`
+appear in at least one sequence.
 
 ```java
 import java.util.*;
@@ -867,11 +892,13 @@ class Solution444 {
 
 ---
 
-## 11. Minimum Height Trees (LC #310)
+## LC310. Minimum Height Trees
 
-**Problem:** Find all tree roots that minimize the tree height. Returns at most 2 roots.
+**Problem.** Find all tree roots that minimize the tree height. Returns at most 2 roots.
 
-**Key insight:** Iteratively prune leaf nodes (degree 1) inward until 1 or 2 nodes remain — analogous to topological sort from the outside in.
+**Approach 1 — Iterative Leaf Pruning (O(V+E) time, O(V+E) space).**
+Iteratively remove all current leaf nodes (degree 1) until at most 2 nodes remain — these are
+the MHT roots. This is equivalent to BFS topological sort inward from the periphery.
 
 ```java
 import java.util.*;
@@ -938,11 +965,13 @@ class Solution310 {
 
 ---
 
-## 12. Parallel Courses (LC #1136)
+## LC1136. Parallel Courses
 
-**Problem:** `n` courses with prerequisite pairs. Return minimum semesters needed, or `-1` if a cycle exists.
+**Problem.** `n` courses with prerequisite pairs. Return minimum semesters needed, or `-1` if a cycle exists.
 
-**Key insight:** Kahn's BFS tracking depth (semester) for each node. Answer is the maximum depth after processing all nodes.
+**Approach 1 — Kahn's BFS with Depth Tracking (O(V+E) time, O(V+E) space).**
+Kahn's BFS tracking the maximum depth (semester) for each node: `depth[v] = max(depth[u]+1)` for
+all prerequisite edges `u→v`. Answer is the maximum depth. Return -1 if a cycle exists.
 
 ```java
 import java.util.*;
@@ -1001,11 +1030,13 @@ class Solution1136 {
 
 ---
 
-## 13. Number of Provinces (LC #547)
+## LC547. Number of Provinces
 
-**Problem:** Given an `n×n` adjacency matrix, count connected components.
+**Problem.** Given an `n×n` adjacency matrix, count connected components.
 
-**Key insight:** Union-Find — union every connected pair and read off `uf.count`.
+**Approach 1 — Union-Find with Path Compression and Union by Rank (O(E·α(V)) time, O(V) space).**
+Union-Find: union every connected pair. The number of provinces equals the remaining component
+count (`uf.count`) after all unions.
 
 ```java
 import java.util.*;
@@ -1064,11 +1095,14 @@ class Solution547 {
 
 ---
 
-## 14. Accounts Merge (LC #721)
+## LC721. Accounts Merge
 
-**Problem:** Merge accounts sharing at least one email. Return sorted merged accounts.
+**Problem.** Merge accounts sharing at least one email. Return sorted merged accounts.
 
-**Key insight:** Union-Find mapping each email to an integer ID. Union emails in the same account, then group by root ID.
+**Approach 1 — Union-Find with Email String Keys (O(E·α(E) + E log E) time, O(E) space).**
+Union-Find: map each email string to an integer index via a `HashMap`. Union all emails within
+the same account. Group all emails by their root index, sort alphabetically, and prepend the
+account name. The sort dominates the complexity.
 
 ```java
 import java.util.*;
@@ -1163,11 +1197,13 @@ class Solution721 {
 
 ---
 
-## 15. Redundant Connection (LC #684)
+## LC684. Redundant Connection
 
-**Problem:** Undirected tree with one extra edge. Find the redundant edge that creates a cycle.
+**Problem.** Undirected tree with one extra edge. Find the redundant edge that creates a cycle.
 
-**Key insight:** Process edges in order; the first edge connecting two already-connected nodes is the answer.
+**Approach 1 — Union-Find Edge Processing (O(E·α(V)) time, O(V) space).**
+Process edges in order: for each edge `(u, v)`, attempt to union them. The first edge where both
+endpoints are already in the same component is the redundant connection.
 
 ```java
 import java.util.*;
@@ -1221,11 +1257,13 @@ class Solution684 {
 
 ---
 
-## 16. Making a Large Island (LC #827)
+## LC827. Making a Large Island
 
-**Problem:** In an `n×n` binary grid, flip at most one `0` to `1` and find the largest island.
+**Problem.** In an `n×n` binary grid, flip at most one `0` to `1` and find the largest island.
 
-**Key insight:** Label all existing islands with Union-Find. For each `0` cell, sum the sizes of distinct neighboring islands plus 1.
+**Approach 1 — Union-Find Island Labeling + 0-Cell Expansion (O(R·C·α(R·C)) time, O(R·C) space).**
+Union-Find labels and sizes each existing island. For each `0` cell, collect the set of distinct
+neighboring island roots, sum their sizes, add 1 (the flipped cell), and track the maximum.
 
 ```java
 import java.util.*;
@@ -1311,11 +1349,13 @@ class Solution827 {
 
 ---
 
-## 17. Satisfiability of Equality Equations (LC #990)
+## LC990. Satisfiability of Equality Equations
 
-**Problem:** Given equations `"a==b"` and `"a!=b"`, determine if all can be satisfied simultaneously.
+**Problem.** Given equations `"a==b"` and `"a!=b"`, determine if all can be satisfied simultaneously.
 
-**Key insight:** Two-pass Union-Find: union all `==` pairs first, then verify no `!=` pair shares a root.
+**Approach 1 — Union-Find Two-Pass (O(E·α(V)) time, O(V) space).**
+Two-pass: first union all `==` equation variable pairs. Then verify all `!=` equations —
+if either variable pair shares the same root, the constraint is contradicted; return false.
 
 ```java
 import java.util.*;
@@ -1370,11 +1410,14 @@ class Solution990 {
 
 ---
 
-## 18. Min Cost to Connect All Points (LC #1584)
+## LC1584. Min Cost to Connect All Points
 
-**Problem:** Given `n` points, connect all with minimum total Manhattan distance.
+**Problem.** Given `n` points, connect all with minimum total Manhattan distance.
 
-**Key insight:** Prim's MST — maintain a min-cost edge to each unvisited point and greedily extend the MST.
+**Approach 1 — Prim's MST (O(V²) time, O(V) space).**
+Prim's MST: maintain a `minCost[]` array of cheapest known edge from any visited node to each
+unvisited node. Greedily pick the unvisited node with minimum `minCost` and update neighbors.
+Manhattan distance is the edge weight between any two points.
 
 ```java
 import java.util.*;
@@ -1437,11 +1480,14 @@ class Solution1584 {
 
 ---
 
-## 19. Optimize Water Distribution in a Village (LC #1168)
+## LC1168. Optimize Water Distribution in a Village
 
-**Problem:** Build wells or lay pipes to supply water to all `n` houses at minimum cost.
+**Problem.** Build wells or lay pipes to supply water to all `n` houses at minimum cost.
 
-**Key insight:** Add a virtual node 0 connected to each house `i` with edge weight `wells[i-1]`. Then run Kruskal's MST on all edges.
+**Approach 1 — Kruskal's MST with Virtual Node (O(E log E) time, O(V+E) space).**
+Add a virtual node 0 as the water source: connect each house `i` to node 0 with edge weight
+`wells[i-1]`. Run Kruskal's MST on all edges (pipe edges + well edges). The MST cost is the
+minimum total cost to supply water to all houses.
 
 ```java
 import java.util.*;
@@ -1505,11 +1551,14 @@ class Solution1168 {
 
 ---
 
-## 20. Critical Connections in a Network (LC #1192)
+## LC1192. Critical Connections in a Network
 
-**Problem:** Find all edges whose removal disconnects the graph (bridges).
+**Problem.** Find all edges whose removal disconnects the graph (bridges).
 
-**Key insight:** Tarjan's bridge-finding algorithm. An edge `(u,v)` is a bridge if `low[v] > disc[u]`, meaning no back-edge from v's subtree reaches u or above.
+**Approach 1 — Tarjan's Bridge-Finding DFS (O(V+E) time, O(V+E) space).**
+DFS tracking `disc[u]` (discovery time) and `low[u]` (minimum discovery time reachable from
+u's subtree via back edges). An edge `(u, v)` is a bridge if `low[v] > disc[u]` — no back
+edge in v's subtree reaches u or an ancestor of u.
 
 ```java
 import java.util.*;
@@ -1591,11 +1640,14 @@ class Solution1192 {
 
 ---
 
-## 21. Number of Ways to Arrive at Destination (LC #1976)
+## LC1976. Number of Ways to Arrive at Destination
 
-**Problem:** Count the number of shortest paths from node `0` to node `n-1`. Answer modulo `10^9 + 7`.
+**Problem.** Count the number of shortest paths from node `0` to node `n-1`. Answer modulo `10^9 + 7`.
 
-**Key insight:** Dijkstra extended with a `ways[]` counter. When a strictly shorter path is found, reset. When an equal-length path is found, add to the count.
+**Approach 1 — Dijkstra with Path Count (O((V+E) log V) time, O(V+E) space).**
+Dijkstra extended with a `ways[]` array. When a strictly shorter path to `v` is found, reset
+`ways[v] = ways[u]`. When an equal-length path is found, add `ways[v] += ways[u]`.
+Answer: `ways[n-1] mod 10^9+7`.
 
 ```java
 import java.util.*;
@@ -1664,11 +1716,13 @@ class Solution1976 {
 
 ---
 
-## 22. Shortest Path with Alternating Colors (LC #1129)
+## LC1129. Shortest Path with Alternating Colors
 
-**Problem:** Graph with red and blue edges. Find shortest path from node `0` to every other node using alternating colors. Return `-1` for unreachable nodes.
+**Problem.** Graph with red and blue edges. Find shortest path from node `0` to every other node using alternating colors. Return `-1` for unreachable nodes.
 
-**Key insight:** BFS on expanded state `(node, lastColor)`. Each transition must flip the color.
+**Approach 1 — BFS on (Node, Color) State Space (O(V+E) time, O(V+E) space).**
+BFS on the expanded state `(node, lastColor)`: from each state, only traverse edges of the
+opposite color. Return the BFS depth when any state with `node = target` is first dequeued.
 
 ```java
 import java.util.*;

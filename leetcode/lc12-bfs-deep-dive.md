@@ -208,11 +208,13 @@ fn bidirectional_bfs(
 
 ---
 
-### LC #102 — Binary Tree Level Order Traversal
+## LC102. Binary Tree Level Order Traversal
 
-**Problem:** Given the root of a binary tree, return the node values grouped by level (list of lists).
+**Problem.** Given the root of a binary tree, return the node values grouped by level (list of lists).
 
-**BFS pattern:** Level-order BFS — snapshot `queue.len()` to separate levels.
+**Approach 1 — Level-Order BFS with Queue Size Snapshot (O(n) time, O(n) space).**
+Snapshot `queue.len()` at the start of each iteration to know how many nodes belong to the
+current level. Drain exactly that many nodes, collect their values, and enqueue children.
 
 ```rust
 use std::cell::RefCell;
@@ -299,11 +301,13 @@ increments the reference count, not a deep copy.
 
 ---
 
-### LC #103 — Binary Tree Zigzag Level Order Traversal
+## LC103. Binary Tree Zigzag Level Order Traversal
 
-**Problem:** Same as LC #102 but alternate each level between left-to-right and right-to-left ordering.
+**Problem.** Same as LC #102 but alternate each level between left-to-right and right-to-left ordering.
 
-**BFS pattern:** Level-order BFS + direction flag.
+**Approach 1 — Level-Order BFS with Direction Flag (O(n) time, O(n) space).**
+Level-order BFS augmented with a direction flag (`left_to_right`) that toggles each level.
+When `left_to_right` is false, reverse the current level's values before appending.
 
 ```rust
 use std::cell::RefCell;
@@ -392,12 +396,15 @@ with `vec![0; level_size]` and index directly — no reverse needed, one allocat
 
 ---
 
-### LC #111 — Minimum Depth of Binary Tree
+## LC111. Minimum Depth of Binary Tree
 
-**Problem:** Find the minimum depth — the number of nodes along the shortest path from the root node
+**Problem.** Find the minimum depth — the number of nodes along the shortest path from the root node
 down to the nearest leaf.
 
-**BFS pattern:** Level-order BFS with early termination when the first leaf is dequeued.
+**Approach 1 — Level-Order BFS with Early Termination (O(n) time, O(n) space).**
+Level-order BFS: when the first leaf node is dequeued, the current BFS depth is the minimum
+depth. This is correct because BFS explores level by level, so the first leaf found is at the
+shallowest level.
 
 ```rust
 use std::cell::RefCell;
@@ -488,13 +495,15 @@ first leaf it encounters (which is guaranteed to be at minimum depth).
 
 ---
 
-### LC #127 — Word Ladder
+## LC127. Word Ladder
 
-**Problem:** Transform `begin_word` into `end_word` by changing one letter at a time. Every intermediate
+**Problem.** Transform `begin_word` into `end_word` by changing one letter at a time. Every intermediate
 word must exist in `word_list`. Return the length of the shortest transformation sequence, or 0.
 
-**BFS pattern:** BFS on a word graph. Pattern-bucket optimization: pre-group words by wildcard patterns
-(e.g., `"hit"` → `["*it", "h*t", "hi*"]`) to find neighbors in O(L) instead of O(N*L).
+**Approach 1 — BFS on Word Graph with Pattern Buckets (O(N·L²) time, O(N·L) space).**
+BFS on a word graph where nodes are words and edges connect words differing by one letter.
+Pattern-bucket optimization: pre-group words by wildcard patterns (e.g., `"hit"` → `["*it", "h*t",
+"hi*"]`) to find all neighbors in O(L) per word instead of O(N·L) per word.
 
 ```rust
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -584,12 +593,14 @@ each BFS step processes O(L) patterns each with O(N) potential neighbors.
 
 ---
 
-### LC #126 — Word Ladder II
+## LC126. Word Ladder II
 
-**Problem:** Like LC #127 but return ALL shortest transformation sequences.
+**Problem.** Like LC #127 but return ALL shortest transformation sequences.
 
-**BFS pattern:** BFS to build a shortest-path DAG (record parents), then DFS/backtracking to enumerate
-all paths through the DAG.
+**Approach 1 — BFS for Shortest-Path DAG + DFS Path Enumeration (O(N·L² + N·P) time, O(N·P) space).**
+BFS builds a shortest-path DAG by recording parent pointers for every word reachable at each BFS
+level. Then DFS/backtracking through the DAG enumerates all paths from target back to source.
+N is word count, L is word length, P is the number of shortest paths.
 
 ```rust
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -702,12 +713,14 @@ mod tests_lc126 {
 
 ---
 
-### LC #1306 — Jump Game III
+## LC1306. Jump Game III
 
-**Problem:** Given array `arr` and start index, you can jump from index `i` to `i + arr[i]` or
+**Problem.** Given array `arr` and start index, you can jump from index `i` to `i + arr[i]` or
 `i - arr[i]`. Return true if you can reach any index with value 0.
 
-**BFS pattern:** Standard BFS on an index graph.
+**Approach 1 — Standard BFS on Index State Space (O(n) time, O(n) space).**
+BFS on the array index state space: from index `i`, enqueue `i + arr[i]` and `i - arr[i]` if
+in bounds and not yet visited. Return true as soon as a cell with value 0 is reached.
 
 ```rust
 use std::collections::VecDeque;
@@ -750,12 +763,15 @@ mod tests_lc1306 {
 
 ---
 
-### LC #752 — Open the Lock
+## LC752. Open the Lock
 
-**Problem:** A lock has 4 wheels (0–9 each). Start at `"0000"`, reach `target`, avoiding `deadends`.
+**Problem.** A lock has 4 wheels (0–9 each). Start at `"0000"`, reach `target`, avoiding `deadends`.
 Each step turns one wheel by one digit. Return minimum turns, or -1.
 
-**BFS pattern:** BFS on a 4-digit state space (10^4 = 10,000 states).
+**Approach 1 — BFS on 4-Digit State Space (O(10^4) time, O(10^4) space).**
+BFS on the lock state space of 10,000 possible 4-digit combinations. Each state transitions to
+8 neighbors (turn each of 4 wheels up or down by 1). Skip deadend states. Return BFS depth
+when target is reached.
 
 ```rust
 use std::collections::{HashSet, VecDeque};
@@ -834,12 +850,15 @@ In Java you'd write `(digit - 1 + 10) % 10` to avoid a negative modulo result.
 
 ---
 
-### LC #994 — Rotting Oranges
+## LC994. Rotting Oranges
 
-**Problem:** Grid of 0 (empty), 1 (fresh), 2 (rotten). Every minute, each rotten orange infects
+**Problem.** Grid of 0 (empty), 1 (fresh), 2 (rotten). Every minute, each rotten orange infects
 adjacent fresh oranges. Return minutes until no fresh oranges remain, or -1 if impossible.
 
-**BFS pattern:** Multi-source BFS — start simultaneously from ALL rotten oranges.
+**Approach 1 — Multi-Source BFS from All Rotten Oranges (O(R×C) time, O(R×C) space).**
+Multi-source BFS: enqueue all initially rotten oranges, then spread contamination level by level.
+Count fresh oranges at the start; decrement as they rot. After BFS, if any fresh orange remains,
+return -1; otherwise return the number of BFS levels elapsed.
 
 ```rust
 use std::collections::VecDeque;
@@ -915,12 +934,15 @@ mod tests_lc994 {
 
 ---
 
-### LC #542 — 01 Matrix
+## LC542. 01 Matrix
 
-**Problem:** Given a binary matrix, return a matrix where each cell contains the distance to the
+**Problem.** Given a binary matrix, return a matrix where each cell contains the distance to the
 nearest 0.
 
-**BFS pattern:** Multi-source BFS — start from ALL zeros simultaneously, spreading distances outward.
+**Approach 1 — Multi-Source BFS from All Zeros (O(R×C) time, O(R×C) space).**
+Multi-source BFS from all zero cells simultaneously: initialize the distance of every zero to 0
+and enqueue them all. BFS then spreads outward, assigning distances `dist[neighbor] = dist[curr] + 1`
+for each unvisited neighbor. This guarantees shortest distance from each cell to the nearest zero.
 
 ```rust
 use std::collections::VecDeque;
@@ -985,12 +1007,15 @@ mod tests_lc542 {
 
 ---
 
-### Walls and Gates (LC #286 equivalent)
+## LC286. Walls and Gates
 
-**Problem:** A grid contains walls (-1), gates (0), and empty rooms (INF = 2^31-1).
+**Problem.** A grid contains walls (-1), gates (0), and empty rooms (INF = 2^31-1).
 Fill each empty room with the distance to its nearest gate.
 
-**BFS pattern:** Multi-source BFS from all gates. Identical structure to LC #542.
+**Approach 1 — Multi-Source BFS from All Gates (O(R×C) time, O(R×C) space).**
+Multi-source BFS from all gate cells (value 0) simultaneously. Empty rooms are updated with
+increasing BFS distance. This is structurally identical to LC542 (01 Matrix) but with gates
+as sources instead of zeros.
 
 ```rust
 use std::collections::VecDeque;
@@ -1053,12 +1078,15 @@ mod tests_wg {
 
 ---
 
-### LC #1091 — Shortest Path in Binary Matrix
+## LC1091. Shortest Path in Binary Matrix
 
-**Problem:** In an n×n binary matrix, find the shortest clear path (all 0s) from top-left to
+**Problem.** In an n×n binary matrix, find the shortest clear path (all 0s) from top-left to
 bottom-right using 8-directional movement. Return its length, or -1.
 
-**BFS pattern:** Standard grid BFS with 8-directional neighbors.
+**Approach 1 — Standard BFS with 8-Directional Neighbors (O(n²) time, O(n²) space).**
+Standard grid BFS from `(0,0)` using all 8 directions. BFS guarantees the shortest path in an
+unweighted grid. Return -1 if start or end is blocked, otherwise return the BFS depth when
+`(n-1, n-1)` is first reached.
 
 ```rust
 use std::collections::VecDeque;
@@ -1119,12 +1147,15 @@ mod tests_lc1091 {
 
 ---
 
-### LC #909 — Snakes and Ladders
+## LC909. Snakes and Ladders
 
-**Problem:** On an n×n Boustrophedon (alternating left-right rows) board, find the minimum number
+**Problem.** On an n×n Boustrophedon (alternating left-right rows) board, find the minimum number
 of dice rolls to reach the last square. Cells may contain snakes/ladders.
 
-**BFS pattern:** Standard BFS on board-square state space (1..n^2).
+**Approach 1 — BFS on Board Square State Space (O(n²) time, O(n²) space).**
+BFS on the `1..n²` square state space: from each square, try all 6 dice rolls, apply any
+snake/ladder at the landing square, and enqueue unseen squares. The first time square `n²` is
+reached, the BFS depth is the minimum dice rolls needed.
 
 ```rust
 use std::collections::VecDeque;
@@ -1194,16 +1225,17 @@ mod tests_lc909 {
 
 ---
 
-### LC #2617 — Minimum Number of Operations to Make Array Elements Equal to 1 (BFS State Space)
+## LC1210. Minimum Moves to Reach Target with State Compression
 
-**Note:** LC #2617 is actually a math/greedy problem. The "minimum moves to spread stones over grid"
-problem referenced in the prompt maps most closely to this pattern. The problem presented below is
-LC #1210 — Minimum Moves to Reach Target (Robot in a grid), solved with BFS on compressed state.
-This section demonstrates BFS on a larger state space than a simple grid.
+**Problem.** A snake of length 2 occupies cells in an n×n grid, starting horizontal at the top-left.
+Move the snake right, down, or rotate clockwise/counterclockwise. Each move must land on empty cells
+(value 0). Find the minimum number of moves to reach the bottom-right corner, or -1 if impossible.
 
-**Problem (LC #1210 — Minimum Moves to Reach Target with State Compression):**
-A snake of length 2 occupies cells in an n×n grid. Move right, down, or rotate. Find minimum moves
-to reach the bottom-right corner.
+**Approach 1 — BFS on Compressed State (O(n²) time, O(n²) space).**
+Represent the snake state as `(tail_row, tail_col, is_horizontal)` — a 3-tuple that uniquely
+identifies position and orientation. BFS on this state space guarantees minimum moves. Use a
+`HashSet` of visited states to avoid revisiting. The target state is `(n-1, n-2, true)` (horizontal
+at bottom-right).
 
 ```rust
 use std::collections::{HashSet, VecDeque};
@@ -1307,11 +1339,14 @@ mod tests_lc1210 {
 
 ---
 
-### LC #133 — Clone Graph
+## LC133. Clone Graph
 
-**Problem:** Clone a connected undirected graph. Each node has a value and list of neighbors.
+**Problem.** Clone a connected undirected graph. Each node has a value and list of neighbors.
 
-**BFS pattern:** BFS + HashMap mapping original nodes to their clones.
+**Approach 1 — BFS with HashMap Clone Registry (O(V+E) time, O(V+E) space).**
+BFS traversal while maintaining a `HashMap<i32, Rc<RefCell<Node>>>` mapping original node values
+to their clones. When a neighbor is first encountered, create its clone and enqueue the original.
+The map ensures each node is cloned exactly once.
 
 ```rust
 use std::cell::RefCell;
@@ -1394,12 +1429,14 @@ a raw pointer cast to `usize`.
 
 ---
 
-### LC #1971 — Find if Path Exists in Graph
+## LC1971. Find if Path Exists in Graph
 
-**Problem:** Given n nodes and a list of undirected edges, determine if a path exists from `source`
+**Problem.** Given n nodes and a list of undirected edges, determine if a path exists from `source`
 to `destination`.
 
-**BFS pattern:** Standard BFS reachability.
+**Approach 1 — Standard BFS Reachability (O(V+E) time, O(V+E) space).**
+Standard BFS from source: mark visited nodes and propagate level by level. Return true as soon
+as the destination is dequeued. This is the simplest reachability check on an unweighted graph.
 
 ```rust
 use std::collections::VecDeque;
@@ -1450,12 +1487,14 @@ mod tests_lc1971 {
 
 ---
 
-### LC #1926 — Nearest Exit from Entrance in Maze
+## LC1926. Nearest Exit from Entrance in Maze
 
-**Problem:** In a grid maze of `'+'` (walls) and `'.'` (empty), find the shortest path from
+**Problem.** In a grid maze of `'+'` (walls) and `'.'` (empty), find the shortest path from
 `entrance` to any border cell that is not the entrance itself.
 
-**BFS pattern:** Standard BFS; return distance when first border cell (non-entrance) is reached.
+**Approach 1 — Standard BFS from Entrance (O(R×C) time, O(R×C) space).**
+Standard BFS from the entrance cell. Skip walls and the entrance itself. The first border cell
+reached (a non-entrance cell on any grid boundary) gives the shortest exit distance.
 
 ```rust
 use std::collections::VecDeque;
@@ -1532,12 +1571,15 @@ mod tests_lc1926 {
 
 ---
 
-### LC #1345 — Jump Game IV
+## LC1345. Jump Game IV
 
-**Problem:** Given array, from index `i` you can jump to `i+1`, `i-1`, or any other index `j` where
+**Problem.** Given array, from index `i` you can jump to `i+1`, `i-1`, or any other index `j` where
 `arr[i] == arr[j]`. Return the minimum number of jumps to reach the last index.
 
-**BFS pattern:** BFS with pre-grouped value buckets to efficiently find same-value neighbors.
+**Approach 1 — BFS with Value Buckets for Same-Value Neighbors (O(n) time, O(n) space).**
+BFS with a `HashMap<i32, Vec<usize>>` pre-grouping indices by value. From index `i`, neighbors
+are `i-1`, `i+1`, and all indices sharing `arr[i]`'s value. Clear the bucket after processing
+to avoid O(n²) re-processing of large duplicate groups.
 
 ```rust
 use std::collections::{HashMap, VecDeque};
@@ -1621,12 +1663,15 @@ causing O(n^2) time.
 
 ---
 
-### LC #815 — Bus Routes
+## LC815. Bus Routes
 
-**Problem:** Bus routes are arrays of stops. You start at `source` and want to reach `target`.
+**Problem.** Bus routes are arrays of stops. You start at `source` and want to reach `target`.
 You can board any bus at any of its stops. Return the minimum number of buses to ride, or -1.
 
-**BFS pattern:** BFS on the route graph — nodes are bus routes, not stops.
+**Approach 1 — BFS on Route Graph (O(stops²) time, O(stops²) space).**
+BFS where nodes are bus routes, not stops. Build a stop-to-routes map, then BFS: from all routes
+containing the current stop, enqueue all routes reachable by boarding and riding one bus. Each
+BFS level equals one bus transfer. Return the number of buses taken when target stop is reached.
 
 ```rust
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -1703,12 +1748,15 @@ mod tests_lc815 {
 
 ---
 
-### LC #934 — Shortest Bridge
+## LC934. Shortest Bridge
 
-**Problem:** A binary grid has exactly two islands (connected groups of 1s). Find the minimum number
+**Problem.** A binary grid has exactly two islands (connected groups of 1s). Find the minimum number
 of 0s you must flip to connect them (shortest bridge).
 
-**BFS pattern:** DFS to mark the first island, then multi-source BFS expanding from all its border
+**Approach 1 — DFS to Mark Island 1, then Multi-Source BFS to Expand (O(n²) time, O(n²) space).**
+DFS to identify and mark all cells of the first island (flood-fill with a sentinel). Then launch
+multi-source BFS from all border cells of the first island, expanding until any cell of the second
+island is reached. BFS level at that point is the shortest bridge length. See below:
 cells outward until the second island is reached.
 
 ```rust
@@ -1800,14 +1848,16 @@ mod tests_lc934 {
 
 ---
 
-### LC #675 — Cut Off Trees for Golf Event
+## LC675. Cut Off Trees for Golf Event
 
-**Problem:** A grid where each cell has a tree height (0 = obstacle, 1 = flat ground, >1 = tree height).
+**Problem.** A grid where each cell has a tree height (0 = obstacle, 1 = flat ground, >1 = tree height).
 You must cut all trees in order of height. Start at (0,0). Return total steps or -1 if any target
 is unreachable.
 
-**BFS pattern:** Repeated BFS — for each tree in height order, BFS shortest path from current position
-to the next tree.
+**Approach 1 — Sort by Height + Repeated BFS (O(n²·R×C) time, O(R×C) space).**
+Sort trees by height, then repeatedly BFS from the current position to the next tree in sorted
+order. Sum all BFS distances. Return -1 if any BFS cannot reach the next tree. N is the number
+of trees; each BFS is O(R×C).
 
 ```rust
 use std::collections::VecDeque;

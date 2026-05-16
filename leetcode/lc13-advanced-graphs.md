@@ -284,11 +284,13 @@ fn prim(n: usize, graph: &Vec<Vec<(usize, i32)>>) -> i32 {
 
 ---
 
-## 1. Network Delay Time (LC #743)
+## LC743. Network Delay Time
 
-**Problem:** Given a directed weighted graph with `n` nodes and edges `(u, v, w)`, a signal is sent from `k`. Return the minimum time for all nodes to receive the signal, or `-1` if any node is unreachable.
+**Problem.** Given a directed weighted graph with `n` nodes and edges `(u, v, w)`, a signal is sent from `k`. Return the minimum time for all nodes to receive the signal, or `-1` if any node is unreachable.
 
-**Algorithm:** Dijkstra's — find the maximum of all shortest distances from `k`.
+**Approach 1 — Dijkstra's Shortest Path (O((V+E) log V) time, O(V+E) space).**
+Find the shortest distance from `k` to all nodes using Dijkstra with a min-heap. The answer is the
+maximum shortest distance across all nodes (or -1 if any node has distance `u32::MAX`).
 
 ```rust
 use std::collections::BinaryHeap;
@@ -354,11 +356,13 @@ mod tests_743 {
 
 ---
 
-## 2. Path with Minimum Effort (LC #1631)
+## LC1631. Path with Minimum Effort
 
-**Problem:** In an `m×n` grid, find a path from top-left to bottom-right minimising the *maximum absolute difference* between any two consecutive cells.
+**Problem.** In an `m×n` grid, find a path from top-left to bottom-right minimising the *maximum absolute difference* between any two consecutive cells.
 
-**Algorithm:** Dijkstra treating each cell as a node and edge weight as `|heights[r1][c1] - heights[r2][c2]|`.
+**Approach 1 — Dijkstra on Grid Graph (O(R·C·log(R·C)) time, O(R·C) space).**
+Treat each cell as a node; edge weight is the absolute height difference. Dijkstra finds the path
+from `(0,0)` to `(R-1,C-1)` that minimizes the maximum single-edge weight (bottleneck shortest path).
 
 ```rust
 use std::collections::BinaryHeap;
@@ -423,11 +427,14 @@ mod tests_1631 {
 
 ---
 
-## 3. Cheapest Flights Within K Stops (LC #787)
+## LC787. Cheapest Flights Within K Stops
 
-**Problem:** Find the cheapest flight from `src` to `dst` using at most `k` stops (k+1 edges). Return `-1` if no such path exists.
+**Problem.** Find the cheapest flight from `src` to `dst` using at most `k` stops (k+1 edges). Return `-1` if no such path exists.
 
-**Algorithm:** Bellman-Ford with exactly `k+1` relaxation rounds. Dijkstra is tricky here because the constraint is on hops, not total cost.
+**Approach 1 — Bellman-Ford with Hop Constraint (O(k·E) time, O(V) space).**
+Bellman-Ford with exactly `k+1` relaxation rounds: on each round, only relax edges using the
+distances from the previous round (snapshot the `dist` array to prevent multi-hop updates within
+one round). Dijkstra doesn't directly handle the hop constraint.
 
 **Java comparison:** Java developers often reach for a modified Dijkstra with state `(cost, node, stops)`. Bellman-Ford with a snapshot is simpler and has the same time complexity for this problem.
 
@@ -485,11 +492,13 @@ mod tests_787 {
 
 ---
 
-## 4. Swim in Rising Water (LC #778)
+## LC778. Swim in Rising Water
 
-**Problem:** Grid where `grid[r][c]` is the elevation. You can swim in adjacent cells once the water level reaches their elevation. Find the minimum time `t` such that there is a path from `(0,0)` to `(n-1,n-1)`.
+**Problem.** Grid where `grid[r][c]` is the elevation. You can swim in adjacent cells once the water level reaches their elevation. Find the minimum time `t` such that there is a path from `(0,0)` to `(n-1,n-1)`.
 
-**Algorithm:** Dijkstra — edge weight from `(r,c)` to `(nr,nc)` is `grid[nr][nc]`. The answer is the maximum elevation on the optimal path.
+**Approach 1 — Dijkstra as Minimax Path (O(n² log n) time, O(n²) space).**
+Dijkstra where edge weight from `(r,c)` to `(nr,nc)` is `grid[nr][nc]`. The shortest-path distance
+from `(0,0)` to `(n-1,n-1)` in this formulation equals the minimum possible maximum water level.
 
 ```rust
 use std::collections::BinaryHeap;
@@ -556,11 +565,14 @@ mod tests_778 {
 
 ---
 
-## 5. Find the City With the Smallest Number of Neighbors (LC #1334)
+## LC1334. Find the City With the Smallest Number of Neighbors
 
-**Problem:** Find the city with the fewest neighbors reachable within distance threshold `distanceThreshold`. Tie-break: return the city with the largest index.
+**Problem.** Find the city with the fewest neighbors reachable within distance threshold `distanceThreshold`. Tie-break: return the city with the largest index.
 
-**Algorithm:** Floyd-Warshall — compute all-pairs shortest paths, then count reachable cities for each.
+**Approach 1 — Floyd-Warshall All-Pairs Shortest Paths (O(V³) time, O(V²) space).**
+Compute all-pairs shortest paths using Floyd-Warshall, then for each city count how many cities
+are reachable within `distanceThreshold`. Return the city with the fewest reachable neighbors
+(ties broken by highest index).
 
 ```rust
 struct Solution;
@@ -628,11 +640,13 @@ mod tests_1334 {
 
 ---
 
-## 6. Path with Maximum Probability (LC #1514)
+## LC1514. Path with Maximum Probability
 
-**Problem:** Find the maximum probability path from `start` to `end`. Edge weights are probabilities in `[0, 1]`.
+**Problem.** Find the maximum probability path from `start` to `end`. Edge weights are probabilities in `[0, 1]`.
 
-**Algorithm:** Dijkstra with a *max-heap* — we want to maximize probability instead of minimize cost, so we don't use `Reverse`.
+**Approach 1 — Dijkstra with Max-Heap (O((V+E) log V) time, O(V+E) space).**
+Maximize probability using Dijkstra with a max-heap (no `Reverse` wrapper). Push `(prob, node)`
+directly into `BinaryHeap`. Multiply probabilities along edges instead of summing costs.
 
 ```rust
 use std::collections::BinaryHeap;
@@ -719,11 +733,13 @@ mod tests_1514 {
 
 ---
 
-## 7. Course Schedule (LC #207)
+## LC207. Course Schedule
 
-**Problem:** Given `numCourses` and prerequisite pairs, determine if it is possible to finish all courses (i.e., the graph has no cycle).
+**Problem.** Given `numCourses` and prerequisite pairs, determine if it is possible to finish all courses (i.e., the graph has no cycle).
 
-**Algorithm:** Kahn's BFS topological sort — if we process all `n` nodes, there is no cycle.
+**Approach 1 — Kahn's BFS Topological Sort (O(V+E) time, O(V+E) space).**
+Kahn's algorithm: start with all nodes with in-degree 0, process them, decrement neighbor in-degrees,
+enqueue neighbors that reach in-degree 0. If exactly `n` nodes are processed, no cycle exists.
 
 ```rust
 use std::collections::VecDeque;
@@ -776,11 +792,13 @@ mod tests_207 {
 
 ---
 
-## 8. Course Schedule II (LC #210)
+## LC210. Course Schedule II
 
-**Problem:** Return one valid ordering in which courses can be taken, or an empty vector if impossible.
+**Problem.** Return one valid ordering in which courses can be taken, or an empty vector if impossible.
 
-**Algorithm:** Kahn's BFS — collect nodes in the order they are dequeued.
+**Approach 1 — Kahn's BFS Topological Order (O(V+E) time, O(V+E) space).**
+Kahn's algorithm collecting nodes in dequeue order gives one valid topological ordering. Return
+an empty array if fewer than `n` nodes are dequeued (cycle detected).
 
 ```rust
 use std::collections::VecDeque;
@@ -843,11 +861,14 @@ mod tests_210 {
 
 ---
 
-## 9. Alien Dictionary (LC #269)
+## LC269. Alien Dictionary
 
-**Problem:** Given a sorted list of words in an unknown alien language, determine the character order. Return the order as a string, or `""` if it is invalid.
+**Problem.** Given a sorted list of words in an unknown alien language, determine the character order. Return the order as a string, or `""` if it is invalid.
 
-**Algorithm:** Build a directed graph from adjacent word pairs (first differing character defines an ordering constraint), then topological sort.
+**Approach 1 — Graph Construction + Topological Sort (O(C + U) time, O(U) space).**
+Build a directed graph from adjacent word pairs: the first differing character between consecutive
+words defines an ordering constraint. Then topological sort (DFS post-order) gives the alien
+alphabet. C is total character count; U is unique character pairs.
 
 ```rust
 use std::collections::{HashMap, VecDeque};
@@ -946,9 +967,14 @@ mod tests_269 {
 
 ---
 
-## 10. Sequence Reconstruction (LC #444)
+## LC444. Sequence Reconstruction
 
-**Problem:** Determine if `nums` (a permutation of `1..=n`) is the *only* sequence reconstructible from `sequences`. This means the topological order must be unique (each step in Kahn's BFS must have exactly one candidate).
+**Problem.** Given `nums` (a permutation of `1..=n`) and `sequences` (lists of subsequences), determine if `nums` is the *only* sequence that can be reconstructed from `sequences`. The topological order must be unique: each step in Kahn's BFS must have exactly one candidate node.
+
+**Approach 1 — Kahn's BFS Uniqueness Check (O(V+E) time, O(V+E) space).**
+Build a directed graph from the sequences (each consecutive pair `seq[i] → seq[i+1]` is an edge).
+Run Kahn's BFS: at each step, if more than one node has in-degree 0, the ordering is not unique.
+Also verify that all numbers 1..=n appear in at least one sequence.
 
 ```rust
 use std::collections::VecDeque;
@@ -1023,11 +1049,14 @@ mod tests_444 {
 
 ---
 
-## 11. Minimum Height Trees (LC #310)
+## LC310. Minimum Height Trees
 
-**Problem:** Find all roots that minimize the height of a tree built from the given undirected tree edges.
+**Problem.** Find all roots that minimize the height of a tree built from the given undirected tree edges.
 
-**Algorithm:** Iteratively prune leaf nodes (degree 1) inward, like topological sort. The remaining nodes at the end are the answer (at most 2).
+**Approach 1 — Iterative Leaf Pruning (O(V+E) time, O(V+E) space).**
+Iteratively remove all current leaf nodes (degree 1), repeating until at most 2 nodes remain.
+These surviving nodes are the MHT roots. This is equivalent to BFS topological sort inward from
+the periphery.
 
 ```rust
 struct Solution;
@@ -1107,11 +1136,13 @@ mod tests_310 {
 
 ---
 
-## 12. Parallel Courses (LC #1136)
+## LC1136. Parallel Courses
 
-**Problem:** `n` courses with prerequisites. In each semester you can take any course whose prerequisites are done. Return the minimum number of semesters needed, or `-1` if impossible.
+**Problem.** `n` courses with prerequisites. In each semester you can take any course whose prerequisites are done. Return the minimum number of semesters needed, or `-1` if impossible.
 
-**Algorithm:** Kahn's BFS topological sort, tracking the maximum depth (semester) for each node.
+**Approach 1 — Kahn's BFS with Depth Tracking (O(V+E) time, O(V+E) space).**
+Kahn's BFS topological sort tracking the maximum depth (semester) for each node. A node's semester
+is `max(semester of all prerequisites) + 1`. Return the maximum semester, or -1 if a cycle exists.
 
 ```rust
 use std::collections::VecDeque;
@@ -1169,11 +1200,13 @@ mod tests_1136 {
 
 ---
 
-## 13. Number of Provinces (LC #547)
+## LC547. Number of Provinces
 
-**Problem:** Given an `n×n` adjacency matrix, count the number of connected components.
+**Problem.** Given an `n×n` adjacency matrix, count the number of connected components.
 
-**Algorithm:** Union-Find — union each connected pair and count remaining components.
+**Approach 1 — Union-Find with Path Compression and Union by Rank (O(E·α(V)) time, O(V) space).**
+Union-Find: union each connected pair, counting distinct components. The number of provinces equals
+the initial component count (`n`) minus the number of successful union operations.
 
 ```rust
 struct Solution;
@@ -1243,11 +1276,13 @@ mod tests_547 {
 
 ---
 
-## 14. Accounts Merge (LC #721)
+## LC721. Accounts Merge
 
-**Problem:** Merge accounts that share at least one email address. Return sorted merged accounts.
+**Problem.** Merge accounts that share at least one email address. Return sorted merged accounts.
 
-**Algorithm:** Union-Find with emails as keys. Map each email to an index, union emails in the same account, then group by root.
+**Approach 1 — Union-Find with Email Key Mapping (O(E·α(E) + E log E) time, O(E) space).**
+Union-Find: map each email string to an integer index. Union all emails within the same account.
+Group all emails by their root component, sort each group, and prepend the account name.
 
 ```rust
 use std::collections::HashMap;
@@ -1345,11 +1380,13 @@ mod tests_721 {
 
 ---
 
-## 15. Redundant Connection (LC #684)
+## LC684. Redundant Connection
 
-**Problem:** In an undirected tree with one extra edge, find the redundant edge that forms a cycle.
+**Problem.** In an undirected tree with one extra edge, find the redundant edge that forms a cycle.
 
-**Algorithm:** Union-Find — process edges in order; the first edge that connects two already-connected nodes is the answer.
+**Approach 1 — Union-Find Edge Processing (O(E·α(V)) time, O(V) space).**
+Process edges in order: for each edge, check if both endpoints are already connected. The first
+edge that connects two already-connected nodes is the redundant connection and the answer.
 
 ```rust
 struct Solution;
@@ -1404,11 +1441,13 @@ mod tests_684 {
 
 ---
 
-## 16. Making a Large Island (LC #827)
+## LC827. Making a Large Island
 
-**Problem:** In an `n×n` binary grid, flip at most one `0` to `1` and find the largest island size.
+**Problem.** In an `n×n` binary grid, flip at most one `0` to `1` and find the largest island size.
 
-**Algorithm:** Union-Find to label and size each existing island. Then for each `0` cell, check distinct neighboring islands and sum their sizes + 1.
+**Approach 1 — Union-Find Island Labeling + 0-Cell Expansion (O(R·C·α(R·C)) time, O(R·C) space).**
+Union-Find labels and sizes each existing island. For each `0` cell, collect the set of distinct
+neighboring island roots, sum their sizes, and add 1 (the flipped cell itself). Return the maximum.
 
 ```rust
 struct Solution;
@@ -1511,11 +1550,13 @@ mod tests_827 {
 
 ---
 
-## 17. Satisfiability of Equality Equations (LC #990)
+## LC990. Satisfiability of Equality Equations
 
-**Problem:** Given equations like `"a==b"` and `"a!=b"`, determine if all can be satisfied simultaneously.
+**Problem.** Given equations like `"a==b"` and `"a!=b"`, determine if all can be satisfied simultaneously.
 
-**Algorithm:** Union-Find — first process all `==` equations (union both variables), then verify all `!=` equations (the two variables must be in different sets).
+**Approach 1 — Union-Find Two-Pass (O(E·α(V)) time, O(V) space).**
+Two-pass: first process all `==` equations by unioning both variable indices. Then verify all
+`!=` equations — if either variable pair shares the same root, return false (contradiction found).
 
 ```rust
 struct Solution;
@@ -1581,11 +1622,14 @@ mod tests_990 {
 
 ---
 
-## 18. Min Cost to Connect All Points (LC #1584)
+## LC1584. Min Cost to Connect All Points
 
-**Problem:** Given `n` points, connect them all with minimum total Manhattan distance.
+**Problem.** Given `n` points, connect them all with minimum total Manhattan distance.
 
-**Algorithm:** Prim's MST starting from point 0. Maintain a `min_cost` array (cheapest known edge to each unvisited node) and greedily pick the next cheapest connection.
+**Approach 1 — Prim's MST (O(V²) time, O(V) space).**
+Prim's MST starting from point 0: maintain a `min_cost` array (cheapest edge from any visited
+node to each unvisited node). At each step greedily pick the unvisited node with the lowest
+`min_cost`. Manhattan distance is the edge weight between any two points.
 
 ```rust
 use std::collections::BinaryHeap;
@@ -1651,11 +1695,14 @@ mod tests_1584 {
 
 ---
 
-## 19. Optimize Water Distribution in a Village (LC #1168)
+## LC1168. Optimize Water Distribution in a Village
 
-**Problem:** `n` houses; you can build a well in any house (cost `wells[i]`) or lay a pipe between houses (cost `pipes[i]`). Find the minimum cost to supply water to all houses.
+**Problem.** `n` houses; you can build a well in any house (cost `wells[i]`) or lay a pipe between houses (cost `pipes[i]`). Find the minimum cost to supply water to all houses.
 
-**Algorithm:** MST with virtual node 0 — add an edge from virtual node 0 to each house `i` with weight `wells[i-1]`. Building a well equals connecting to the virtual water source. Then run Kruskal's on all edges.
+**Approach 1 — Kruskal's MST with Virtual Node (O(E log E) time, O(V+E) space).**
+Add a virtual node 0 representing the water source: connect each house `i` to node 0 with
+edge weight `wells[i-1]`. Building a well = connecting to the virtual source. Run Kruskal's
+MST on all edges (pipe costs + well costs) to find the minimum total cost.
 
 ```rust
 struct Solution;
@@ -1725,11 +1772,14 @@ mod tests_1168 {
 
 ---
 
-## 20. Critical Connections in a Network (LC #1192)
+## LC1192. Critical Connections in a Network
 
-**Problem:** Find all edges whose removal disconnects the graph (bridges).
+**Problem.** Find all edges whose removal disconnects the graph (bridges).
 
-**Algorithm:** Tarjan's bridge-finding algorithm. Track `disc[u]` (discovery time) and `low[u]` (lowest discovery time reachable from u's subtree). An edge `(u, v)` is a bridge if `low[v] > disc[u]`.
+**Approach 1 — Tarjan's Bridge-Finding Algorithm (O(V+E) time, O(V+E) space).**
+DFS tracking `disc[u]` (discovery time) and `low[u]` (lowest discovery time reachable from u's
+subtree via back edges). Edge `(u, v)` is a bridge if `low[v] > disc[u]` — no back edge in v's
+subtree reaches u or an ancestor of u.
 
 **Java comparison:** Tarjan's requires careful tracking of the parent to avoid treating the tree edge back to parent as a back edge. Rust's explicit `parent` parameter in DFS makes this clear.
 
@@ -1819,11 +1869,14 @@ mod tests_1192 {
 
 ---
 
-## 21. Number of Ways to Arrive at Destination (LC #1976)
+## LC1976. Number of Ways to Arrive at Destination
 
-**Problem:** Count the number of shortest paths from node `0` to node `n-1`. Answer modulo `10^9 + 7`.
+**Problem.** Count the number of shortest paths from node `0` to node `n-1`. Answer modulo `10^9 + 7`.
 
-**Algorithm:** Dijkstra extended with a `ways[]` array. When a strictly shorter path is found, reset the count. When an equal-length path is found, add to the count.
+**Approach 1 — Dijkstra with Path Count (O((V+E) log V) time, O(V+E) space).**
+Dijkstra extended with a `ways[]` array tracking the number of shortest paths to each node.
+When a strictly shorter path is found, reset the count to the predecessor's count. When an
+equal-length path is found, add the predecessor's count. Answer: `ways[n-1] mod 10^9+7`.
 
 ```rust
 use std::collections::BinaryHeap;
@@ -1896,11 +1949,14 @@ mod tests_1976 {
 
 ---
 
-## 22. Shortest Path with Alternating Colors (LC #1129)
+## LC1129. Shortest Path with Alternating Colors
 
-**Problem:** In a graph with red and blue edges, find the shortest path from node `0` to every other node using alternating edge colors. Return `-1` for unreachable nodes.
+**Problem.** In a graph with red and blue edges, find the shortest path from node `0` to every other node using alternating edge colors. Return `-1` for unreachable nodes.
 
-**Algorithm:** BFS on an expanded state space `(node, last_color)`. Each state transition must flip the color.
+**Approach 1 — BFS on (Node, Color) State Space (O(V+E) time, O(V+E) space).**
+BFS on the expanded state `(node, last_color)`. From each state, only traverse edges of the
+opposite color. The BFS depth when any state with `node = target` is first dequeued is the
+shortest path length with alternating colors.
 
 ```rust
 use std::collections::VecDeque;

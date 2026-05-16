@@ -41,14 +41,16 @@ int[][] DIRS = {{0,1},{0,-1},{1,0},{-1,0}};
 
 ---
 
-### 1. Number of Islands — LC #200
+## LC200. Number of Islands
 
-**Problem:** Given a 2-D binary grid of `'1'` (land) and `'0'` (water), count the number of
+**Problem.** Given a 2-D binary grid of `'1'` (land) and `'0'` (water), count the number of
 islands — connected groups of `'1'`s (4-directional connectivity).
 
-**Key insight:** Each cell can serve as the root of a DFS. Marking visited cells `'#'` in-place
-avoids a separate `boolean[][]` visited array. The count of DFS calls that actually start (cell
-was `'1'`) equals the island count.
+**Approach 1 — Recursive Grid DFS with In-Place Marking (O(R×C) time, O(R×C) space).**
+Each cell is treated as a potential DFS root. Marking visited cells `'#'` in-place avoids a
+separate `boolean[][]` visited array, identical to the Rust approach. The count of DFS
+calls that actually start (cell was `'1'`) equals the island count. Java's reference semantics
+make in-place mutation straightforward — no ownership transfer needed.
 
 ```java
 class Solution200 {
@@ -116,13 +118,15 @@ allocating a `boolean[][]` visited grid.
 
 ---
 
-### 2. Max Area of Island — LC #695
+## LC695. Max Area of Island
 
-**Problem:** Find the connected component of `1`s with the greatest area. The grid uses `int`
+**Problem.** Find the connected component of `1`s with the greatest area. The grid uses `int`
 values `0` and `1`.
 
-**Key insight:** DFS returns the total cell count of the current island. Accumulate the count as
-cells are marked visited. Track the running maximum across all islands.
+**Approach 1 — Recursive Grid DFS Returning Area (O(R×C) time, O(R×C) space).**
+DFS returns the total cell count of the current island. Accumulate the count as cells are marked
+visited with `-1`. Track the running maximum across all DFS invocations. Returning area from the
+recursive call avoids a mutable instance counter.
 
 ```java
 class Solution695 {
@@ -187,12 +191,13 @@ an instance-level counter — a cleaner pattern than `this.area++`.
 
 ---
 
-### 3. Flood Fill — LC #733
+## LC733. Flood Fill
 
-**Problem:** Starting from `(sr, sc)`, replace its color and all 4-directionally connected pixels
+**Problem.** Starting from `(sr, sc)`, replace its color and all 4-directionally connected pixels
 of the same original color with `newColor`.
 
-**Key insight:** Guard against the case where `newColor == originalColor` to avoid infinite
+**Approach 1 — Recursive Grid DFS Flood Fill (O(R×C) time, O(R×C) space).**
+Guard against the case where `newColor == originalColor` to avoid infinite
 recursion. Otherwise apply DFS changing cells as they are visited.
 
 ```java
@@ -243,13 +248,15 @@ ownership transfer — the caller's reference and the method's reference alias t
 
 ---
 
-### 4. Surrounded Regions — LC #130
+## LC130. Surrounded Regions
 
-**Problem:** Flip all `'O'`s not connected to any border cell to `'X'`. Border-connected `'O'`s
+**Problem.** Flip all `'O'`s not connected to any border cell to `'X'`. Border-connected `'O'`s
 survive.
 
-**Key insight:** Reverse the problem. DFS from every border `'O'`, marking reachable `'O'`s as
-`'S'` (safe). Then sweep: `'O'` → `'X'`, `'S'` → `'O'`.
+**Approach 1 — Reverse DFS from Border Cells (O(R×C) time, O(R×C) space).**
+Reverse the problem: DFS from every border `'O'`, marking reachable `'O'`s as `'S'` (safe).
+Then sweep: `'O'` → `'X'` (captured), `'S'` → `'O'` (restored). This avoids the hard problem
+of determining which interior regions are surrounded.
 
 ```java
 class Solution130 {
@@ -330,13 +337,15 @@ and reads like a Rust `match` arm.
 
 ---
 
-### 5. Pacific Atlantic Water Flow — LC #417
+## LC417. Pacific Atlantic Water Flow
 
-**Problem:** Return all cells from which water can flow to both oceans. Water flows to neighbors
+**Problem.** Return all cells from which water can flow to both oceans. Water flows to neighbors
 with equal or lesser height.
 
-**Key insight:** Reverse the flow. DFS from Pacific-border cells (top row + left col) marking
-cells that can "flow up" to the ocean. Repeat for Atlantic. Intersection is the answer.
+**Approach 1 — Reverse DFS from Each Ocean's Border (O(R×C) time, O(R×C) space).**
+Reverse the flow direction: DFS from Pacific-border cells (top row + left col) marking all cells
+that can "flow up" to the Pacific. Repeat for Atlantic borders (bottom row + right col).
+Cells appearing in both reachable sets flow to both oceans.
 
 ```java
 import java.util.*;
@@ -413,13 +422,15 @@ no risk of visited state leaking between test cases. `Integer.MIN_VALUE` as the 
 
 ---
 
-### 6. Longest Increasing Path in a Matrix — LC #329
+## LC329. Longest Increasing Path in a Matrix
 
-**Problem:** Find the length of the longest strictly increasing path in the matrix, moving in 4
+**Problem.** Find the length of the longest strictly increasing path in the matrix, moving in 4
 directions.
 
-**Key insight:** DFS from each cell, memoized. Because the path must be strictly increasing,
-there are no cycles — memoization alone prevents redundant work; no `visited` array is needed.
+**Approach 1 — Memoized DFS (O(R×C) time, O(R×C) space).**
+DFS from each cell, caching the longest path length in `memo[r][c]`. Because the path must be
+strictly increasing, there are no cycles — memoization alone prevents redundant work without a
+`visited` array. Each cell is computed at most once.
 
 ```java
 class Solution329 {
@@ -478,13 +489,14 @@ without a separate `inStack` check.
 
 ---
 
-### 7. Number of Connected Components — LC #323
+## LC323. Number of Connected Components in an Undirected Graph
 
-**Problem:** Given `n` nodes (0 to n-1) and undirected edges, return the number of connected
+**Problem.** Given `n` nodes (0 to n-1) and undirected edges, return the number of connected
 components.
 
-**Key insight:** Build an adjacency list, then count DFS calls from unvisited nodes. Each call
-from an unvisited node discovers one new component.
+**Approach 1 — Graph DFS with Visited Array (O(V+E) time, O(V+E) space).**
+Build an adjacency list, then count DFS calls from unvisited nodes. Each DFS call from an
+unvisited node discovers exactly one new connected component and marks all its members visited.
 
 ```java
 import java.util.*;
@@ -544,13 +556,15 @@ avoids boxing overhead.
 
 ---
 
-### 8. Graph Valid Tree — LC #261
+## LC261. Graph Valid Tree
 
-**Problem:** Given `n` nodes and `edges`, determine whether they form a valid tree (connected,
+**Problem.** Given `n` nodes and `edges`, determine whether they form a valid tree (connected,
 no cycles).
 
-**Key insight:** A valid tree has exactly `n-1` edges AND is fully connected. Use DFS cycle
-detection: track the parent edge to avoid false back-edges in an undirected graph.
+**Approach 1 — DFS Cycle Detection with Parent Tracking (O(V+E) time, O(V+E) space).**
+A valid tree has exactly `n-1` edges AND is fully connected. DFS cycle detection tracks the
+parent edge to avoid counting the traversed edge as a back-edge in an undirected graph.
+If no cycle and all nodes reached, it is a valid tree.
 
 ```java
 import java.util.*;
@@ -609,13 +623,14 @@ on n nodes has exactly n-1 edges.
 
 ---
 
-### 9. Course Schedule — LC #207
+## LC207. Course Schedule
 
-**Problem:** Given `numCourses` and prerequisite pairs `[a, b]` (take b before a), determine
+**Problem.** Given `numCourses` and prerequisite pairs `[a, b]` (take b before a), determine
 if all courses can be finished (no directed cycle).
 
-**Key insight:** Directed-graph cycle detection using three-color DFS: `0` = unvisited, `1` =
-in current DFS stack, `2` = fully processed. A back edge to a node with state `1` means a cycle.
+**Approach 1 — DFS Three-Color Cycle Detection (O(V+E) time, O(V+E) space).**
+Use three-color DFS: `0` = unvisited, `1` = in current DFS stack (gray), `2` = fully processed
+(black). A back edge to a gray node means a cycle exists. If any cycle is detected, return false.
 
 ```java
 import java.util.*;
@@ -675,13 +690,14 @@ enum boxing overhead in the hot loop.
 
 ---
 
-### 10. Course Schedule II — LC #210
+## LC210. Course Schedule II
 
-**Problem:** Same DAG setup as LC #207. Return a valid topological order, or an empty array if
+**Problem.** Same DAG setup as LC #207. Return a valid topological order, or an empty array if
 a cycle exists.
 
-**Key insight:** Topological sort via DFS post-order. After fully processing a node (state → 2),
-push it to the result list. Reverse the list at the end.
+**Approach 1 — DFS Post-Order Topological Sort (O(V+E) time, O(V+E) space).**
+Topological sort via DFS post-order: after fully processing a node (state → 2), push it to the
+result list. Reverse the list at the end to get a valid ordering. A cycle makes ordering impossible.
 
 ```java
 import java.util.*;
@@ -747,12 +763,14 @@ instance variables — the same pattern as Rust's `&mut Vec<i32>`.
 
 ---
 
-### 11. All Paths From Source to Target — LC #797
+## LC797. All Paths From Source to Target
 
-**Problem:** Given a DAG (node `n-1` is the target), return all paths from node 0 to node `n-1`.
+**Problem.** Given a DAG (node `n-1` is the target), return all paths from node 0 to node `n-1`.
 
-**Key insight:** DFS with backtracking on a DAG. No `visited` array needed — cycles cannot exist.
-Push the current node to `path`, recurse on all neighbors, pop when done.
+**Approach 1 — DFS Backtracking on DAG (O(V · 2^V) time, O(V) path space).**
+DFS with backtracking: push the current node to `path`, recurse on all neighbors, pop when done.
+No `visited` array is needed because cycles cannot exist in a DAG. Each root-to-target path is
+collected when the target node is reached.
 
 ```java
 import java.util.*;
@@ -809,14 +827,15 @@ occurrence of `x`, not necessarily the last element. Always remove by index for 
 
 ---
 
-### 12. Reconstruct Itinerary — LC #332
+## LC332. Reconstruct Itinerary
 
-**Problem:** Given airline tickets as `[from, to]` pairs, reconstruct the itinerary starting
+**Problem.** Given airline tickets as `[from, to]` pairs, reconstruct the itinerary starting
 from `"JFK"` in lexicographic order. All tickets must be used exactly once.
 
-**Key insight:** Hierholzer's algorithm for an Eulerian path. DFS always picks the
-lexicographically smallest destination (use a `PriorityQueue` per source). Push to result after
-all neighbors are exhausted (post-order). Reverse at the end.
+**Approach 1 — Hierholzer's Algorithm / DFS Eulerian Path (O(E log E) time, O(E) space).**
+Hierholzer's algorithm for an Eulerian path: DFS always picks the lexicographically smallest
+destination using a `PriorityQueue` per source. Add the departure airport to the result *after*
+all neighbors are exhausted (post-order). Reverse at the end for the correct order.
 
 ```java
 import java.util.*;
@@ -891,13 +910,15 @@ compilation. The structure matches the LeetCode standard definition.
 
 ---
 
-### 13. Path Sum II — LC #113
+## LC113. Path Sum II
 
-**Problem:** Find all root-to-leaf paths where the sum of node values equals `targetSum`.
+**Problem.** Find all root-to-leaf paths where the sum of node values equals `targetSum`.
 Return each path as a list.
 
-**Key insight:** DFS with backtracking. Carry a mutable `path` list and subtract the current
-node's value from the remaining sum. At a leaf with `remaining == 0`, snapshot the current path.
+**Approach 1 — DFS Backtracking with Path Accumulator (O(N²) time, O(N) space).**
+DFS with backtracking: carry a mutable `path` list and subtract the current node's value from the
+remaining sum. At a leaf with `remaining == 0`, snapshot the current path into results. Always
+call `path.remove(path.size() - 1)` at the end of `dfs` (by index, not by value) to backtrack.
 
 ```java
 import java.util.*;
@@ -969,12 +990,14 @@ subtrees.
 
 ---
 
-### 14. Binary Tree Paths — LC #257
+## LC257. Binary Tree Paths
 
-**Problem:** Return all root-to-leaf paths formatted as `"1->2->5"`.
+**Problem.** Return all root-to-leaf paths formatted as `"1->2->5"`.
 
-**Key insight:** DFS accumulating a running string. Pass the current path string by value
-(copy-on-call) so siblings get independent copies. No explicit backtracking needed.
+**Approach 1 — DFS with String Accumulation (O(N²) time, O(N) space).**
+DFS accumulating a running path string passed by value (copy-on-call), so sibling subtrees
+receive independent copies. No explicit backtracking is needed because Java `String` is immutable
+and a new instance is created at each recursive call with `path + val`.
 
 ```java
 import java.util.*;
@@ -1032,13 +1055,14 @@ at the branch point, but in Java it happens implicitly due to immutability.
 
 ---
 
-### 15. Sum Root to Leaf Numbers — LC #129
+## LC129. Sum Root to Leaf Numbers
 
-**Problem:** Each root-to-leaf path forms a decimal number (root is most significant digit).
+**Problem.** Each root-to-leaf path forms a decimal number (root is most significant digit).
 Return the total sum.
 
-**Key insight:** DFS passing the running number down. Multiply by 10 and add the current digit
-at each node. At leaves, return the accumulated number.
+**Approach 1 — DFS with Running Number Accumulation (O(N) time, O(N) space).**
+DFS passing the running number down: multiply by 10 and add the current digit at each node.
+At leaves, return the accumulated number. Sum all leaf values up the recursion for the total.
 
 ```java
 class Solution129 {
@@ -1094,14 +1118,16 @@ within the logical frame.
 
 ---
 
-### 16. Flatten Binary Tree to Linked List — LC #114
+## LC114. Flatten Binary Tree to Linked List
 
-**Problem:** Flatten the binary tree in-place to a linked list in preorder order, using right
+**Problem.** Flatten the binary tree in-place to a linked list in preorder order, using right
 child pointers. Left child pointers must be `null`.
 
-**Key insight:** Java's reference semantics make the classic O(1)-space reverse-postorder
-approach (right → left → root) straightforward. Maintain a `prev` field; visit right, then left,
-then set `node.right = prev; node.left = null; prev = node`.
+**Approach 1 — Reverse Postorder DFS with `prev` Field (O(N) time, O(N) space).**
+Java's reference semantics make the classic O(1)-space reverse-postorder approach straightforward.
+Maintain an instance `prev` field; visit right subtree, then left, then set
+`node.right = prev; node.left = null; prev = node`. The right-before-left DFS order ensures nodes
+are linked in preorder when reversed.
 
 ```java
 class Solution114 {
@@ -1187,13 +1213,15 @@ explicit — in a real LeetCode submission the judge constructs a fresh `Solutio
 
 ---
 
-### 17. Word Search — LC #79
+## LC79. Word Search
 
-**Problem:** Given a 2-D character board and a word, determine whether the word exists using
+**Problem.** Given a 2-D character board and a word, determine whether the word exists using
 adjacent (4-directional) cells, each cell used at most once per path.
 
-**Key insight:** DFS with backtracking. Temporarily mark the current cell `'#'` during recursion;
-restore it after returning. This avoids a separate `boolean[][]` visited array.
+**Approach 1 — DFS Backtracking with In-Place Marking (O(R×C×4^L) time, O(L) space).**
+DFS with backtracking: temporarily mark the current cell `'#'` during recursion to avoid reuse,
+then restore it after returning. This avoids a separate `boolean[][]` visited array. L is the
+word length; the branching factor is at most 4 directions.
 
 ```java
 class Solution79 {
@@ -1266,14 +1294,15 @@ in the caller's grid copy.
 
 ---
 
-### 18. Word Search II — LC #212
+## LC212. Word Search II
 
-**Problem:** Given a board and a list of words, return all words that can be found in the grid
+**Problem.** Given a board and a list of words, return all words that can be found in the grid
 (same movement rules as LC #79).
 
-**Key insight:** Build a Trie of all words. During DFS, traverse the Trie in parallel to prune
-paths that cannot complete any word. Remove a word from the Trie once found to prevent
-duplicates.
+**Approach 1 — Trie + DFS Backtracking (O(R×C×4^L) time, O(total word chars) space).**
+Build a Trie of all words. During DFS on the board, traverse the Trie in parallel to prune paths
+that cannot complete any word. Remove a word from the Trie once found (set `word = null`)
+to prevent duplicates without a separate seen-set.
 
 ```java
 import java.util.*;
@@ -1364,14 +1393,15 @@ Rust's `Option::take()` — it prevents duplicate results in one assignment with
 
 ---
 
-### 19. Remove Invalid Parentheses — LC #301
+## LC301. Remove Invalid Parentheses
 
-**Problem:** Remove the minimum number of invalid parentheses to make the input string valid.
+**Problem.** Remove the minimum number of invalid parentheses to make the input string valid.
 Return all possible results.
 
-**Key insight:** BFS level by level — each level removes one more character. The first level
-that produces a valid string contains all minimum-removal solutions. BFS naturally guarantees
-minimum removals without additional pruning.
+**Approach 1 — BFS Level-by-Level Removal (O(2^n · n) time, O(2^n) space).**
+BFS level by level: each level removes one more character. The first level that produces a valid
+string contains all minimum-removal solutions. A `HashSet` of visited strings prevents duplicate
+work. BFS naturally guarantees minimum removals without additional pruning.
 
 > **Note:** This problem uses BFS, not recursive DFS. BFS is the correct algorithm here because
 > it finds minimum-edit solutions at the first level that yields a valid string. A pure DFS
@@ -1452,14 +1482,15 @@ redundant string processing when multiple removal paths produce the same candida
 
 ---
 
-### 20. Expression Add Operators — LC #282
+## LC282. Expression Add Operators
 
-**Problem:** Given a string of digits and a target integer, return all expressions formed by
+**Problem.** Given a string of digits and a target integer, return all expressions formed by
 inserting `+`, `-`, or `*` between digits that evaluate to the target.
 
-**Key insight:** DFS (backtracking) over all split points and three operator choices. Track the
-last operand to correctly undo multiplication when `*` follows an earlier `+` or `-`. Build the
-expression as a `StringBuilder` and truncate to backtrack.
+**Approach 1 — DFS Backtracking with Multiplication Tracking (O(4^n · n) time, O(n) space).**
+DFS backtracking over all split points and three operator choices. Track the last operand to
+correctly undo multiplication when `*` follows an earlier `+` or `-`. Build the expression as a
+`StringBuilder` and truncate to its saved length to backtrack efficiently.
 
 ```java
 import java.util.*;
