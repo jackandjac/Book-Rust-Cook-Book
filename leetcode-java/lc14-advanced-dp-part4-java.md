@@ -83,6 +83,36 @@ class Solution1696 {
 
 **Java Notes:** `ArrayDeque.peekFirst()` / `peekLast()` return `null` on empty — always guard with `!deq.isEmpty()`. The `dp` array is zero-initialized by Java, so no explicit fill needed before the `dp[0] = nums[0]` assignment.
 
+**Approach 2 — Naive O(n * k):**
+
+```java
+class Solution1696Naive {
+    public int maxResult(int[] nums, int k) {
+        int n = nums.length;
+        int[] dp = new int[n];
+        dp[0] = nums[0];
+        final int NEG_INF = Integer.MIN_VALUE / 2;
+        for (int i = 1; i < n; i++) {
+            dp[i] = NEG_INF;
+            for (int j = Math.max(0, i - k); j < i; j++) {
+                if (dp[j] != NEG_INF)
+                    dp[i] = Math.max(dp[i], dp[j] + nums[i]);
+            }
+        }
+        return dp[n - 1];
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution1696Naive();
+        if (sol.maxResult(new int[]{1,-1,-2,4,-7,3}, 2) != 7) throw new AssertionError();
+        if (sol.maxResult(new int[]{10,-5,-2,4,0,3}, 3) != 17) throw new AssertionError();
+        System.out.println("LC1696 Naive: all tests passed.");
+    }
+}
+```
+
+Use the naive approach for clarity when verifying the recurrence; use the deque approach for O(n) production performance.
+
 ---
 
 ### LC #1425 — Constrained Subsequence Sum
@@ -157,7 +187,7 @@ class Solution1425 {
 
 **Problem:** `n` fruits (1-indexed). Buying fruit `i` costs `prices[i-1]` coins and gives fruits `i+1` through `2*i+1` for free. Return minimum coins to acquire all fruits.
 
-**Key Insight:** `dp[i] = prices[i] + min(dp[i+1..min(2i+2, n)])` (0-indexed). Process right-to-left with a monotone min-deque. `dp[n] = 0` is the sentinel for "no more fruits needed."
+**Key Insight:** Buying 0-indexed fruit `i` (1-indexed `i+1`) gives fruits `i+1` through `2i+2` (0-indexed) for free. So the next purchase can be at any `j` in `[i+1, min(2i+3, n)]`. `dp[i] = prices[i] + min(dp[j])` over that range. Process right-to-left with sentinel `dp[n] = 0`. The sliding-window minimum over the varying range is maintained in O(1) per step by a monotone min-deque.
 
 ```java
 import java.util.ArrayDeque;
@@ -174,8 +204,9 @@ class Solution2944 {
         deq.addLast(n); // dp[n] = 0
 
         for (int i = n - 1; i >= 0; i--) {
-            // Window for index i (0-indexed): next states are i+1 .. min(2*(i+1), n)
-            int hi = Math.min(2 * (i + 1), n);
+            // Buying 0-indexed fruit i (1-indexed i+1) gives fruits i+1..2i+2 free.
+            // Next non-free purchase can be at j in [i+1, min(2i+3, n)].
+            int hi = Math.min(2 * (i + 1) + 1, n);
             // Remove indices from front that are out of window (> hi)
             while (!deq.isEmpty() && deq.peekFirst() > hi) {
                 deq.pollFirst();
@@ -754,8 +785,70 @@ class Solution329 {
 | Approach | Time | Space |
 |----------|------|-------|
 | Memoized DFS | O(m * n) | O(m * n) |
+| Topological Sort BFS | O(m * n) | O(m * n) |
 
 **Java Notes:** `memo[r][c] = 0` means "not yet computed" since every valid answer is ≥ 1. No need for a separate `visited` array — the zero-init of Java arrays serves as the sentinel.
+
+**Approach 2 — Topological Sort BFS:**
+
+Build an explicit DAG: edge `(r,c) → (nr,nc)` when `matrix[nr][nc] > matrix[r][c]`. Count layers of the BFS (each layer = one step in the longest path).
+
+```java
+import java.util.ArrayDeque;
+
+class Solution329Topo {
+    private static final int[][] DIRS = {{-1,0},{1,0},{0,-1},{0,1}};
+
+    public int longestIncreasingPath(int[][] matrix) {
+        int m = matrix.length, n = matrix[0].length;
+        int[] inDeg = new int[m * n];
+
+        for (int r = 0; r < m; r++) {
+            for (int c = 0; c < n; c++) {
+                for (var d : DIRS) {
+                    int nr = r + d[0], nc = c + d[1];
+                    if (nr >= 0 && nr < m && nc >= 0 && nc < n
+                            && matrix[nr][nc] > matrix[r][c]) {
+                        inDeg[nr * n + nc]++;
+                    }
+                }
+            }
+        }
+
+        var queue = new ArrayDeque<Integer>();
+        for (int i = 0; i < m * n; i++) if (inDeg[i] == 0) queue.add(i);
+
+        int layers = 0;
+        while (!queue.isEmpty()) {
+            layers++;
+            int size = queue.size();
+            for (int k = 0; k < size; k++) {
+                int u = queue.poll();
+                int r = u / n, c = u % n;
+                for (var d : DIRS) {
+                    int nr = r + d[0], nc = c + d[1];
+                    if (nr >= 0 && nr < m && nc >= 0 && nc < n
+                            && matrix[nr][nc] > matrix[r][c]) {
+                        if (--inDeg[nr * n + nc] == 0) queue.add(nr * n + nc);
+                    }
+                }
+            }
+        }
+        return layers;
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution329Topo();
+        if (sol.longestIncreasingPath(new int[][]{{9,9,4},{6,6,8},{2,1,1}}) != 4)
+            throw new AssertionError();
+        if (sol.longestIncreasingPath(new int[][]{{3,4,5},{3,2,6},{2,2,1}}) != 4)
+            throw new AssertionError();
+        if (sol.longestIncreasingPath(new int[][]{{1}}) != 1)
+            throw new AssertionError();
+        System.out.println("LC329 Topo: all tests passed.");
+    }
+}
+```
 
 ---
 
@@ -1055,6 +1148,49 @@ class Solution188 {
 
 **Java Notes:** `Integer.MIN_VALUE / 2` (not `Integer.MIN_VALUE`) is crucial for `buy[]` initialization — adding `p` to `Integer.MIN_VALUE` overflows to a positive number, producing wrong answers.
 
+**Approach 2 — Explicit hold/cash State Machine:**
+
+```java
+class Solution188Explicit {
+    public int maxProfit(int k, int[] prices) {
+        int n = prices.length;
+        if (n == 0) return 0;
+        if (k >= n / 2) {
+            int profit = 0;
+            for (int i = 1; i < n; i++)
+                if (prices[i] > prices[i - 1]) profit += prices[i] - prices[i - 1];
+            return profit;
+        }
+        // hold[j] = best profit holding stock, having started j-th transaction
+        // cash[j] = best profit not holding, having completed j transactions
+        int[] hold = new int[k + 1];
+        int[] cash = new int[k + 1];
+        java.util.Arrays.fill(hold, Integer.MIN_VALUE / 2);
+
+        for (int p : prices) {
+            for (int j = k; j >= 1; j--) {
+                hold[j] = Math.max(hold[j], cash[j - 1] - p); // buy
+                cash[j] = Math.max(cash[j], hold[j] + p);     // sell
+            }
+        }
+        int ans = 0;
+        for (int x : cash) ans = Math.max(ans, x);
+        return ans;
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution188Explicit();
+        if (sol.maxProfit(2, new int[]{2,4,1}) != 2) throw new AssertionError("188ex ex1");
+        if (sol.maxProfit(2, new int[]{3,2,6,5,0,3}) != 7) throw new AssertionError("188ex ex2");
+        if (sol.maxProfit(100, new int[]{1,2,3,4,5}) != 4) throw new AssertionError("188ex k-large");
+        if (sol.maxProfit(1, new int[]{5,4,3,2,1}) != 0) throw new AssertionError("188ex no-profit");
+        System.out.println("LC188 Explicit: all tests passed.");
+    }
+}
+```
+
+**When to use which:** Both approaches run in O(n·k) / O(k). The explicit `hold`/`cash` naming makes the state machine unambiguous. Use the first variant for conciseness; use this variant when reviewing state-machine DP in interviews.
+
 ---
 
 ### LC #2218 — Maximum Value of K Coins From Piles
@@ -1117,6 +1253,51 @@ class Solution2218 {
 |----------|------|-------|
 | Grouped knapsack | O(k * sum of pile sizes) | O(k) |
 
+**Approach 2 — Top-Down Memoized DFS:**
+
+```java
+class Solution2218Memo {
+    private int[][] memo;
+    private int[][] pre; // prefix sums per pile
+
+    public int maxValueOfCoins(java.util.List<java.util.List<Integer>> piles, int k) {
+        int n = piles.size();
+        pre = new int[n][];
+        for (int i = 0; i < n; i++) {
+            var pile = piles.get(i);
+            pre[i] = new int[pile.size() + 1];
+            for (int j = 0; j < pile.size(); j++) pre[i][j + 1] = pre[i][j] + pile.get(j);
+        }
+        memo = new int[n][k + 1];
+        for (int[] row : memo) java.util.Arrays.fill(row, -1);
+        return dfs(0, k);
+    }
+
+    private int dfs(int i, int rem) {
+        if (i == pre.length || rem == 0) return 0;
+        if (memo[i][rem] != -1) return memo[i][rem];
+        int best = dfs(i + 1, rem); // take 0 from pile i
+        int maxTake = Math.min(pre[i].length - 1, rem);
+        for (int t = 1; t <= maxTake; t++)
+            best = Math.max(best, pre[i][t] + dfs(i + 1, rem - t));
+        return memo[i][rem] = best;
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution2218Memo();
+        var r1 = sol.maxValueOfCoins(java.util.List.of(
+            java.util.List.of(1,100,3), java.util.List.of(7,8,9)), 2);
+        if (r1 != 101) throw new AssertionError("LC2218memo ex1: expected 101, got " + r1);
+        var r2 = sol.maxValueOfCoins(java.util.List.of(
+            java.util.List.of(5,3,1)), 2);
+        if (r2 != 8) throw new AssertionError("LC2218memo single: expected 8, got " + r2);
+        System.out.println("LC2218 Memo: all tests passed.");
+    }
+}
+```
+
+**When to use which:** The bottom-up grouped knapsack is faster in practice (better cache locality, no stack overhead). The top-down version maps directly to the recursive formulation `dfs(pile, remaining)` and is a useful starting point for deriving the tabulation.
+
 ---
 
 ### LC #2209 — Minimum White Tiles After Covering With Carpets
@@ -1159,7 +1340,7 @@ class Solution2209 {
     public static void main(String[] args) {
         var sol = new Solution2209();
 
-        var r1 = sol.minimumWhiteTiles("10110101", 2, 3);
+        var r1 = sol.minimumWhiteTiles("10110101", 2, 2);
         if (r1 != 2) throw new AssertionError("LC2209 ex1: expected 2, got " + r1);
 
         var r2 = sol.minimumWhiteTiles("11111", 2, 3);
@@ -1516,10 +1697,10 @@ class Solution2809 {
         var sol = new Solution2809();
 
         var r1 = sol.minimumTime(new int[]{1,2,3}, new int[]{1,2,3}, 4);
-        if (r1 != 5) throw new AssertionError("LC2809 ex1: expected 5, got " + r1);
+        if (r1 != 3) throw new AssertionError("LC2809 ex1: expected 3, got " + r1);
 
         var r2 = sol.minimumTime(new int[]{1,2,3}, new int[]{1,2,3}, 5);
-        if (r2 != 5) throw new AssertionError("LC2809 ex2: expected 5, got " + r2);
+        if (r2 != 2) throw new AssertionError("LC2809 ex2: expected 2, got " + r2);
 
         // sum1 = 1, x = 5 → already satisfied at t=0
         var r3 = sol.minimumTime(new int[]{1}, new int[]{0}, 5);
@@ -1649,7 +1830,7 @@ while (!deq.isEmpty() && pre[deq.peekLast()] >= pre[i]) deq.pollLast();
 
 | Issue | Severity | Fix Applied |
 |-------|----------|-------------|
-| LC 2944 Rust source had dead-code first pass | High | Java port uses only the correct right-to-left min-deque pass |
+| LC 2944 Rust source had dead-code first pass and wrong window bound `2*(i+1)` | High | Correct formula is `hi = min(2i+3, n)`; Java port fixed, Rust source fixed |
 | `Integer.MAX_VALUE` used as infinity sentinel with addition | High | `Integer.MIN_VALUE / 2` for LC 188 `buy[]`; `Long.MAX_VALUE / 2` for LC 2463, LC 2809 |
 | LC 907 intermediate product `arr[i]*left[i]*right[i]` overflows `int` | High | Cast to `long` before multiplication; modular arithmetic throughout |
 | LC 862 prefix sums overflow `int` for large inputs | High | `long[]` prefix array throughout |

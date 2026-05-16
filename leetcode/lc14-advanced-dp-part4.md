@@ -96,6 +96,43 @@ mod tests_1696 {
 - `deq.front().map_or(false, |&f| ...)` safely checks an `Option<&usize>` without unwrapping.
 - Pattern-binding `|&f|` destructures the reference inside the closure.
 
+#### Approach 2 — Naive O(n * k) DP
+
+The naive approach is the starting point that motivates the deque optimization. It scans up to `k` predecessors for each index, giving O(n*k) time.
+
+```rust
+struct SolutionNaive;
+
+impl SolutionNaive {
+    pub fn max_result(nums: Vec<i32>, k: i32) -> i32 {
+        let n = nums.len();
+        let k = k as usize;
+        let mut dp = vec![i32::MIN; n];
+        dp[0] = nums[0];
+
+        for i in 1..n {
+            let lo = if i >= k { i - k } else { 0 };
+            // Scan up to k predecessors
+            for j in lo..i {
+                if dp[j] != i32::MIN {
+                    dp[i] = dp[i].max(dp[j] + nums[i]);
+                }
+            }
+        }
+        dp[n - 1]
+    }
+}
+
+fn main() {
+    assert_eq!(SolutionNaive::max_result(vec![1, -1, -2, 4, -7, 3], 2), 7);
+    assert_eq!(SolutionNaive::max_result(vec![10, -5, -2, 4, 0, 3], 3), 17);
+    assert_eq!(SolutionNaive::max_result(vec![5], 1), 5);
+    println!("LC1696 Naive: all tests passed.");
+}
+```
+
+**When to use which:** Use the naive approach for small inputs or when `k` is tiny (O(n) when k=1). The deque approach is always safe and should be preferred in production/interview contexts. The naive approach is useful for testing the deque result and understanding the recurrence.
+
 ---
 
 ### LC #1425 — Constrained Subsequence Sum
@@ -194,7 +231,7 @@ You have `n` fruits. To buy fruit `i` (1-indexed), you pay `prices[i-1]` coins. 
 
 #### Key Insight
 
-`dp[i]` = minimum cost to acquire all fruits from `i` to `n`. Transition: `dp[i] = prices[i-1] + min(dp[i+1..2*i+2])`. Process right-to-left. The inner min is over a growing window — use a monotone deque (min-deque). Naive: O(n²). Optimized: O(n).
+`dp[i]` = minimum cost to acquire all fruits from 0-indexed `i` onward. Buying 0-indexed `i` (1-indexed `i+1`) gives fruits `i+1` through `2i+2` (0-indexed) for free, so the next purchase can be at any index `j` in `[i+1, min(2i+3, n)]`. Transition: `dp[i] = prices[i] + min(dp[j] for j in [i+1, min(2i+3, n)])`. Process right-to-left with a sentinel `dp[n] = 0`. The inner min is a sliding-window minimum over a growing window — monotone min-deque reduces O(n²) to O(n).
 
 #### Rust Solution
 
@@ -206,59 +243,33 @@ struct Solution;
 impl Solution {
     pub fn minimum_coins(prices: Vec<i32>) -> i32 {
         let n = prices.len();
-        // dp[i] = min cost to acquire fruits i..n (0-indexed)
-        let mut dp = vec![0i32; n + 1];
-        // Monotone min-deque over dp values, stores indices
+        // dp[i] = min cost to acquire all fruits from index i to n-1 (0-indexed).
+        // dp[n] = 0: no fruits remaining costs nothing.
+        let mut dp = vec![i32::MAX; n + 1];
+        dp[n] = 0;
+        // Monotone min-deque of dp indices; smallest dp value at front.
         let mut deq: VecDeque<usize> = VecDeque::new();
+        deq.push_back(n);
 
-        // Fill right-to-left
         for i in (0..n).rev() {
-            // Remove indices outside the reachable window from i:
-            // buying fruit i (1-indexed: i+1) gives free fruits up to index 2*(i+1)
-            // i.e., in 0-indexed dp: next states are i+1 .. 2*i+2 (inclusive up to n-1)
-            let lo = i + 1;
-            let hi = (2 * i + 2).min(n);
-            // Pop from back indices that are beyond hi (out-of-window on the right)
-            // We iterate right-to-left so new entries are smaller indices → push to front
-            // Actually we process i from n-1 down to 0; deque holds valid next indices
+            // Buying 0-indexed fruit i (1-indexed i+1) gives fruits i+1 through 2i+2 free
+            // (0-indexed). The next non-free purchase is at 0-indexed 2i+3 (or done if >= n).
+            // So we can jump to any j in [i+1, min(2i+3, n)].
+            let hi = (2 * i + 3).min(n);
+            // Remove indices from front that fall outside the window [i+1, hi].
             while deq.front().map_or(false, |&f| f > hi) {
                 deq.pop_front();
             }
-            // For current i, best next = min dp in [lo, hi]
-            // Deque may contain indices > hi already removed; ensure front >= lo
-            while deq.back().map_or(false, |&b| b < lo) {
+            // Best next state is the minimum dp in the window.
+            let best_next = dp[*deq.front().unwrap()];
+            dp[i] = prices[i] + best_next;
+            // Maintain min-deque: pop back indices dominated by dp[i].
+            while deq.back().map_or(false, |&b| dp[b] >= dp[i]) {
                 deq.pop_back();
             }
-            // Simpler approach: rebuild deque correctly. Use standard sliding window min.
-            // Push i+1 into deque for future use; current dp[i] uses min of [i+1..hi]
-            // Let's use a forward pass instead for clarity.
-            let _ = (lo, hi);
-            dp[i] = prices[i]; // placeholder, corrected below
+            deq.push_back(i);
         }
-
-        // Correct implementation: forward pass
-        // dp[i] = prices[i] + min(dp[i+1], ..., dp[min(2i+2, n-1)], 0 if i==n-1)
-        // Use a min-deque. Process left to right but we need future values... 
-        // Instead, use right-to-left with a proper min-deque.
-        let mut dp2 = vec![i32::MAX; n + 1];
-        dp2[n] = 0; // sentinel: cost to acquire nothing
-        let mut deq2: VecDeque<usize> = VecDeque::new();
-        deq2.push_back(n); // dp2[n] = 0
-
-        for i in (0..n).rev() {
-            let hi = (2 * i + 2).min(n);
-            // Remove indices from front that are out of window (> hi)
-            while deq2.front().map_or(false, |&f| f > hi) {
-                deq2.pop_front();
-            }
-            dp2[i] = prices[i].saturating_add(*deq2.front().map(|f| &dp2[*f]).unwrap_or(&0));
-            // Maintain min-deque: pop from back while dp2[back] >= dp2[i]
-            while deq2.back().map_or(false, |&b| dp2[b] >= dp2[i]) {
-                deq2.pop_back();
-            }
-            deq2.push_back(i);
-        }
-        dp2[0]
+        dp[0]
     }
 }
 
@@ -298,8 +309,9 @@ mod tests_2944 {
 
 #### Rust Notes
 
-- Processing right-to-left with a min-deque: the deque stores indices in increasing `dp` value order (smallest at front).
-- `saturating_add` prevents overflow when combining large costs.
+- The deque stores indices into `dp[]` in increasing dp-value order (smallest at front).
+- Seed the deque with index `n` (`dp[n] = 0`) before the right-to-left pass so the sentinel is immediately available.
+- `deq.front().unwrap()` is safe: the deque always contains at least the sentinel `n` until it falls out of the window, but `dp[n] = 0` is always reachable from any `i` (since `n <= 2*i+2` for all `i < n`).
 
 ---
 
@@ -1008,6 +1020,89 @@ mod tests_329 {
 |-|------|-------|
 | Memoized DFS | O(m * n) | O(m * n) |
 
+#### Approach 2 — Topological Sort (Kahn's BFS)
+
+Build an explicit DAG by adding an edge `(r,c) → (nr,nc)` whenever `matrix[nr][nc] > matrix[r][c]`. Track in-degrees. Process cells in topological order (BFS by layer) and track the layer count — the number of layers equals the longest path.
+
+```rust
+use std::collections::VecDeque;
+
+struct SolutionTopo;
+
+impl SolutionTopo {
+    pub fn longest_increasing_path(matrix: Vec<Vec<i32>>) -> i32 {
+        let m = matrix.len();
+        let n = matrix[0].len();
+        let dirs: [(i32, i32); 4] = [(-1, 0), (1, 0), (0, -1), (0, 1)];
+        let idx = |r: usize, c: usize| r * n + c;
+
+        let mut in_deg = vec![0u32; m * n];
+        for r in 0..m {
+            for c in 0..n {
+                for (dr, dc) in dirs {
+                    let nr = r as i32 + dr;
+                    let nc = c as i32 + dc;
+                    if nr >= 0 && nr < m as i32 && nc >= 0 && nc < n as i32 {
+                        let (nr, nc) = (nr as usize, nc as usize);
+                        if matrix[nr][nc] > matrix[r][c] {
+                            // Edge r,c → nr,nc: nr,nc has higher in-degree
+                            in_deg[idx(nr, nc)] += 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        // All cells with in_deg == 0 are local minima (no smaller neighbor)
+        let mut queue: VecDeque<usize> = VecDeque::new();
+        for i in 0..m * n {
+            if in_deg[i] == 0 {
+                queue.push_back(i);
+            }
+        }
+
+        let mut layers = 0;
+        let mut remaining = m * n;
+        while !queue.is_empty() {
+            layers += 1;
+            for _ in 0..queue.len() {
+                let u = queue.pop_front().unwrap();
+                remaining -= 1;
+                let r = u / n;
+                let c = u % n;
+                for (dr, dc) in dirs {
+                    let nr = r as i32 + dr;
+                    let nc = c as i32 + dc;
+                    if nr >= 0 && nr < m as i32 && nc >= 0 && nc < n as i32 {
+                        let (nr, nc) = (nr as usize, nc as usize);
+                        if matrix[nr][nc] > matrix[r][c] {
+                            in_deg[idx(nr, nc)] -= 1;
+                            if in_deg[idx(nr, nc)] == 0 {
+                                queue.push_back(idx(nr, nc));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // If remaining > 0, there's a cycle — impossible on this strictly-increasing DAG
+        let _ = remaining;
+        layers
+    }
+}
+
+fn main() {
+    let m1 = vec![vec![9,9,4],vec![6,6,8],vec![2,1,1]];
+    assert_eq!(SolutionTopo::longest_increasing_path(m1), 4);
+    let m2 = vec![vec![3,4,5],vec![3,2,6],vec![2,2,1]];
+    assert_eq!(SolutionTopo::longest_increasing_path(m2), 4);
+    assert_eq!(SolutionTopo::longest_increasing_path(vec![vec![1]]), 1);
+    println!("LC329 Topo: all tests passed.");
+}
+```
+
+**When to use which:** The memoized DFS is cleaner and sufficient. The topological sort BFS reinforces the DAG perspective and is useful when you want to compute multiple DP values simultaneously (e.g., computing the path length for all cells in one pass without recursion stack overhead).
+
 ---
 
 ### LC #1857 — Largest Color Value in a Directed Graph
@@ -1400,6 +1495,53 @@ mod tests_188 {
 | Unlimited (k >= n/2) | O(n) | O(1) |
 | General | O(n * k) | O(k) |
 
+#### Approach 2 — Explicit 2-D State Machine DP
+
+The rolling-array approach above is compact but can be hard to follow. This explicit version uses a full 2-D table `dp[day][j][holding]` collapsed to two 1-D arrays per transaction level, making the state transitions maximally clear.
+
+```rust
+struct SolutionExplicit;
+
+impl SolutionExplicit {
+    pub fn max_profit(k: i32, prices: Vec<i32>) -> i32 {
+        let n = prices.len();
+        if n == 0 { return 0; }
+        let k = k as usize;
+
+        if k >= n / 2 {
+            // Unlimited: greedy (every up-day is a gain)
+            return prices.windows(2).map(|w| (w[1] - w[0]).max(0)).sum();
+        }
+
+        // hold[j] = best profit when holding stock, having used j buys so far
+        // cash[j] = best profit when NOT holding, having completed j transactions
+        let mut hold = vec![i32::MIN / 2; k + 1];
+        let mut cash = vec![0i32; k + 1];
+
+        for &p in &prices {
+            for j in (1..=k).rev() {
+                // Buy: was not holding, now hold (starts transaction j)
+                hold[j] = hold[j].max(cash[j - 1] - p);
+                // Sell: was holding, now not holding (completes transaction j)
+                cash[j] = cash[j].max(hold[j] + p);
+            }
+        }
+
+        *cash.iter().max().unwrap()
+    }
+}
+
+fn main() {
+    assert_eq!(SolutionExplicit::max_profit(2, vec![2, 4, 1]), 2);
+    assert_eq!(SolutionExplicit::max_profit(2, vec![3, 2, 6, 5, 0, 3]), 7);
+    assert_eq!(SolutionExplicit::max_profit(100, vec![1, 2, 3, 4, 5]), 4);
+    assert_eq!(SolutionExplicit::max_profit(1, vec![5, 4, 3, 2, 1]), 0);
+    println!("LC188 Explicit: all tests passed.");
+}
+```
+
+**When to use which:** Both approaches run in O(n·k) time and O(k) space. The explicit `hold`/`cash` naming clarifies that each `j` tracks a distinct transaction count and why the reverse loop prevents reuse within a single price step.
+
 ---
 
 ### LC #2218 — Maximum Value of K Coins From Piles
@@ -1477,6 +1619,59 @@ mod tests_2218 {
 |-|------|-------|
 | Grouped knapsack | O(k * sum of pile sizes) | O(k) |
 
+#### Approach 2 — Top-Down Memoized DFS
+
+The bottom-up grouped knapsack is cache-friendly and fast. A top-down memoization with `memo[pile_idx][coins_remaining]` is easier to derive from the recursive formulation and verifies the same state space.
+
+```rust
+struct SolutionMemo;
+
+impl SolutionMemo {
+    pub fn max_value_of_coins(piles: Vec<Vec<i32>>, k: i32) -> i32 {
+        let k = k as usize;
+        // Build prefix sums for each pile
+        let pre: Vec<Vec<i32>> = piles.iter().map(|p| {
+            let mut ps = vec![0i32; p.len() + 1];
+            for (i, &v) in p.iter().enumerate() { ps[i + 1] = ps[i] + v; }
+            ps
+        }).collect();
+        let n = pre.len();
+        // memo[i][j] = max coins from piles[i..] with j coins remaining
+        let mut memo = vec![vec![-1i32; k + 1]; n];
+
+        fn dfs(
+            i: usize, rem: usize,
+            pre: &[Vec<i32>], memo: &mut Vec<Vec<i32>>,
+        ) -> i32 {
+            if i == pre.len() || rem == 0 { return 0; }
+            if memo[i][rem] != -1 { return memo[i][rem]; }
+            // Take 0 coins from pile i
+            let mut best = dfs(i + 1, rem, pre, memo);
+            // Take t coins from pile i
+            let max_take = (pre[i].len() - 1).min(rem);
+            for t in 1..=max_take {
+                best = best.max(pre[i][t] + dfs(i + 1, rem - t, pre, memo));
+            }
+            memo[i][rem] = best;
+            best
+        }
+
+        dfs(0, k, &pre, &mut memo)
+    }
+}
+
+fn main() {
+    assert_eq!(SolutionMemo::max_value_of_coins(vec![vec![1,100,3],vec![7,8,9]], 2), 101);
+    assert_eq!(SolutionMemo::max_value_of_coins(vec![
+        vec![100],vec![100],vec![100],vec![100],vec![100],vec![100],vec![1,1,1,1,1,1,700]
+    ], 7), 706);
+    assert_eq!(SolutionMemo::max_value_of_coins(vec![vec![5,3,1]], 2), 8);
+    println!("LC2218 Memo: all tests passed.");
+}
+```
+
+**When to use which:** The bottom-up approach saves stack frames and is preferred in competitive contexts. The top-down version is a cleaner starting point when working out the recurrence on paper — the `dfs(i, rem)` decomposition is immediately obvious.
+
 ---
 
 ### LC #2209 — Minimum White Tiles After Covering With Carpets
@@ -1509,28 +1704,31 @@ impl Solution {
             prefix[i + 1] = prefix[i] + tiles[i];
         }
 
-        // dp[j][i] = min white tiles in floor[0..=i] using j carpets
-        // Use rolling: dp[j] array indexed by position
-        // Space optimization: iterate carpets outer, positions inner
-        let mut dp = vec![0i32; n]; // dp[i] = min whites in [0..=i] with 0 carpets
-        for i in 0..n {
-            dp[i] = prefix[i + 1]; // no carpets: all whites remain
-        }
+        // dp[i] = min white tiles in floor[0..i] (exclusive, length i prefix).
+        // With 0 carpets, dp[i] = prefix[i].
+        // Rolling: outer loop over carpet count, inner over prefix length.
+        let mut dp = prefix.clone(); // n+1 elements; dp[0]=0, dp[i]=prefix[i]
 
         for _carpet in 1..=nc {
-            let mut ndp = vec![0i32; n];
-            for i in 0..n {
-                // Option 1: don't cover position i with this carpet
-                let no_cover = if i > 0 { ndp[i - 1] } else { 0 } + tiles[i];
-                // Option 2: place carpet ending at i
+            let mut ndp = vec![0i32; n + 1];
+            for i in 0..=n {
+                if i == 0 {
+                    ndp[0] = 0;
+                    continue;
+                }
+                // Option 1: don't use a carpet on tile i-1 — add tile i-1 to cost,
+                // also allow "use fewer than _carpet carpets on first i-1 tiles"
+                // by taking min with dp[i] (previous carpet count's value).
+                ndp[i] = (ndp[i - 1] + tiles[i - 1]).min(dp[i]);
+                // Option 2: place one carpet ending at tile i-1 (carpet covers [start..i)).
+                // Cost = dp[start] with one fewer carpet (previous layer).
                 let start = i.saturating_sub(cl);
-                let with_cover = if start > 0 { dp[start - 1] } else { 0 };
-                ndp[i] = no_cover.min(with_cover);
+                ndp[i] = ndp[i].min(dp[start]);
             }
             dp = ndp;
         }
 
-        dp[n - 1]
+        dp[n]
     }
 }
 
@@ -1540,7 +1738,7 @@ mod tests_2209 {
 
     #[test]
     fn example1() {
-        assert_eq!(Solution::minimum_white_tiles("10110101".to_string(), 2, 3), 2);
+        assert_eq!(Solution::minimum_white_tiles("10110101".to_string(), 2, 2), 2);
     }
 
     #[test]
@@ -1971,12 +2169,12 @@ mod tests_2809 {
 
     #[test]
     fn example1() {
-        assert_eq!(Solution::minimum_time(vec![1,2,3], vec![1,2,3], 4), 5);
+        assert_eq!(Solution::minimum_time(vec![1,2,3], vec![1,2,3], 4), 3);
     }
 
     #[test]
     fn example2() {
-        assert_eq!(Solution::minimum_time(vec![1,2,3], vec![1,2,3], 5), 5);
+        assert_eq!(Solution::minimum_time(vec![1,2,3], vec![1,2,3], 5), 2);
     }
 
     #[test]
