@@ -90,11 +90,11 @@ impl Solution {
         let mut len = first.len();
         for s in strs.iter().skip(1) {
             let sb = s.as_bytes();
-            // Shrink len to the common prefix length with this string
             len = len.min(sb.len());
-            while len > 0 && first[len - 1] != sb[len - 1] {
-                len -= 1;
-            }
+            // Scan forward to find the first mismatch
+            let mut i = 0;
+            while i < len && first[i] == sb[i] { i += 1; }
+            len = i;
         }
         strs[0][..len].to_string()
     }
@@ -111,7 +111,9 @@ mod tests_lc14 {
             for s in strs.iter().skip(1) {
                 let sb = s.as_bytes();
                 len = len.min(sb.len());
-                while len > 0 && first[len - 1] != sb[len - 1] { len -= 1; }
+                let mut i = 0;
+                while i < len && first[i] == sb[i] { i += 1; }
+                len = i;
             }
             strs[0][..len].to_string()
         }
@@ -1495,10 +1497,10 @@ mod tests_lc440 {
 characters one at a time. After each character, return `true` if the suffix of all characters read
 so far ends with any word in the dictionary.
 
-**Key insight.** Insert reversed words into a Trie. Maintain a buffer of recent characters. After
-each character, check if any suffix of the buffer (read backwards from the current character)
-matches a Trie path ending at an `is_end` node. Maintain a set of "active" Trie nodes to avoid
-re-scanning the full buffer each time.
+**Key insight.** Insert each word into the Trie in forward order. Maintain a set of "active" Trie
+nodes — one per ongoing suffix-match attempt. On each new character, advance every active node by
+that character (keeping matches alive), and also start a fresh attempt from the root. If any
+advanced node reaches an `is_end`, the stream's suffix matches a dictionary word.
 
 ```rust
 #[derive(Default)]
@@ -1516,10 +1518,10 @@ struct StreamChecker {
 impl StreamChecker {
     fn new(words: Vec<String>) -> Self {
         let mut root = TrieNode::default();
-        // Insert each word reversed
+        // Insert each word in forward order
         for word in &words {
             let mut node = &mut root;
-            for c in word.bytes().rev() {
+            for c in word.bytes() {
                 let idx = (c - b'a') as usize;
                 node = node.children[idx].get_or_insert_with(|| Box::new(TrieNode::default()));
             }
@@ -1563,7 +1565,7 @@ mod tests_lc1032 {
             let mut root = TrieNode::default();
             for word in &words {
                 let mut node = &mut root;
-                for c in word.bytes().rev() {
+                for c in word.bytes() {
                     let idx = (c - b'a') as usize;
                     node = node.children[idx].get_or_insert_with(|| Box::new(TrieNode::default()));
                 }
@@ -1817,11 +1819,21 @@ mod tests_lc1178 {
     }
     #[test]
     fn test_basic() {
+        // LeetCode Example 1 (all puzzles exactly 7 chars)
         let result = Solution::find_num_of_valid_words(
             vec!["aaaa".into(),"asas".into(),"able".into(),"ability".into(),"actt".into(),"actor".into(),"access".into()],
-            vec!["aboveyz".into(),"abrodyz".into(),"abslute".into(),"absolutely".into(),"acttbyz".into()]
+            vec!["aboveyz".into(),"abrodyz".into(),"abslute".into(),"befores".into(),"cmntxyz".into(),"lopekmn".into(),"acttbyz".into()]
         );
-        assert_eq!(result, vec![1, 1, 3, 4, 0]);
+        assert_eq!(result, vec![1, 1, 3, 0, 0, 0, 2]);
+    }
+    #[test]
+    fn test_example2() {
+        // LeetCode Example 2
+        let result = Solution::find_num_of_valid_words(
+            vec!["apple".into(),"pleas".into(),"please".into()],
+            vec!["aelwxyz".into(),"aelpxyz".into(),"aelpsxy".into(),"saelpxy".into(),"xaelpsy".into()]
+        );
+        assert_eq!(result, vec![0, 1, 3, 2, 0]);
     }
     #[test]
     fn test_no_matches() {

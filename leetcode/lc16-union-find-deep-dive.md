@@ -1356,7 +1356,7 @@ impl Solution {
             idx_sorted.sort_unstable();
             let mut chars: Vec<u8> = idx_sorted.iter().map(|&i| bytes[i]).collect();
             chars.sort_unstable();
-            for (pos, &ch) in idx_sorted.iter().zip(chars.iter()) {
+            for (&pos, &ch) in idx_sorted.iter().zip(chars.iter()) {
                 result[pos] = ch;
             }
         }

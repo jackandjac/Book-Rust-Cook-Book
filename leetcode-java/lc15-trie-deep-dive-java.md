@@ -968,7 +968,8 @@ class Solution676 {
         var obj = new Solution676();
         obj.buildDict(new String[]{"hello","hallo","leetcode"});
         boolean r1 = obj.search("hello");
-        if (r1) throw new AssertionError("LC676 'hello' exact: expected false (need 1 diff)");
+        // "hallo" differs from "hello" by exactly 1 char → true
+        if (!r1) throw new AssertionError("LC676 'hello': expected true ('hallo' differs by 1 char)");
         boolean r2 = obj.search("hhllo");
         if (!r2) throw new AssertionError("LC676 'hhllo': expected true");
         boolean r3 = obj.search("hell");
@@ -1204,11 +1205,18 @@ class Solution1178 {
 
     public static void main(String[] args) {
         var s = new Solution1178();
+        // All puzzles are exactly 7 chars (LeetCode constraint)
         var r1 = s.findNumOfValidWords(
             new String[]{"aaaa","asas","able","ability","actt","actor","access"},
-            new String[]{"aboveyz","abrodyz","abslute","befores","cmn","lopekmn","acttsu"});
-        var expected1 = List.of(1,1,3,2,4,0,2);
+            new String[]{"aboveyz","abrodyz","abslute","befores","cmntxyz","lopekmn","acttbyz"});
+        var expected1 = List.of(1,1,3,0,0,0,2);
         if (!r1.equals(expected1)) throw new AssertionError("LC1178 t1: got " + r1);
+        // LeetCode Example 2
+        var r2 = s.findNumOfValidWords(
+            new String[]{"apple","pleas","please"},
+            new String[]{"aelwxyz","aelpxyz","aelpsxy","saelpxy","xaelpsy"});
+        var expected2 = List.of(0,1,3,2,0);
+        if (!r2.equals(expected2)) throw new AssertionError("LC1178 t2: got " + r2);
     }
 }
 ```
