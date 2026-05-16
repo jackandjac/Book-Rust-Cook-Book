@@ -182,6 +182,46 @@ fn main() {
 > **Java comparison.** In Java you'd write `int[] parent = new int[n]` and loop to initialize.
 > In Rust, `(0..n).collect()` is idiomatic and doesn't require a separate loop.
 
+**Approach 2 — DFS (O(n²) time, O(n) space).** The adjacency-matrix graph can be traversed with a plain DFS instead. Count the number of DFS invocations that start on an unvisited node — each invocation discovers one complete province. This is conceptually simpler and avoids the DSU implementation; the DSU is preferred when you need incremental updates or cycle detection.
+
+```rust
+struct SolutionDFS;
+
+impl SolutionDFS {
+    pub fn find_circle_num(is_connected: Vec<Vec<i32>>) -> i32 {
+        let n = is_connected.len();
+        let mut visited = vec![false; n];
+        let mut count = 0;
+
+        for start in 0..n {
+            if !visited[start] {
+                count += 1;
+                Self::dfs(&is_connected, start, &mut visited);
+            }
+        }
+        count
+    }
+
+    fn dfs(g: &Vec<Vec<i32>>, node: usize, visited: &mut Vec<bool>) {
+        visited[node] = true;
+        for next in 0..g.len() {
+            if g[node][next] == 1 && !visited[next] {
+                Self::dfs(g, next, visited);
+            }
+        }
+    }
+}
+
+fn main() {
+    assert_eq!(SolutionDFS::find_circle_num(vec![vec![1,1,0],vec![1,1,0],vec![0,0,1]]), 2);
+    assert_eq!(SolutionDFS::find_circle_num(vec![vec![1,0,0],vec![0,1,0],vec![0,0,1]]), 3);
+    assert_eq!(SolutionDFS::find_circle_num(vec![vec![1,1,1],vec![1,1,1],vec![1,1,1]]), 1);
+    println!("LC547 DFS OK");
+}
+```
+
+**When to use which:** DSU shines when you add edges incrementally (online queries) or need to detect cycles; DFS is simpler for a single static adjacency matrix.
+
 ---
 
 ## LC990. Satisfiability of Equality Equations

@@ -811,6 +811,69 @@ mod tests_lc139 {
 
 **Complexity.** Time O(n * max_word_len), Space O(n).
 
+**Approach 2 — Trie + DP (O(D + n * L) time, O(D + n) space).** Build a Trie from the dictionary. For each DP position `i`, walk the Trie forward from `i` — each `is_end` node encountered at position `j` means `s[i..j]` is a valid word. This avoids the substring lookup inside the inner loop and is the natural Trie chapter approach.
+
+```rust
+#[derive(Default)]
+struct TrieNode {
+    children: [Option<Box<TrieNode>>; 26],
+    is_end: bool,
+}
+
+struct SolutionTrie;
+
+impl SolutionTrie {
+    pub fn word_break(s: String, word_dict: Vec<String>) -> bool {
+        // Build Trie from dictionary
+        let mut root = TrieNode::default();
+        for word in &word_dict {
+            let mut node = &mut root;
+            for c in word.bytes() {
+                let idx = (c - b'a') as usize;
+                node = node.children[idx].get_or_insert_with(|| Box::new(TrieNode::default()));
+            }
+            node.is_end = true;
+        }
+
+        let sb = s.as_bytes();
+        let n = s.len();
+        let mut dp = vec![false; n + 1];
+        dp[0] = true;
+
+        for i in 0..n {
+            if !dp[i] { continue; }
+            // Walk Trie from position i forward
+            let mut node = &root;
+            for j in i..n {
+                let idx = (sb[j] - b'a') as usize;
+                match node.children[idx].as_ref() {
+                    None => break, // no word with this prefix
+                    Some(child) => {
+                        node = child;
+                        if node.is_end {
+                            dp[j + 1] = true;
+                        }
+                    }
+                }
+            }
+        }
+        dp[n]
+    }
+}
+
+fn main() {
+    assert!(SolutionTrie::word_break("leetcode".into(), vec!["leet".into(), "code".into()]));
+    assert!(SolutionTrie::word_break("applepenapple".into(), vec!["apple".into(), "pen".into()]));
+    assert!(!SolutionTrie::word_break(
+        "catsandog".into(),
+        vec!["cats".into(), "dog".into(), "sand".into(), "and".into(), "cat".into()]
+    ));
+    println!("LC139 Trie+DP OK");
+}
+```
+
+**When to use which:** HashSet DP is simpler to write. Trie DP is preferred when the same dictionary is used for many queries (amortizes the Trie-build cost) or when you need to enumerate all matching words at each position (as in Word Break II).
+
 ---
 
 ## LC 140. Word Break II
@@ -1142,6 +1205,33 @@ mod tests_lc421 {
 > **Java note.** Java developers implement this identically with a two-child array node. The Rust
 > version uses the same `get_or_insert_with` insertion idiom as a regular Trie. The key difference
 > is that you always have exactly 2 children, and you greedily pick the opposite bit.
+
+**Approach 2 — O(n²) Brute Force.** For completeness, the naive approach tries every pair. This helps verify correctness and shows why the Trie approach is O(n) instead of O(n²).
+
+```rust
+struct SolutionBrute;
+
+impl SolutionBrute {
+    pub fn find_maximum_xor(nums: Vec<i32>) -> i32 {
+        let mut max_xor = 0;
+        for i in 0..nums.len() {
+            for j in i + 1..nums.len() {
+                max_xor = max_xor.max(nums[i] ^ nums[j]);
+            }
+        }
+        max_xor
+    }
+}
+
+fn main() {
+    assert_eq!(SolutionBrute::find_maximum_xor(vec![3, 10, 5, 25, 2, 8]), 28);
+    assert_eq!(SolutionBrute::find_maximum_xor(vec![0, 1]), 1);
+    assert_eq!(SolutionBrute::find_maximum_xor(vec![7, 7, 7]), 0);
+    println!("LC421 brute-force OK");
+}
+```
+
+**When to use which:** For `n <= 1000`, brute force is acceptable. For `n > 10^4` (LeetCode constraint: up to 2×10^5), the O(n) Trie approach is required.
 
 ---
 
@@ -1538,8 +1628,7 @@ impl StreamChecker {
 
         // Always start a new match attempt from the root for this character
         // (root represents the empty suffix; we advance it by one character below)
-        let candidates: std::iter::Chain<std::iter::Once<*const TrieNode>, std::vec::IntoIter<*const TrieNode>> =
-            std::iter::once(root_ptr).chain(self.active.drain(..));
+        let candidates = std::iter::once(root_ptr).chain(self.active.drain(..));
 
         for node_ptr in candidates {
             let node = unsafe { &*node_ptr };
