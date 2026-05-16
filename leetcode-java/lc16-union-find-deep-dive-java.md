@@ -229,6 +229,43 @@ class LC547 {
 
 **Complexity.** Time O(n² α(n)), Space O(n).
 
+**Approach 2 — DFS (O(n²) time, O(n) space).** Walk the adjacency matrix; for each unvisited node, increment the count and flood-fill all connected cities. Simpler to implement; preferred when you don't need incremental connectivity updates.
+
+```java
+class LC547DFS {
+    public int findCircleNum(int[][] isConnected) {
+        int n = isConnected.length;
+        boolean[] visited = new boolean[n];
+        int count = 0;
+        for (int i = 0; i < n; i++) {
+            if (!visited[i]) {
+                count++;
+                dfs(isConnected, visited, i);
+            }
+        }
+        return count;
+    }
+
+    private void dfs(int[][] g, boolean[] visited, int node) {
+        visited[node] = true;
+        for (int next = 0; next < g.length; next++)
+            if (g[node][next] == 1 && !visited[next])
+                dfs(g, visited, next);
+    }
+
+    public static void main(String[] args) {
+        var s = new LC547DFS();
+        int r1 = s.findCircleNum(new int[][]{{1,1,0},{1,1,0},{0,0,1}});
+        if (r1 != 2) throw new AssertionError("LC547DFS t1: got " + r1);
+        int r2 = s.findCircleNum(new int[][]{{1,0,0},{0,1,0},{0,0,1}});
+        if (r2 != 3) throw new AssertionError("LC547DFS t2: got " + r2);
+        int r3 = s.findCircleNum(new int[][]{{1,1,1},{1,1,1},{1,1,1}});
+        if (r3 != 1) throw new AssertionError("LC547DFS t3: got " + r3);
+        System.out.println("LC547 DFS OK");
+    }
+}
+```
+
 ---
 
 ## LC 695. Max Area of Island

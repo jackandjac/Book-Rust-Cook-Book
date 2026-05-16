@@ -213,6 +213,44 @@ class Solution139 {
 > `node.children[idx].as_ref()?` with the `?` short-circuiting the walk. Java uses an explicit
 > `break`; Rust can use `Option` chaining.
 
+**Approach 2 — HashSet DP (O(n × maxWordLen) time, O(n + W) space).** The canonical non-trie solution. For each position `i` with `dp[i]` true, try all substrings `s[i..j]` up to the maximum dictionary word length and check membership in a HashSet.
+
+```java
+import java.util.*;
+
+class Solution139HashSet {
+    public boolean wordBreak(String s, List<String> wordDict) {
+        var dict = new HashSet<>(wordDict);
+        int maxLen = wordDict.stream().mapToInt(String::length).max().orElse(0);
+        int n = s.length();
+        var dp = new boolean[n + 1];
+        dp[0] = true;
+        for (int i = 1; i <= n; i++) {
+            for (int j = Math.max(0, i - maxLen); j < i; j++) {
+                if (dp[j] && dict.contains(s.substring(j, i))) {
+                    dp[i] = true;
+                    break;
+                }
+            }
+        }
+        return dp[n];
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution139HashSet();
+        if (!sol.wordBreak("leetcode", List.of("leet","code")))
+            throw new AssertionError("t1 expected true");
+        if (!sol.wordBreak("applepenapple", List.of("apple","pen")))
+            throw new AssertionError("t2 expected true");
+        if (sol.wordBreak("catsandog", List.of("cats","dog","sand","and","cat")))
+            throw new AssertionError("t3 expected false");
+        System.out.println("LC139 HashSet OK");
+    }
+}
+```
+
+**When to use which:** Trie DP is faster when many queries share the same dictionary. HashSet DP is simpler to implement correctly in interviews.
+
 ---
 
 ## LC648. Replace Words
@@ -736,6 +774,29 @@ class Solution421 {
 > `[Option<Box<Node>>; 2]`. Both index by the bit value 0 or 1. Java `Integer.numberOfLeadingZeros`
 > can determine the actual highest bit, but starting at bit 30 (covers all `int` values ≤ 10^9)
 > is simpler and correct for the given constraints.
+
+**Approach 2 — O(n²) Brute Force.** For small `n` or as a correctness check, try every pair.
+
+```java
+class Solution421Brute {
+    public int findMaximumXOR(int[] nums) {
+        int max = 0;
+        for (int i = 0; i < nums.length; i++)
+            for (int j = i + 1; j < nums.length; j++)
+                max = Math.max(max, nums[i] ^ nums[j]);
+        return max;
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution421Brute();
+        int r1 = sol.findMaximumXOR(new int[]{3, 10, 5, 25, 2, 8});
+        if (r1 != 28) throw new AssertionError("LC421 brute t1: got " + r1);
+        int r2 = sol.findMaximumXOR(new int[]{0, 1});
+        if (r2 != 1) throw new AssertionError("LC421 brute t2: got " + r2);
+        System.out.println("LC421 brute-force OK");
+    }
+}
+```
 
 ---
 
