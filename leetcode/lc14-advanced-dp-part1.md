@@ -172,12 +172,56 @@ mod tests_lc516 {
 
 | | Time | Space |
 |-|------|-------|
-| Interval DP | O(n²) | O(n²) |
+| Interval DP (bottom-up) | O(n²) | O(n²) |
+
+### Approach 2 — Space-Optimized 1-D DP (O(n²) time, O(n) space)
+
+Since `dp[i][j]` only depends on `dp[i+1][j]`, `dp[i][j-1]`, and `dp[i+1][j-1]`, we can maintain two 1-D arrays (current and previous row) and reduce space to O(n).
+
+```rust
+struct Solution;
+
+impl Solution {
+    pub fn longest_palindrome_subseq_space_opt(s: String) -> i32 {
+        let b = s.as_bytes();
+        let n = b.len();
+        // dp[j] = LPS length for s[i..=j] (i varies in outer loop)
+        let mut dp = vec![0i32; n];
+        // prev[j] = dp[i+1][j] from previous i iteration
+        let mut prev = vec![0i32; n];
+
+        for i in (0..n).rev() {
+            dp[i] = 1; // dp[i][i] = 1
+            let mut prev_diag = 0i32; // stores dp[i+1][j-1]
+            for j in i + 1..n {
+                let saved = dp[j]; // will become prev_diag for next j
+                let len = j - i + 1;
+                dp[j] = if b[i] == b[j] {
+                    if len == 2 { 2 } else { prev_diag + 2 }
+                } else {
+                    prev[j].max(dp[j - 1])
+                };
+                prev_diag = saved;
+            }
+            prev = dp.clone();
+        }
+        dp[n - 1]
+    }
+}
+
+fn main() {
+    assert_eq!(Solution::longest_palindrome_subseq_space_opt("bbbab".to_string()), 4);
+    assert_eq!(Solution::longest_palindrome_subseq_space_opt("cbbd".to_string()), 2);
+    assert_eq!(Solution::longest_palindrome_subseq_space_opt("a".to_string()), 1);
+    println!("LC 516 space-opt OK");
+}
+```
 
 ### Rust Notes
 
 - The `len == 2` guard prevents index underflow: `dp[i+1][j-1]` when `j = i+1` would access `dp[i+1][i]` (which is 0 but the correct answer for two equal chars is 2, not `0 + 2`). Alternatively initialize `dp[i][i+1]` in a separate base-case loop.
 - `b[i] == b[j]` compares `u8` values — safe for ASCII; use `.chars().collect::<Vec<_>>()` for Unicode.
+- The space-optimized version uses `prev_diag` to track the diagonal element `dp[i+1][j-1]` before it gets overwritten — the same technique used in LCS space optimization.
 
 ---
 
@@ -494,7 +538,8 @@ mod tests_lc312 {
 
     #[test]
     fn test_all_ones() {
-        assert_eq!(Solution::max_coins(vec![1, 1, 1]), 4);
+        // All values are 1; every burst yields 1*1*1=1, total = 3
+        assert_eq!(Solution::max_coins(vec![1, 1, 1]), 3);
     }
 }
 ```
@@ -503,13 +548,56 @@ mod tests_lc312 {
 
 | | Time | Space |
 |-|------|-------|
-| Interval DP | O(n³) | O(n²) |
+| Bottom-up interval DP | O(n³) | O(n²) |
+
+### Approach 2 — Top-Down Memoization (O(n³) time, O(n²) space)
+
+Some developers find the "last balloon" idea clearer in top-down form where the recursion mirrors the definition directly.
+
+```rust
+struct Solution;
+
+impl Solution {
+    pub fn max_coins_top_down(nums: Vec<i32>) -> i32 {
+        let mut arr = vec![1i32];
+        arr.extend_from_slice(&nums);
+        arr.push(1);
+        let n = arr.len();
+        // memo[i][j] = max coins from bursting all balloons strictly between i and j
+        let mut memo = vec![vec![-1i32; n]; n];
+        Self::solve(&arr, 0, n - 1, &mut memo)
+    }
+
+    fn solve(arr: &[i32], i: usize, j: usize, memo: &mut Vec<Vec<i32>>) -> i32 {
+        if j <= i + 1 { return 0; } // no balloon between i and j
+        if memo[i][j] != -1 { return memo[i][j]; }
+        let mut best = 0;
+        for k in i + 1..j {
+            // k is the LAST balloon burst between i and j
+            let coins = arr[i] * arr[k] * arr[j]
+                + Self::solve(arr, i, k, memo)
+                + Self::solve(arr, k, j, memo);
+            best = best.max(coins);
+        }
+        memo[i][j] = best;
+        best
+    }
+}
+
+fn main() {
+    assert_eq!(Solution::max_coins_top_down(vec![3, 1, 5, 8]), 167);
+    assert_eq!(Solution::max_coins_top_down(vec![1, 5]), 10);
+    assert_eq!(Solution::max_coins_top_down(vec![1, 1, 1]), 3);
+    println!("LC 312 top-down OK");
+}
+```
 
 ### Rust Notes
 
 - `extend_from_slice` copies a slice into a `Vec` — cleaner than a manual loop.
 - The "last burst" framing transforms an exponential state space into a polynomial one. The key is that `dp[i][k]` and `dp[k][j]` are **independent** once we fix `k` as the last balloon.
 - In Java you'd typically pad with an explicit conditional; Rust's sentinel approach (`arr[0] = 1, arr[n+1] = 1`) is equally clean.
+- Top-down uses `memo[i][j] = -1` as the uncomputed sentinel. `-1` is safe because all valid coin counts are non-negative.
 
 ---
 
@@ -939,6 +1027,43 @@ mod tests_lc1312 {
 |-|------|-------|
 | Interval DP | O(n²) | O(n²) |
 
+### Approach 2 — Via LPS (O(n²) time, O(n²) space)
+
+Because `min_insertions(s) = n - LPS(s)`, you can reuse the LC 516 solution directly. This is the cleanest approach when you already have an LPS function:
+
+```rust
+struct Solution;
+
+impl Solution {
+    pub fn min_insertions_via_lps(s: String) -> i32 {
+        let b = s.as_bytes();
+        let n = b.len();
+        // Compute LPS — same as LC 516
+        let mut dp = vec![vec![0i32; n]; n];
+        for i in 0..n { dp[i][i] = 1; }
+        for len in 2..=n {
+            for i in 0..=n - len {
+                let j = i + len - 1;
+                if b[i] == b[j] {
+                    dp[i][j] = if len == 2 { 2 } else { dp[i + 1][j - 1] + 2 };
+                } else {
+                    dp[i][j] = dp[i + 1][j].max(dp[i][j - 1]);
+                }
+            }
+        }
+        // Minimum insertions = characters NOT in LPS
+        n as i32 - dp[0][n - 1]
+    }
+}
+
+fn main() {
+    assert_eq!(Solution::min_insertions_via_lps("zzazz".to_string()), 0);
+    assert_eq!(Solution::min_insertions_via_lps("mbadm".to_string()), 2);
+    assert_eq!(Solution::min_insertions_via_lps("leetcode".to_string()), 5);
+    println!("LC 1312 via-LPS OK");
+}
+```
+
 ### Rust Notes
 
 - This is the complement of LC #516: `min_insertions = n - longest_palindromic_subsequence`. You can solve it directly with the recurrence above, or compute `n - lps(s)`.
@@ -1020,9 +1145,9 @@ mod tests_lc877 {
 
     #[test]
     fn test_trivial() {
-        // Alice always wins (n even, total odd)
-        assert!(Solution::stone_game(vec![1, 100, 1, 1]));
-        assert!(Solution::stone_game(vec![2, 7, 9, 4]));
+        // Alice always wins (n even, total odd — problem constraint)
+        assert!(Solution::stone_game(vec![1, 100, 1, 1])); // total=103 odd
+        assert!(Solution::stone_game(vec![4, 2, 6, 3]));   // total=15 odd
     }
 }
 ```
@@ -1032,6 +1157,33 @@ mod tests_lc877 {
 | | Time | Space |
 |-|------|-------|
 | Interval DP | O(n²) | O(n²) |
+
+### Approach 2 — Mathematical O(1) Solution
+
+Since `n` is even and the total is odd (problem constraints), Alice can always win by controlling parity. She picks either all even-indexed or all odd-indexed piles — whichever has a larger sum — and she can always force this by mirroring Bob's choices.
+
+```rust
+struct Solution;
+
+impl Solution {
+    pub fn stone_game_math(_piles: Vec<i32>) -> bool {
+        // With n even and total-stones odd, Alice always controls parity.
+        // She designates all even-indexed OR all odd-indexed piles as "hers"
+        // and can always take from the correct end to claim them.
+        // Proof: at every turn, both ends are from different index parities.
+        true
+    }
+}
+
+fn main() {
+    // Mathematical solution: always true under the problem's constraints
+    assert!(Solution::stone_game_math(vec![5, 3, 4, 5]));
+    assert!(Solution::stone_game_math(vec![1, 100, 1, 1]));
+    println!("LC 877 math approach OK");
+}
+```
+
+**When to use which approach:** Use the mathematical O(1) solution for LC 877 specifically (it exploits fixed constraints). Use the DP approach when generalizing to: arbitrary n (odd or even), arbitrary totals, or finding the exact margin — as in LC 486 (Predict the Winner) and LC 1140 (Stone Game II).
 
 ### Rust Notes
 

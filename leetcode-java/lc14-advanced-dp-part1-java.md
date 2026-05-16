@@ -129,7 +129,45 @@ class Solution {
 
 **Complexity:** Time O(n²), Space O(n²).
 
-**Java notes:** The `len == 2` guard is identical to the Rust version — without it, `dp[i+1][j-1]` at `j = i+1` accesses `dp[i+1][i]` which is 0, producing 2 anyway, but the intent is clearer with the explicit check. Java arrays are zero-initialized so no `Arrays.fill` needed here.
+**Approach 2 — Space-Optimized O(n) space.** Since `dp[i][j]` depends on `dp[i+1][j]`, `dp[i][j-1]`, and the diagonal `dp[i+1][j-1]`, we can use two 1-D arrays: the previous `i+1` row and the current `i` row. Track the diagonal value separately as `prevDiag`.
+
+```java
+class Solution {
+    public int longestPalindromeSubseqSpaceOpt(String s) {
+        int n = s.length();
+        int[] dp = new int[n];
+        int[] prev = new int[n]; // represents dp[i+1][*]
+
+        for (int i = n - 1; i >= 0; i--) {
+            dp[i] = 1; // dp[i][i] = 1
+            int prevDiag = 0; // tracks dp[i+1][j-1] before overwrite
+            for (int j = i + 1; j < n; j++) {
+                int saved = dp[j]; // save before overwrite
+                int len = j - i + 1;
+                if (s.charAt(i) == s.charAt(j)) {
+                    dp[j] = (len == 2) ? 2 : prevDiag + 2;
+                } else {
+                    dp[j] = Math.max(prev[j], dp[j - 1]);
+                }
+                prevDiag = saved;
+            }
+            prev = dp.clone();
+        }
+        return dp[n - 1];
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution();
+        var r1 = sol.longestPalindromeSubseqSpaceOpt("bbbab");
+        if (r1 != 4) throw new AssertionError("bbbab space-opt: got " + r1);
+        var r2 = sol.longestPalindromeSubseqSpaceOpt("cbbd");
+        if (r2 != 2) throw new AssertionError("cbbd space-opt: got " + r2);
+        System.out.println("LC 516 space-opt OK");
+    }
+}
+```
+
+**Java notes:** The `len == 2` guard is identical to the Rust version — without it, `dp[i+1][j-1]` at `j = i+1` accesses `dp[i+1][i]` which is 0, producing 2 anyway, but the intent is clearer with the explicit check. Java arrays are zero-initialized so no `Arrays.fill` needed here. The space-optimized version clones the array with `.clone()` — this is an O(n) operation each outer iteration, so total time is still O(n²).
 
 ---
 
@@ -297,7 +335,8 @@ class Solution {
         if (r3 != 3) throw new AssertionError("[3]: got " + r3);
 
         var r4 = sol.maxCoins(new int[]{1, 1, 1});
-        if (r4 != 4) throw new AssertionError("[1,1,1]: got " + r4);
+        // All values are 1; every burst yields 1*1*1=1, total = 3
+        if (r4 != 3) throw new AssertionError("[1,1,1]: got " + r4);
 
         System.out.println("LC 312 OK");
     }
@@ -306,7 +345,53 @@ class Solution {
 
 **Complexity:** Time O(n³), Space O(n²).
 
-**Java notes:** The open-interval convention (`dp[i][j]` covers strictly between `i` and `j`) avoids edge-case handling at the boundaries — the sentinel `1`s at index 0 and `n+1` absorb the boundary multiplications. Java's `int` is sufficient; products max out at 100 × 100 × 100 = 10^6 per balloon, and the sum across all balloons fits in `int`.
+**Approach 2 — Top-Down Memoization.** Many find the "last balloon" recursion more natural top-down. The logic is identical; memoization prevents re-computing subproblems.
+
+```java
+import java.util.Arrays;
+
+class Solution {
+    private int[] arr;
+    private int[][] memo;
+
+    public int maxCoinsTopDown(int[] nums) {
+        int n = nums.length;
+        arr = new int[n + 2];
+        arr[0] = 1;
+        arr[n + 1] = 1;
+        for (int i = 0; i < n; i++) arr[i + 1] = nums[i];
+        int m = arr.length;
+        memo = new int[m][m];
+        for (var row : memo) Arrays.fill(row, -1);
+        return solve(0, m - 1);
+    }
+
+    private int solve(int i, int j) {
+        if (j <= i + 1) return 0;
+        if (memo[i][j] != -1) return memo[i][j];
+        int best = 0;
+        for (int k = i + 1; k < j; k++) {
+            // k is the LAST balloon burst between i and j
+            int coins = arr[i] * arr[k] * arr[j] + solve(i, k) + solve(k, j);
+            best = Math.max(best, coins);
+        }
+        memo[i][j] = best;
+        return best;
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution();
+        var r1 = sol.maxCoinsTopDown(new int[]{3, 1, 5, 8});
+        if (r1 != 167) throw new AssertionError("[3,1,5,8] top-down: got " + r1);
+        var sol2 = new Solution();
+        var r2 = sol2.maxCoinsTopDown(new int[]{1, 1, 1});
+        if (r2 != 3) throw new AssertionError("[1,1,1] top-down: got " + r2);
+        System.out.println("LC 312 top-down OK");
+    }
+}
+```
+
+**Java notes:** The open-interval convention (`dp[i][j]` covers strictly between `i` and `j`) avoids edge-case handling at the boundaries — the sentinel `1`s at index 0 and `n+1` absorb the boundary multiplications. Java's `int` is sufficient; products max out at 100 × 100 × 100 = 10^6 per balloon, and the sum across all balloons fits in `int`. The top-down version uses `-1` as the memo sentinel: always safe since all valid coin totals are non-negative.
 
 ---
 
@@ -600,8 +685,9 @@ class Solution {
         var r2 = sol.stoneGame(new int[]{1, 100, 1, 1});
         if (!r2) throw new AssertionError("[1,100,1,1]: got " + r2);
 
-        var r3 = sol.stoneGame(new int[]{2, 7, 9, 4});
-        if (!r3) throw new AssertionError("[2,7,9,4]: got " + r3);
+        // Use an odd-total input per problem constraints (n even, total odd → Alice always wins)
+        var r3 = sol.stoneGame(new int[]{4, 2, 6, 3}); // total=15 odd
+        if (!r3) throw new AssertionError("[4,2,6,3]: got " + r3);
 
         System.out.println("LC 877 OK");
     }
@@ -610,7 +696,27 @@ class Solution {
 
 **Complexity:** Time O(n²), Space O(n²).
 
-**Java notes:** `dp[i][j] = max(piles[i] - dp[i+1][j], piles[j] - dp[i][j-1])` encodes both players' optimal strategies in a single table: the current player picks the choice that maximizes their net lead. The subtraction `piles[x] - dp[...]` flips the perspective from opponent to current player.
+**Approach 2 — Mathematical O(1).** Under the problem's fixed constraints (n even, total odd), Alice always wins by controlling parity. No computation needed.
+
+```java
+class Solution {
+    public boolean stoneGameMath(int[] piles) {
+        // With n even and odd total, Alice chooses all even-indexed or all odd-indexed piles
+        // (whichever sum is larger). She can always take from the side that extends her chosen
+        // parity, because at every step both ends have different parity indices.
+        return true;
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution();
+        if (!sol.stoneGameMath(new int[]{5, 3, 4, 5}))
+            throw new AssertionError("Mathematical solution should return true");
+        System.out.println("LC 877 math approach OK");
+    }
+}
+```
+
+**Java notes:** `dp[i][j] = max(piles[i] - dp[i+1][j], piles[j] - dp[i][j-1])` encodes both players' optimal strategies in a single table: the current player picks the choice that maximizes their net lead. The subtraction `piles[x] - dp[...]` flips the perspective from opponent to current player. Use the DP approach (Approach 1) when generalizing to LC 486 or LC 1140 where Alice doesn't always win.
 
 ---
 

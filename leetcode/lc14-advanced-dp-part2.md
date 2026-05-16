@@ -652,6 +652,46 @@ mod tests_526 {
 
 **Complexity:** O(2^n * n) time, O(2^n) space.
 
+**Approach 2 — Backtracking (O(k^n) worst case, O(n) space)**
+
+For small `n` (≤ 15), a backtracking solution with pruning is simpler to reason about:
+
+```rust
+struct Solution;
+impl Solution {
+    pub fn count_arrangement_backtrack(n: i32) -> i32 {
+        let n = n as usize;
+        let mut used = vec![false; n + 1];
+        Self::bt(1, n, &mut used)
+    }
+
+    fn bt(pos: usize, n: usize, used: &mut Vec<bool>) -> i32 {
+        if pos > n { return 1; }
+        let mut count = 0;
+        for num in 1..=n {
+            if !used[num] && (num % pos == 0 || pos % num == 0) {
+                used[num] = true;
+                count += Self::bt(pos + 1, n, used);
+                used[num] = false;
+            }
+        }
+        count
+    }
+}
+
+fn main() {
+    assert_eq!(Solution::count_arrangement_backtrack(1), 1);
+    assert_eq!(Solution::count_arrangement_backtrack(2), 2);
+    assert_eq!(Solution::count_arrangement_backtrack(3), 3);
+    assert_eq!(Solution::count_arrangement_backtrack(4), 8);
+    println!("LC 526 backtrack OK");
+}
+```
+
+**When to use which approach:**
+- **Bitmask DP:** Better when you need the count for many subsets simultaneously, or when you want to reuse subproblem results across multiple "valid predecessor" states.
+- **Backtracking:** More intuitive for counting arrangements; with good pruning it's fast in practice even though the theoretical worst case is exponential.
+
 **Rust note:** `mask.count_ones()` is a single CPU instruction (`POPCNT`). Use it
 freely — it does not require a loop.
 

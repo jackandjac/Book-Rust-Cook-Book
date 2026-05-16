@@ -133,9 +133,61 @@ class Solution {
 
 **Time:** O(m × n) | **Space:** O(m × n)
 
+### Approach 2 — Top-Down Memoization
+
+```java
+import java.util.Arrays;
+
+class Solution {
+    private int m, n;
+    private String s, p;
+    // 0=unset, 1=true, -1=false
+    private byte[][] memo;
+
+    public boolean isMatchMemo(String s, String p) {
+        this.s = s; this.p = p;
+        this.m = s.length(); this.n = p.length();
+        this.memo = new byte[m + 1][n + 1];
+        return dp(0, 0);
+    }
+
+    private boolean dp(int i, int j) {
+        if (memo[i][j] != 0) return memo[i][j] == 1;
+        boolean result;
+        if (j == n) {
+            result = (i == m);
+        } else if (j + 1 < n && p.charAt(j + 1) == '*') {
+            // Zero copies of p[j]:
+            boolean zero = dp(i, j + 2);
+            // One or more copies of p[j]:
+            boolean more = i < m
+                && (p.charAt(j) == '.' || p.charAt(j) == s.charAt(i))
+                && dp(i + 1, j);
+            result = zero || more;
+        } else {
+            result = i < m
+                && (p.charAt(j) == '.' || p.charAt(j) == s.charAt(i))
+                && dp(i + 1, j + 1);
+        }
+        memo[i][j] = result ? (byte)1 : (byte)-1;
+        return result;
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution();
+        if (sol.isMatchMemo("aa", "a"))     throw new AssertionError("LC10 memo: expected false aa,a");
+        if (!sol.isMatchMemo("aa", "a*"))   throw new AssertionError("LC10 memo: expected true aa,a*");
+        if (!sol.isMatchMemo("aab", "c*a*b")) throw new AssertionError("LC10 memo: expected true aab");
+        System.out.println("LC10 top-down OK");
+    }
+}
+```
+
 **Java notes:** `boolean[][]` is zero-initialized to `false` — no fill needed. The base-case
 loop starts at `j = 2` (not 1) because `*` must have a preceding character. Compare to LC #44
-where the base loop starts at `j = 1` and uses `dp[0][j-1]` (not `dp[0][j-2]`).
+where the base loop starts at `j = 1` and uses `dp[0][j-1]` (not `dp[0][j-2]`). In the top-down
+version, a `byte[][]` memo using sentinel values (0=unset, 1=true, -1=false) avoids boxing
+`Boolean` objects — the same technique as Rust's `i8` memo.
 
 ---
 

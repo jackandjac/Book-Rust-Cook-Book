@@ -120,8 +120,51 @@ fn main() {}
 
 **Time:** O(m × n) | **Space:** O(m × n)
 
+### Approach 2 — Top-Down Memoization (O(m × n) time, O(m × n) space)
+
+```rust
+struct Solution;
+
+impl Solution {
+    pub fn is_match_memo(s: String, p: String) -> bool {
+        let (sb, pb) = (s.as_bytes(), p.as_bytes());
+        // memo[i][j]: 0=uncomputed, 1=true, -1=false
+        let mut memo = vec![vec![0i8; pb.len() + 1]; sb.len() + 1];
+        Self::dp(sb, pb, 0, 0, &mut memo)
+    }
+
+    fn dp(s: &[u8], p: &[u8], i: usize, j: usize, memo: &mut Vec<Vec<i8>>) -> bool {
+        if memo[i][j] != 0 { return memo[i][j] == 1; }
+        let result = if j == p.len() {
+            i == s.len()
+        } else if j + 1 < p.len() && p[j + 1] == b'*' {
+            // Try zero copies OR consume s[i] if it matches
+            let zero = Self::dp(s, p, i, j + 2, memo);
+            let more = i < s.len()
+                && (p[j] == b'.' || p[j] == s[i])
+                && Self::dp(s, p, i + 1, j, memo);
+            zero || more
+        } else {
+            i < s.len()
+                && (p[j] == b'.' || p[j] == s[i])
+                && Self::dp(s, p, i + 1, j + 1, memo)
+        };
+        memo[i][j] = if result { 1 } else { -1 };
+        result
+    }
+}
+
+fn main() {
+    assert!(!Solution::is_match_memo("aa".to_string(), "a".to_string()));
+    assert!(Solution::is_match_memo("aa".to_string(), "a*".to_string()));
+    assert!(Solution::is_match_memo("aab".to_string(), "c*a*b".to_string()));
+    println!("LC 10 top-down OK");
+}
+```
+
 **Rust notes:** `b'*'` and `b'.'` are byte literals (`u8`), avoiding a `char` cast.
 The `||` short-circuit on the `*` branch mirrors the two-case logic cleanly.
+The top-down version uses `i8` as the memo type: `0` = uncomputed, `1` = true, `-1` = false — avoiding a separate `Option` wrapper.
 
 ---
 

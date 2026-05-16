@@ -567,6 +567,47 @@ class Solution526 {
 > arrays are zero-initialized so `dp[0] = 1` is the only explicit write needed before
 > the loop. Rust must write `dp[0] = 1` too since `vec![0; n]` also zero-initializes.
 
+**Approach 3 — Backtracking (no bitmask, for small n):**
+
+When n is very small (≤ 6) or you need to enumerate the actual arrangements, classic backtracking with a `boolean[] used` array suffices. This is O(k^n) worst case but prunes aggressively.
+
+```java
+class Solution526BT {
+    private int n;
+    private boolean[] used;
+
+    public int countArrangement(int n) {
+        this.n = n;
+        this.used = new boolean[n + 1];
+        return bt(1);
+    }
+
+    private int bt(int pos) {
+        if (pos > n) return 1;
+        int count = 0;
+        for (int num = 1; num <= n; num++) {
+            if (!used[num] && (num % pos == 0 || pos % num == 0)) {
+                used[num] = true;
+                count += bt(pos + 1);
+                used[num] = false;
+            }
+        }
+        return count;
+    }
+
+    public static void main(String[] args) {
+        var sol = new Solution526BT();
+        if (sol.countArrangement(1) != 1) throw new AssertionError();
+        if (sol.countArrangement(2) != 2) throw new AssertionError();
+        if (sol.countArrangement(3) != 3) throw new AssertionError();
+        if (sol.countArrangement(4) != 8) throw new AssertionError();
+        System.out.println("LC 526 BT: all tests passed.");
+    }
+}
+```
+
+**When to use which:** Backtracking is simplest to write and easiest to verify. Bitmask DP is necessary for n > 12 or when you need all state counts simultaneously. The memoized top-down approach is a natural bridge between the two.
+
 ---
 
 ### Problem 8 — LC #1986: Minimum Number of Work Sessions to Finish the Tasks
