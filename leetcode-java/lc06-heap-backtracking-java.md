@@ -178,9 +178,7 @@ Space O(k).
 
 ### Problem 2 — LC #1046: Last Stone Weight
 
-**Problem.** Given an array of stone weights, repeatedly smash the two
-heaviest. If equal, both are destroyed; if unequal, the smaller is destroyed
-and the larger becomes `|x - y|`. Return the last remaining stone, or 0.
+**Problem.** You have a collection of stones with positive integer weights. Repeatedly pick the two heaviest stones and smash them together: if they weigh the same, both are destroyed; if they differ, the lighter is destroyed and the heavier's weight is reduced by the lighter's weight. Repeat until at most one stone remains. Return the last stone's weight, or 0 if none remain. Constraints: `1 <= stones.length <= 30`, `1 <= stones[i] <= 1000`.
 
 **Key insight.** Use a max-heap. Each iteration pop the two largest, compute
 the difference, and push it back if nonzero.
@@ -245,9 +243,7 @@ class Solution {
 
 ### Problem 3 — LC #973: K Closest Points to Origin
 
-**Problem.** Given a list of 2D points, return the `k` closest to the origin
-(0, 0). Distances are Euclidean but compare squared distances to stay in
-integer arithmetic.
+**Problem.** Given an array of 2D points and an integer `k`, return the `k` closest points to the origin `(0, 0)`. Distance is Euclidean, but since you are only comparing distances you can use squared distance `x² + y²` to avoid floating-point arithmetic. The result may be returned in any order. Constraints: `1 <= k <= points.length <= 10^4`, `-10^4 <= points[i][j] <= 10^4`.
 
 **Key insight.** Maintain a max-heap of size `k` keyed by squared distance. If
 the heap grows beyond `k`, pop the farthest point. The remaining `k` entries
@@ -325,8 +321,7 @@ class Solution {
 
 ### Problem 4 — LC #215: Kth Largest Element in an Array
 
-**Problem.** Find the k-th largest element in an unsorted array (k-th in
-sorted descending order, not k-th distinct).
+**Problem.** Given an integer array `nums` and integer `k`, return the k-th largest element in sorted descending order — not the k-th distinct largest. Duplicates count toward position, so in `[3,2,3,1,2,4,5,5,6]` with `k=4` the answer is `4`. Constraints: `1 <= k <= nums.length <= 10^5`, `-10^4 <= nums[i] <= 10^4`.
 
 **Key insight.** Two approaches: (A) min-heap of size k in O(n log k); (B)
 `Arrays.sort` in O(n log n) — simple but slower; (C) quickselect in O(n)
@@ -398,9 +393,7 @@ Space O(n) for clone.
 
 ### Problem 5 — LC #621: Task Scheduler
 
-**Problem.** Given CPU tasks (letters) and a cooldown `n`, find the minimum
-number of CPU intervals to execute all tasks. Identical tasks must be at least
-`n` intervals apart. Idle intervals are allowed.
+**Problem.** Given a list of CPU tasks represented by uppercase letters and a cooldown integer `n`, find the minimum total number of CPU intervals (including idle slots) to finish all tasks. Identical task types must be separated by at least `n` intervals; different task types may run consecutively. Constraints: `1 <= tasks.length <= 10^4`, `tasks[i]` is an uppercase English letter, `0 <= n <= 100`.
 
 **Key insight.** Greedy with a max-heap and a cooldown queue. At each tick:
 if the cooldown queue has a task ready to re-enter the heap, move it in. Then
@@ -490,13 +483,68 @@ class Solution {
 - The cooldown queue entries store `[remaining_count, earliest_time]` as
   `int[]`. No need to box into a record for an internal helper structure.
 
+**Approach 2 — O(1) Math Formula.**
+
+An alternative to heap simulation: compute the answer directly. Let `maxFreq` be the highest task frequency and `countMax` be the number of tasks that share that peak frequency. The answer is:
+
+```
+Math.max(tasks.length, (maxFreq - 1) * (n + 1) + countMax)
+```
+
+The `(maxFreq - 1) * (n + 1) + countMax` term counts the minimum slots when the most-frequent task forces idle gaps. If there are enough varied tasks to fill every cooldown window, `tasks.length` wins.
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+class Solution2 {
+    public int leastInterval(char[] tasks, int n) {
+        Map<Character, Integer> freq = new HashMap<>();
+        for (char t : tasks) freq.merge(t, 1, Integer::sum);
+
+        int maxFreq = 0;
+        for (int f : freq.values()) maxFreq = Math.max(maxFreq, f);
+
+        // Capture in a final copy so the lambda can use it
+        final int mf = maxFreq;
+        long countMax = freq.values().stream().filter(f -> f == mf).count();
+
+        long formula = (long)(maxFreq - 1) * (n + 1) + countMax;
+        return (int) Math.max(tasks.length, formula);
+    }
+
+    public static void main(String[] args) {
+        Solution2 sol = new Solution2();
+
+        int r1 = sol.leastInterval(new char[]{'A','A','A','B','B','B'}, 2);
+        if (r1 != 8) throw new AssertionError("ex1: expected 8, got " + r1);
+
+        int r2 = sol.leastInterval(new char[]{'A','A','A','B','B','B'}, 0);
+        if (r2 != 6) throw new AssertionError("n=0: expected 6, got " + r2);
+
+        int r3 = sol.leastInterval(
+            new char[]{'A','A','A','A','A','A','B','C','D','E','F','G'}, 2);
+        if (r3 != 16) throw new AssertionError("variety: expected 16, got " + r3);
+
+        int r4 = sol.leastInterval(new char[]{'A'}, 10);
+        if (r4 != 1) throw new AssertionError("single: expected 1, got " + r4);
+
+        System.out.println("LC #621 TaskScheduler Formula: all tests passed");
+    }
+}
+```
+
+**Complexity.** Time O(t + 26) = O(t). Space O(26) = O(1). No heap overhead — purely arithmetic after counting frequencies.
+
+**Java notes.**
+- `freq.values().stream().filter(f -> f == maxFreq).count()` counts tasks tied at the peak frequency. `stream()` on a collection of `Integer` unboxes lazily — fine for at most 26 entries.
+- The formula uses `long` to avoid overflow when `maxFreq` and `n` are both large; the result is cast back to `int` at the end.
+
 ---
 
 ### Problem 6 — LC #355: Design Twitter
 
-**Problem.** Design a simplified Twitter: `postTweet(userId, tweetId)`,
-`getNewsFeed(userId)` (10 most recent tweets from user and followees),
-`follow(followerId, followeeId)`, `unfollow(followerId, followeeId)`.
+**Problem.** Design a simplified Twitter supporting four operations: `postTweet(userId, tweetId)` adds a tweet; `getNewsFeed(userId)` returns the 10 most recent tweet IDs from the user and their followees, newest first; `follow(followerId, followeeId)` creates a follow relationship; `unfollow(followerId, followeeId)` removes it. Each `tweetId` is globally unique. Constraints: `1 <= userId, followerId, followeeId, tweetId <= 500`, at most 3×10^4 calls in total.
 
 **Key insight.** Store each user's tweets as a `List<int[]>` of
 `[timestamp, tweetId]`. For `getNewsFeed`, seed a max-heap with the most
@@ -625,8 +673,7 @@ is the number of candidate users. `follow`/`unfollow` O(1).
 
 ### Problem 7 — LC #295: Find Median from Data Stream
 
-**Problem.** Design a data structure supporting `addNum(int num)` and
-`findMedian()`. `findMedian` returns the median of all numbers added so far.
+**Problem.** Design a data structure that dynamically maintains a running median as integers are added one at a time. It must support `addNum(int num)` to insert a number, and `findMedian()` to return the median of all numbers added so far. If the count is even, the median is the average of the two middle values. Constraints: `-10^5 <= num <= 10^5`, at most 5×10^4 calls to `addNum` and `findMedian`.
 
 **Key insight.** Maintain two heaps: a max-heap for the lower half and a
 min-heap for the upper half. Keep them balanced (sizes differ by at most 1).
@@ -766,8 +813,7 @@ void backtrack(
 
 ### Problem 8 — LC #78: Subsets
 
-**Problem.** Given an integer array `nums` of unique elements, return all
-possible subsets (the power set). The result must not contain duplicate subsets.
+**Problem.** Given an integer array `nums` of unique elements, return all possible subsets — that is, the power set. A subset is any selection of zero or more elements, including the empty set and the full array. The result must not contain duplicate subsets and may be returned in any order. Constraints: `1 <= nums.length <= 10`, `-10 <= nums[i] <= 10`, all elements are distinct.
 
 **Key insight.** At each recursive call, record the current path as a valid
 subset (including the empty set). Then try adding each element from `start`
@@ -840,13 +886,73 @@ recursion depth + O(n * 2^n) output.
   of `Integer`, `path.remove(Integer.valueOf(x))` removes by value; using an
   index is safer and O(1) for `ArrayList`.
 
+#### Approach 2 — Bitmask Enumeration: O(n * 2^n), no recursion
+
+Each subset maps to an integer `mask` from `0` to `2^n - 1`. Bit `i` set means `nums[i]` is in the subset.
+
+```java
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+class Solution2 {
+    public List<List<Integer>> subsets(int[] nums) {
+        int n = nums.length;
+        int total = 1 << n; // 2^n
+        List<List<Integer>> result = new ArrayList<>(total);
+        for (int mask = 0; mask < total; mask++) {
+            var subset = new ArrayList<Integer>();
+            for (int i = 0; i < n; i++) {
+                if ((mask & (1 << i)) != 0) {
+                    subset.add(nums[i]);
+                }
+            }
+            result.add(subset);
+        }
+        return result;
+    }
+
+    private static List<List<Integer>> sorted(List<List<Integer>> v) {
+        v.forEach(s -> java.util.Collections.sort(s));
+        v.sort((a, b) -> a.toString().compareTo(b.toString()));
+        return v;
+    }
+
+    private static List<Integer> mlist(Integer... vals) {
+        return new ArrayList<>(Arrays.asList(vals));
+    }
+
+    public static void main(String[] args) {
+        Solution2 sol = new Solution2();
+
+        var r1 = sorted(sol.subsets(new int[]{1, 2, 3}));
+        var exp1 = sorted(new ArrayList<>(Arrays.asList(
+            mlist(), mlist(1), mlist(2), mlist(3),
+            mlist(1, 2), mlist(1, 3), mlist(2, 3), mlist(1, 2, 3))));
+        if (!r1.equals(exp1))
+            throw new AssertionError("bitmask [1,2,3]: got " + r1);
+
+        var r2 = sorted(sol.subsets(new int[]{0}));
+        var exp2 = sorted(new ArrayList<>(Arrays.asList(mlist(), mlist(0))));
+        if (!r2.equals(exp2))
+            throw new AssertionError("bitmask [0]: got " + r2);
+
+        // n=4 → 16 subsets
+        if (sol.subsets(new int[]{1, 2, 3, 4}).size() != 16)
+            throw new AssertionError("bitmask [1,2,3,4]: expected 16 subsets");
+
+        System.out.println("LC #78 Subsets (bitmask): all tests passed");
+    }
+}
+```
+
+**Why bitmask.** The loop over integers 0..2^n eliminates the call stack entirely. For `n <= 20` this is fast and cache-friendly. LeetCode's constraint is `n <= 10`, so `1 << n` fits comfortably in an `int`.
+
 ---
 
 ### Problem 9 — LC #39: Combination Sum
 
-**Problem.** Given distinct positive integers `candidates` and a `target`,
-return all unique combinations summing to `target`. The same number may be
-used any number of times.
+**Problem.** Given an array of distinct positive integers `candidates` and a positive integer `target`, return all unique combinations of candidates whose numbers sum to `target`. The same number may be chosen any number of times. Two combinations are unique if they differ as multisets. The result may be returned in any order. Constraints: `1 <= candidates.length <= 30`, `2 <= candidates[i] <= 40`, all elements are distinct, `1 <= target <= 40`.
 
 **Key insight.** Pass the same `start` index into the recursive call (not
 `start + 1`) to allow reuse of the current element. Prune when the remaining
@@ -926,8 +1032,7 @@ candidate. Space O(T/M) recursion depth.
 
 ### Problem 10 — LC #40: Combination Sum II
 
-**Problem.** Like LC #39 but each number may only be used once, and candidates
-may contain duplicates. Return all unique combinations.
+**Problem.** Like LC #39 but with two important differences: `candidates` may contain duplicates, and each number may be used at most once. Return all unique combinations that sum to `target`. Because the input has duplicates, naive backtracking would generate duplicate results; sorting and skipping equal siblings at each recursion level eliminates them. Constraints: `1 <= candidates.length <= 100`, `1 <= candidates[i] <= 50`, `1 <= target <= 30`.
 
 **Key insight.** Sort the input. In the loop, skip duplicates at the same
 recursion level with `if (i > start && candidates[i] == candidates[i-1])`.
@@ -1010,8 +1115,7 @@ class Solution {
 
 ### Problem 11 — LC #46: Permutations
 
-**Problem.** Given an array of distinct integers, return all possible
-permutations.
+**Problem.** Given an array `nums` of distinct integers, return all possible permutations in any order. A permutation uses every element exactly once; for `n` distinct elements there are `n!` permutations. For example `[1,2,3]` has 6 permutations. Constraints: `1 <= nums.length <= 6`, `-10 <= nums[i] <= 10`, all elements are distinct.
 
 **Key insight.** At each step, try every element that has not yet been added to
 the current path. Track usage with a boolean array. At depth `n`, record the
@@ -1065,8 +1169,9 @@ class Solution {
             throw new AssertionError("permute [0]: got " + r2);
 
         var r3 = sol.permute(new int[]{0, 1});
-        if (r3.size() != 2)
-            throw new AssertionError("permute [0,1]: expected 2, got " + r3.size());
+        r3.sort((a, b) -> a.toString().compareTo(b.toString()));
+        if (!r3.equals(new ArrayList<>(List.of(List.of(0, 1), List.of(1, 0)))))
+            throw new AssertionError("permute [0,1]: got " + r3);
 
         System.out.println("LC #46 Permutations: all tests passed");
     }
@@ -1086,8 +1191,7 @@ class Solution {
 
 ### Problem 12 — LC #90: Subsets II
 
-**Problem.** Given an integer array `nums` that may contain duplicates, return
-all possible subsets without duplicate subsets.
+**Problem.** Given an integer array `nums` that may contain duplicates, return all possible subsets without duplicate subsets. Unlike LC #78 (unique elements), repeated values in `nums` can cause the same subset to be generated multiple times if not handled carefully. Sorting and skipping equal siblings at each recursion level is the canonical fix. Constraints: `1 <= nums.length <= 10`, `-10 <= nums[i] <= 10`.
 
 **Key insight.** Sort first. At each recursion level, skip elements equal to
 the previous one using the same guard as Combination Sum II.
@@ -1160,9 +1264,7 @@ class Solution {
 
 ### Problem 13 — LC #79: Word Search
 
-**Problem.** Given an `m x n` grid of characters and a word, return `true` if
-the word exists as a path of adjacent (horizontally/vertically) cells, with no
-cell used twice.
+**Problem.** Given an `m × n` grid of characters `board` and a string `word`, return `true` if `word` exists in the grid. The word must be formed by sequentially adjacent cells — horizontally or vertically neighboring — and the same cell may not be used more than once in a single path. You may start from any cell. Constraints: `1 <= m, n <= 6`, `1 <= word.length <= 15`, `board` and `word` consist of only lowercase and uppercase English letters.
 
 **Key insight.** DFS backtracking from every cell. Mark visited cells by
 temporarily replacing the character with `'#'`, then restore it on the way
@@ -1248,8 +1350,7 @@ recursion depth.
 
 ### Problem 14 — LC #131: Palindrome Partitioning
 
-**Problem.** Given string `s`, return all possible ways to partition it so
-that every substring is a palindrome.
+**Problem.** Given a string `s`, return all possible ways to partition it such that every substring in the partition is a palindrome. A partition splits `s` into a list of non-empty contiguous substrings covering `s` exactly. For `"aab"` the two valid palindrome partitions are `[["a","a","b"], ["aa","b"]]`. Constraints: `1 <= s.length <= 16`, `s` contains only lowercase English letters.
 
 **Key insight.** Backtracking: at each position `start`, try all prefixes
 `s[start..end]`. If the prefix is a palindrome, add it to the path and recurse
@@ -1330,8 +1431,7 @@ check each. Space O(n) recursion depth.
 
 ### Problem 15 — LC #17: Letter Combinations of a Phone Number
 
-**Problem.** Given a string of digits (2–9), return all possible letter
-combinations from a phone keypad. Return an empty list for empty input.
+**Problem.** Given a string of digits from `2` to `9`, return all possible letter combinations those digits could represent on a phone keypad (2→abc, 3→def, ..., 9→wxyz). The combinations may be returned in any order. Return an empty list for empty input. Constraints: `0 <= digits.length <= 4`, each digit is in `'2'..'9'`.
 
 **Key insight.** Backtracking: at each digit index, iterate over the letters
 mapped to that digit, append each to the path, and recurse for the next digit.
@@ -1408,8 +1508,7 @@ class Solution {
 
 ### Problem 16 — LC #51: N-Queens
 
-**Problem.** Place `n` queens on an `n x n` chessboard so no two queens
-attack each other. Return all distinct board configurations.
+**Problem.** Place `n` queens on an `n × n` chessboard so no two queens attack each other — no two share a row, column, or diagonal. Return all distinct solutions, each represented as a list of `n` strings using `'Q'` for a queen and `'.'` for an empty cell. For `n=4` there are exactly 2 solutions; for `n=8` there are 92. Constraints: `1 <= n <= 9`.
 
 **Key insight.** Place one queen per row. Track attacked columns and both
 diagonals with three `Set`s. A queen at `(row, col)` attacks all cells with
@@ -1526,6 +1625,88 @@ Space O(n) for the sets + O(n^2) per solution.
   speaking the value at `queens[row]` is irrelevant until it is overwritten on
   the next placement, but resetting makes the state explicit and easier to
   debug.
+
+#### Approach 2 — Bitmask attack tracking: O(n!), O(1) extra per frame
+
+Replace the three `HashSet<Integer>`s with three `int` bitmasks. Bitwise AND checks conflict; OR applies the placement; the previous state is passed as a parameter (no removal needed on backtrack since integers are value types in Java).
+
+```java
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+class Solution2 {
+    public List<List<String>> solveNQueens(int n) {
+        List<List<String>> result = new ArrayList<>();
+        int[] queens = new int[n];
+        Arrays.fill(queens, -1);
+        backtrack(0, n, 0, 0, 0, queens, result);
+        return result;
+    }
+
+    private void backtrack(int row, int n,
+                           int colsMask, int diag1Mask, int diag2Mask,
+                           int[] queens, List<List<String>> result) {
+        if (row == n) {
+            result.add(buildBoard(queens, n));
+            return;
+        }
+        for (int col = 0; col < n; col++) {
+            int d1Bit = 1 << (row - col + n - 1); // NW-SE diagonal offset
+            int d2Bit = 1 << (row + col);          // NE-SW diagonal
+            int cBit  = 1 << col;
+            if ((colsMask & cBit) != 0
+                    || (diag1Mask & d1Bit) != 0
+                    || (diag2Mask & d2Bit) != 0) {
+                continue;
+            }
+            queens[row] = col;
+            backtrack(row + 1, n,
+                      colsMask  | cBit,
+                      diag1Mask | d1Bit,
+                      diag2Mask | d2Bit,
+                      queens, result);
+            queens[row] = -1; // restore for clarity
+        }
+    }
+
+    private List<String> buildBoard(int[] queens, int n) {
+        List<String> board = new ArrayList<>();
+        for (int col : queens) {
+            char[] row = new char[n];
+            Arrays.fill(row, '.');
+            row[col] = 'Q';
+            board.add(new String(row));
+        }
+        return board;
+    }
+
+    public static void main(String[] args) {
+        Solution2 sol = new Solution2();
+
+        var r4 = sol.solveNQueens(4);
+        if (r4.size() != 2)
+            throw new AssertionError("n=4: expected 2, got " + r4.size());
+
+        var r1 = sol.solveNQueens(1);
+        if (r1.size() != 1 || !r1.get(0).equals(List.of("Q")))
+            throw new AssertionError("n=1: got " + r1);
+
+        if (!sol.solveNQueens(2).isEmpty())
+            throw new AssertionError("n=2: expected empty");
+        if (!sol.solveNQueens(3).isEmpty())
+            throw new AssertionError("n=3: expected empty");
+
+        int count8 = sol.solveNQueens(8).size();
+        if (count8 != 92)
+            throw new AssertionError("n=8: expected 92, got " + count8);
+
+        System.out.println("LC #51 NQueens (bitmask): all tests passed");
+    }
+}
+```
+
+**Why bitmasks.** Integer bitwise operations are constant-time with no allocation. The `int` bitmask arguments are passed by value, so no undo step is needed — the previous mask is naturally restored when the stack unwinds. `diag1` uses offset `n-1` so `row - col + n - 1 >= 0` always.
 
 ---
 

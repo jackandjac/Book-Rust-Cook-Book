@@ -116,7 +116,7 @@ mod tests_lc703 {
 
 ### Problem 2 — LC #1046: Last Stone Weight
 
-**Problem.** Given an array of stone weights, repeatedly smash the two heaviest stones. If they are equal both are destroyed; if unequal, the smaller is destroyed and the larger becomes `|x - y|`. Return the weight of the last remaining stone, or 0 if none remain.
+**Problem.** You have a collection of stones, each with a positive integer weight. Repeatedly pick the two heaviest stones and smash them together: if both weigh the same, both are destroyed; if they differ, the lighter one is destroyed and the heavier one's weight is reduced by the lighter weight. Continue until at most one stone remains. Return the weight of the last stone, or 0 if no stones remain. Constraints: `1 <= stones.length <= 30`, `1 <= stones[i] <= 1000`.
 
 **Insight.** Use a max-heap. Each round, pop two elements. Push `x - y` back if they differ.
 
@@ -176,7 +176,7 @@ mod tests_lc1046 {
 
 ### Problem 3 — LC #973: K Closest Points to Origin
 
-**Problem.** Given a list of 2D points, return the `k` closest to the origin (0, 0). Distance is Euclidean but you can compare squared distances to avoid floating-point.
+**Problem.** Given an array of points in a 2D plane and an integer `k`, return the `k` closest points to the origin `(0, 0)`. Distance between two points is the Euclidean distance, but since we are only comparing distances you can use squared Euclidean distance `x² + y²` to avoid floating-point arithmetic. The answer may be returned in any order. Constraints: `1 <= k <= points.length <= 10^4`, `-10^4 <= points[i][j] <= 10^4`.
 
 **Insight.** Maintain a max-heap of size `k` keyed by squared distance. If the heap grows beyond `k`, pop the farthest. The remaining `k` entries are the closest.
 
@@ -262,7 +262,7 @@ mod tests_lc973 {
 
 ### Problem 4 — LC #215: Kth Largest Element in an Array
 
-**Problem.** Find the k-th largest element in an unsorted array. This is the k-th largest in sorted order, not the k-th distinct element.
+**Problem.** Given an integer array `nums` and integer `k`, return the k-th largest element in the array. Note that it is the k-th largest in sorted order, not the k-th distinct largest — duplicates count toward position. For example, in `[3,2,3,1,2,4,5,5,6]` with `k=4`, the 4th largest is `4`. Constraints: `1 <= k <= nums.length <= 10^5`, `-10^4 <= nums[i] <= 10^4`.
 
 **Insight.** Two approaches: (A) min-heap of size k — O(n log k); (B) `select_nth_unstable` — O(n) average. The heap approach mirrors the Java interview-standard solution.
 
@@ -332,7 +332,7 @@ mod tests_lc215 {
 
 ### Problem 5 — LC #621: Task Scheduler
 
-**Problem.** Given a list of CPU tasks (letters) and a cooling period `n`, find the minimum intervals needed to execute all tasks. Identical tasks must be separated by at least `n` intervals.
+**Problem.** Given a list of CPU tasks represented by uppercase letters and an integer `n` representing the cooldown period, find the minimum number of CPU intervals (time slots) needed to finish all tasks. The CPU can be idle during any interval. Two identical tasks must be at least `n` intervals apart. Different tasks may run in consecutive intervals with no restriction. Constraints: `1 <= tasks.length <= 10^4`, `tasks[i]` is uppercase English letter, `0 <= n <= 100`.
 
 **Insight.** Count task frequencies. In each round, try to schedule up to `n+1` tasks picking the most frequent first (greedy). If fewer than `n+1` distinct tasks remain, pad with idle time. Track remaining tasks with a max-heap and a cooldown queue of `(count, available_time)` pairs.
 
@@ -424,11 +424,77 @@ mod tests_lc621 {
 - `freq.iter().filter(|&&f| f > 0).cloned().collect()` — the double `&&` is because `iter()` yields `&i32`, and `filter` provides another `&`, so the closure receives `&&i32`. `cloned()` strips both to produce `i32` for the heap.
 - The cooldown queue is a `VecDeque` — front is the soonest-available task, back is the most recently cooled. FIFO order preserves availability ordering.
 
+#### Approach 2 — Math Formula: O(1) time
+
+The minimum intervals is the maximum of two quantities: the total task count (if there are enough varied tasks to fill all cooldown slots naturally), and the "frame" formula `(max_freq - 1) * (n + 1) + count_of_max_freq`. The frame formula counts the slots needed when the most frequent task forces idle gaps between its repetitions.
+
+```rust
+#[allow(dead_code)]
+struct Solution2;
+
+impl Solution2 {
+    pub fn least_interval(tasks: Vec<char>, n: i32) -> i32 {
+        let mut freq = [0i32; 26];
+        for &c in &tasks {
+            freq[(c as u8 - b'A') as usize] += 1;
+        }
+        let max_freq = *freq.iter().max().unwrap();
+        let count_of_max = freq.iter().filter(|&&f| f == max_freq).count() as i32;
+        // frame slots needed by the most-frequent task
+        let frame = (max_freq - 1) * (n + 1) + count_of_max;
+        // either all tasks fill naturally, or the frame dominates
+        frame.max(tasks.len() as i32)
+    }
+}
+
+#[cfg(test)]
+mod tests_lc621_formula {
+    use super::Solution2;
+
+    #[test]
+    fn test_formula_example1() {
+        // A,B fill 3 slots each, cooldown 2 → A_B_A_B_A_B = 8
+        assert_eq!(
+            Solution2::least_interval(vec!['A', 'A', 'A', 'B', 'B', 'B'], 2),
+            8
+        );
+    }
+
+    #[test]
+    fn test_formula_no_idle() {
+        // n=0: no cooling, just run all 6 tasks
+        assert_eq!(
+            Solution2::least_interval(vec!['A', 'A', 'A', 'B', 'B', 'B'], 0),
+            6
+        );
+    }
+
+    #[test]
+    fn test_formula_variety() {
+        // Enough variety to fill cooldown naturally
+        assert_eq!(
+            Solution2::least_interval(
+                vec!['A', 'A', 'A', 'A', 'A', 'A', 'B', 'C', 'D', 'E', 'F', 'G'],
+                2
+            ),
+            16
+        );
+    }
+
+    #[test]
+    fn test_formula_single() {
+        assert_eq!(Solution2::least_interval(vec!['A'], 10), 1);
+    }
+}
+```
+
+**Why the formula works.** With cooldown `n`, the most-frequent task with frequency `max_freq` defines a schedule of `max_freq - 1` full frames each of width `n + 1`, plus a final slot. At the end of the last frame, all `count_of_max` tasks with frequency `max_freq` are placed together: total = `(max_freq - 1) * (n + 1) + count_of_max`. If other tasks are numerous enough to fill the frames with no idles, the answer is simply `tasks.len()`.
+
 ---
 
 ### Problem 6 — LC #355: Design Twitter
 
-**Problem.** Design a simplified Twitter: `post_tweet(userId, tweetId)`, `get_news_feed(userId)` (10 most recent tweets from user and followees), `follow(followerId, followeeId)`, `unfollow(followerId, followeeId)`.
+**Problem.** Design a simplified version of Twitter with the following operations: `post_tweet(userId, tweetId)` posts a new tweet; `get_news_feed(userId)` retrieves the 10 most recent tweet IDs from the user and their followees; `follow(followerId, followeeId)` makes `followerId` follow `followeeId`; `unfollow(followerId, followeeId)` reverses that. Each `tweetId` is unique and tweets should be returned newest-first. Constraints: `1 <= userId, followerId, followeeId, tweetId <= 500`, at most 3×10^4 calls in total.
 
 **Insight.** Store tweets per user as a `Vec<(timestamp, tweetId)>`. For `get_news_feed`, use a max-heap seeded with each candidate user's most recent tweet; iteratively pop and extend from the next tweet in that user's list (k-way merge).
 
@@ -555,7 +621,7 @@ mod tests_lc355 {
 
 ### Problem 7 — LC #295: Find Median from Data Stream
 
-**Problem.** Design a data structure that supports `add_num(num)` and `find_median()`. `find_median` returns the median of all numbers added so far.
+**Problem.** Design a data structure that dynamically maintains a running median as integers are added one at a time. It must support two operations: `add_num(num)` inserts `num` into the data structure, and `find_median()` returns the median of all elements added so far. If the total count is even, the median is the average of the two middle elements. Constraints: `-10^5 <= num <= 10^5`, at most 5×10^4 calls to `add_num` and `find_median`.
 
 **Insight.** Maintain two heaps: a max-heap for the lower half and a min-heap for the upper half. Keep them balanced (differ by at most 1). The median is the top of the larger heap, or the average of both tops.
 
@@ -713,7 +779,7 @@ fn backtrack(
 
 ### Problem 8 — LC #78: Subsets
 
-**Problem.** Given an integer array `nums` of unique elements, return all possible subsets (the power set). The solution must not contain duplicate subsets.
+**Problem.** Given an integer array `nums` of unique elements, return all possible subsets — that is, the power set. A subset is any selection of zero or more elements from the array (including the empty subset and the full array itself). The output must not contain duplicate subsets, and the subsets may be returned in any order. Constraints: `1 <= nums.length <= 10`, `-10 <= nums[i] <= 10`, all elements are distinct.
 
 **Insight.** At each index, choose to include or skip the element. Equivalently, record the path at every node of the recursion tree (not just leaves).
 
@@ -782,11 +848,81 @@ mod tests_lc78 {
 - `Self::backtrack(...)` is how associated functions call sibling functions within an `impl` block in Rust.
 - Unlike Java where you'd remove by index, `path.pop()` removes the last element — this is the backtrack step.
 
+#### Approach 2 — Bitmask Enumeration: O(n * 2^n) but no recursion
+
+Each subset corresponds to a bitmask from `0` to `2^n - 1`. Bit `i` set means `nums[i]` is in the subset. This is an entirely different mental model: iteration over integers rather than recursion over choices.
+
+```rust
+#[allow(dead_code)]
+struct Solution2;
+
+impl Solution2 {
+    pub fn subsets(nums: Vec<i32>) -> Vec<Vec<i32>> {
+        let n = nums.len();
+        let total = 1usize << n; // 2^n subsets
+        let mut result: Vec<Vec<i32>> = Vec::with_capacity(total);
+        for mask in 0..total {
+            let subset: Vec<i32> = (0..n)
+                .filter(|&i| mask & (1 << i) != 0)
+                .map(|i| nums[i])
+                .collect();
+            result.push(subset);
+        }
+        result
+    }
+}
+
+#[cfg(test)]
+mod tests_lc78_bitmask {
+    use super::Solution2;
+
+    fn sorted_subsets(mut v: Vec<Vec<i32>>) -> Vec<Vec<i32>> {
+        for sub in &mut v {
+            sub.sort();
+        }
+        v.sort();
+        v
+    }
+
+    #[test]
+    fn test_bitmask_example() {
+        let result = Solution2::subsets(vec![1, 2, 3]);
+        let expected: Vec<Vec<i32>> = vec![
+            vec![],
+            vec![1],
+            vec![2],
+            vec![3],
+            vec![1, 2],
+            vec![1, 3],
+            vec![2, 3],
+            vec![1, 2, 3],
+        ];
+        assert_eq!(sorted_subsets(result), sorted_subsets(expected));
+    }
+
+    #[test]
+    fn test_bitmask_single() {
+        let result = Solution2::subsets(vec![0]);
+        assert_eq!(sorted_subsets(result), sorted_subsets(vec![vec![], vec![0]]));
+    }
+
+    #[test]
+    fn test_bitmask_count() {
+        // n=4 → 16 subsets
+        assert_eq!(Solution2::subsets(vec![1, 2, 3, 4]).len(), 16);
+    }
+}
+```
+
+**Complexity.** Time O(n * 2^n). Space O(n * 2^n) for output only — O(1) extra (no recursion stack).
+
+**Why this matters.** The bitmask approach eliminates the call stack entirely. For competitive programming it is often faster in practice due to better cache behavior. The trade-off: it requires `n <= 20` to avoid `usize` overflow (2^20 = 1M subsets, fine; 2^64 would wrap). LeetCode's constraint is `n <= 10`, so both approaches are safe.
+
 ---
 
 ### Problem 9 — LC #39: Combination Sum
 
-**Problem.** Given an array of distinct positive integers `candidates` and a target, return all unique combinations where the numbers sum to target. The same number may be used an unlimited number of times.
+**Problem.** Given an array of distinct positive integers `candidates` and a positive integer `target`, return a list of all unique combinations of candidates that sum to `target`. The same number may be chosen from the candidates any number of times. Two combinations are considered unique if their multisets differ. The combinations may be returned in any order. Constraints: `1 <= candidates.length <= 30`, `2 <= candidates[i] <= 40`, all elements are distinct, `1 <= target <= 40`.
 
 **Insight.** At each step, try every candidate from `start` onward. Pass the same `start` index (not `i+1`) to allow reuse of the same element. Prune when the remaining target goes negative.
 
@@ -869,7 +1005,7 @@ mod tests_lc39 {
 
 ### Problem 10 — LC #40: Combination Sum II
 
-**Problem.** Like LC #39 but each number may only be used once, and candidates may contain duplicates. Return all unique combinations.
+**Problem.** Given a collection of integers `candidates` (which may contain duplicates) and a `target`, return all unique combinations where the chosen numbers sum to `target`. Each number may only be used once in a combination. Because the input can have duplicates, you must de-duplicate the output so that no two combinations in the result are identical as multisets. Constraints: `1 <= candidates.length <= 100`, `1 <= candidates[i] <= 50`, `1 <= target <= 30`.
 
 **Insight.** Sort the input. Skip duplicate candidates at the same recursion level (when `i > start && candidates[i] == candidates[i-1]`). Advance by `i + 1` to avoid reuse.
 
@@ -957,7 +1093,7 @@ mod tests_lc40 {
 
 ### Problem 11 — LC #46: Permutations
 
-**Problem.** Given an array of distinct integers, return all possible permutations.
+**Problem.** Given an array `nums` of distinct integers, return all possible permutations in any order. A permutation is an arrangement of all elements; for `n` elements there are exactly `n!` permutations. For example, `[1,2,3]` has 6 permutations. Constraints: `1 <= nums.length <= 6`, `-10 <= nums[i] <= 10`, all elements are distinct.
 
 **Insight.** At each step, try every element that has not yet been used. Track which elements are in the current path with a boolean `used` array.
 
@@ -1031,6 +1167,8 @@ mod tests_lc46 {
     fn test_two_elements() {
         let result = Solution::permute(vec![0, 1]);
         assert_eq!(result.len(), 2);
+        let expected = vec![vec![0, 1], vec![1, 0]];
+        assert_eq!(sorted_perms(result), sorted_perms(expected));
     }
 }
 ```
@@ -1045,7 +1183,7 @@ mod tests_lc46 {
 
 ### Problem 12 — LC #90: Subsets II
 
-**Problem.** Given an integer array `nums` that may contain duplicates, return all possible subsets without duplicate subsets.
+**Problem.** Given an integer array `nums` that may contain duplicates, return all possible subsets (the power set) such that no two subsets in the result are identical. Unlike LC #78 where all elements are unique, here the same value can appear multiple times in `nums`, so naive backtracking would generate duplicate subsets. Sorting and skipping equal siblings at each recursion level eliminates them. Constraints: `1 <= nums.length <= 10`, `-10 <= nums[i] <= 10`.
 
 **Insight.** Sort the input. At each recursion level, skip elements equal to the previous one (same deduplication guard as Combination Sum II).
 
@@ -1114,7 +1252,7 @@ mod tests_lc90 {
 
 ### Problem 13 — LC #79: Word Search
 
-**Problem.** Given an `m x n` grid of characters and a word, return `true` if the word exists in the grid. The word can be constructed from sequentially adjacent cells (horizontally or vertically), and the same cell cannot be used more than once.
+**Problem.** Given an `m x n` grid of characters `board` and a string `word`, return `true` if `word` exists in the grid. The word must be formed by sequentially adjacent cells — horizontally or vertically neighboring — and the same cell may not be used more than once in a single path. You may start from any cell on the board. Constraints: `1 <= m, n <= 6`, `1 <= word.length <= 15`, `board` and `word` consist of only lowercase and uppercase English letters.
 
 **Insight.** DFS backtracking from every cell. Mark visited cells by temporarily mutating the grid (replace with `'#'`), then restore on backtrack.
 
@@ -1143,11 +1281,12 @@ impl Solution {
         c: usize,
         idx: usize,
     ) -> bool {
-        if idx == word.len() {
-            return true;
-        }
         if board[r][c] != word[idx] {
             return false;
+        }
+        // Matched the last character in the word — success
+        if idx + 1 == word.len() {
+            return true;
         }
         let ch = board[r][c];
         board[r][c] = '#'; // mark visited
@@ -1206,6 +1345,7 @@ mod tests_lc79 {
 **Complexity.** Time O(m * n * 4^L) where L is the word length. Space O(L) recursion depth.
 
 **Rust notes.**
+- The base case `if idx + 1 == word.len() { return true; }` fires immediately after matching the last character, before exploring neighbors. This correctly handles single-character words and avoids a spurious neighbor loop on the final character.
 - `r.wrapping_sub(1)` handles `r == 0` without panicking on unsigned underflow. If `r == 0`, `wrapping_sub(1)` returns `usize::MAX`, which fails the bounds check `nr < board.len()`.
 - The `'#'` sentinel marker approach mutates the board in place rather than carrying a `visited` matrix — saves O(m*n) space and avoids a separate allocation.
 - `.iter().any(|&(nr, nc)| ...)` short-circuits as soon as any direction succeeds.
@@ -1214,7 +1354,7 @@ mod tests_lc79 {
 
 ### Problem 14 — LC #131: Palindrome Partitioning
 
-**Problem.** Given a string `s`, partition it into all possible substrings such that every substring is a palindrome. Return all such partitions.
+**Problem.** Given a string `s`, partition it so that every substring of the partition is a palindrome. Return all possible palindrome partitioning of `s`. A partition is a way to split `s` into a list of non-empty, contiguous substrings that together cover `s` exactly. For example, `"aab"` can be partitioned as `[["a","a","b"], ["aa","b"]]`. Constraints: `1 <= s.length <= 16`, `s` contains only lowercase English letters.
 
 **Insight.** Backtracking: at each position, try all prefixes starting at `start`. If the prefix is a palindrome, include it and recurse on the remainder.
 
@@ -1309,7 +1449,7 @@ mod tests_lc131 {
 
 ### Problem 15 — LC #17: Letter Combinations of a Phone Number
 
-**Problem.** Given a string of digits (2-9), return all possible letter combinations each digit could represent on a phone keypad. Return an empty list for empty input.
+**Problem.** Given a string containing digits from `2` to `9`, return all possible letter combinations that the number could represent, based on a phone keypad mapping (the same as a traditional telephone: 2→abc, 3→def, ..., 9→wxyz). The combinations should be returned in any order. Return an empty list if `digits` is empty. Constraints: `0 <= digits.length <= 4`, `digits[i]` is a digit in `'2'..'9'`.
 
 **Insight.** Backtracking: at each step, append each letter that corresponds to the current digit, then recurse for the next digit.
 
@@ -1397,7 +1537,7 @@ mod tests_lc17 {
 
 ### Problem 16 — LC #51: N-Queens
 
-**Problem.** Place `n` queens on an `n x n` chessboard so that no two queens attack each other. Return all distinct board configurations as a vector of strings.
+**Problem.** Place `n` queens on an `n × n` chessboard such that no two queens can attack each other — no two queens share the same row, column, or diagonal. Return all distinct solutions as a list of boards, where each board is represented as a list of `n` strings using `'Q'` for a queen and `'.'` for empty cells. For `n = 4` there are exactly 2 solutions; for `n = 8` there are 92. Constraints: `1 <= n <= 9`.
 
 **Insight.** Place one queen per row. Track attacked columns and diagonals with three `HashSet`s. Backtrack by removing from all three sets on undo.
 
@@ -1514,6 +1654,111 @@ mod tests_lc51 {
 - `i32` for diagonal keys because `row - col` can be negative.
 - `row.iter().collect::<String>()` in `build_board` converts `Vec<char>` to `String`.
 - All six mutable references (`queens`, `cols`, `diag1`, `diag2`, and `result`) are threaded through the call stack. In Java this would typically be six instance variables on `this`.
+
+#### Approach 2 — Bitmask attack tracking: O(n!) time, O(1) extra per frame
+
+Replace the three `HashSet`s with three bitmasks (`i32`). A set-bit at position `col` in `cols_mask` means column `col` is attacked. Diagonal masks use the same `row - col` and `row + col` keys but stored as bit offsets.
+
+```rust
+#[allow(dead_code)]
+struct Solution2;
+
+impl Solution2 {
+    pub fn solve_n_queens(n: i32) -> Vec<Vec<String>> {
+        let n = n as usize;
+        let mut result: Vec<Vec<String>> = Vec::new();
+        let mut queens: Vec<usize> = Vec::with_capacity(n);
+        // cols_mask: bit i set → column i is attacked
+        // diag1_mask: bit (row-col+n-1) → NW-SE diagonal attacked
+        // diag2_mask: bit (row+col)     → NE-SW diagonal attacked
+        Self::backtrack(0, n, 0i32, 0i32, 0i32, &mut queens, &mut result);
+        result
+    }
+
+    fn backtrack(
+        row: usize,
+        n: usize,
+        cols_mask: i32,
+        diag1_mask: i32,
+        diag2_mask: i32,
+        queens: &mut Vec<usize>,
+        result: &mut Vec<Vec<String>>,
+    ) {
+        if row == n {
+            result.push(Self::build_board(queens, n));
+            return;
+        }
+        for col in 0..n {
+            let d1_bit = 1 << (row as i32 - col as i32 + n as i32 - 1);
+            let d2_bit = 1 << (row + col);
+            let c_bit  = 1 << col;
+            if cols_mask & c_bit != 0
+                || diag1_mask & d1_bit != 0
+                || diag2_mask & d2_bit != 0
+            {
+                continue;
+            }
+            queens.push(col);
+            Self::backtrack(
+                row + 1, n,
+                cols_mask  | c_bit,
+                diag1_mask | d1_bit,
+                diag2_mask | d2_bit,
+                queens, result,
+            );
+            queens.pop();
+        }
+    }
+
+    fn build_board(queens: &[usize], n: usize) -> Vec<String> {
+        queens
+            .iter()
+            .map(|&col| {
+                let mut row = vec!['.'; n];
+                row[col] = 'Q';
+                row.iter().collect::<String>()
+            })
+            .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests_lc51_bitmask {
+    use super::Solution2;
+
+    #[test]
+    fn test_bitmask_n4() {
+        let result = Solution2::solve_n_queens(4);
+        assert_eq!(result.len(), 2);
+        let sol1: Vec<String> = [".Q..", "...Q", "Q...", "..Q."]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        let sol2: Vec<String> = ["..Q.", "Q...", "...Q", ".Q.."]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        let mut result_sorted = result;
+        result_sorted.sort();
+        let mut expected = vec![sol1, sol2];
+        expected.sort();
+        assert_eq!(result_sorted, expected);
+    }
+
+    #[test]
+    fn test_bitmask_n1() {
+        let result = Solution2::solve_n_queens(1);
+        assert_eq!(result, vec![vec!["Q".to_string()]]);
+    }
+
+    #[test]
+    fn test_bitmask_n8_count() {
+        assert_eq!(Solution2::solve_n_queens(8).len(), 92);
+    }
+}
+```
+
+**Why bitmasks.** Integer bitwise AND/OR/shift is faster than `HashSet` lookup (no hashing, no heap allocation). The trade-off: bitmask indices must be non-negative and fit in the integer width. `diag1` uses an offset of `n-1` so that `row - col + n - 1` is always `>= 0`. For `n <= 16` (well within LeetCode's constraints), all bit positions fit in `i32`.
 
 ---
 
