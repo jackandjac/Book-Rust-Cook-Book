@@ -1808,11 +1808,11 @@ All 16 Blind75/NeetCode150 heap and backtracking problems are covered with compl
 | Low | `Design Twitter` uses `self.tweets[&uid]` (panicking index) after an earlier `if let Some(list)` guard proves the key exists. A reader might not see the connection. A comment or using `self.tweets.get(&uid).unwrap()` would be clearer. | Problem 6, `get_news_feed` | Functionally correct |
 | Low | `Letter Combinations` builds a `Vec<usize>` from the digit string, adding one allocation. An alternative is to index into `phone` inline using `(ch as u8 - b'0') as usize` inside `backtrack`. The pre-conversion approach improves readability at minor cost. | Problem 15 | Intentional; readability trade-off |
 | Medium | `Word Search` passes `&mut Vec<Vec<char>>` into `dfs` to allow in-place mutation. On LeetCode, `board` is passed by value to `exist`, so this matches the API. In a multi-threaded context this mutable-borrow approach would need `Arc<Mutex<...>>`, but for single-threaded LeetCode use it is correct. | Problem 13 | Correct for intended use |
-| High | None identified — all solutions are algorithmically correct and all tests pass. | — | Verified by design |
+| High | **LC79 Word Search — single-character board returned false** (fixed): original `dfs` checked `if idx == word.len() { return true; }` at the top of the function, then matched the character and explored neighbors. For a 1-cell board with a 1-character word, the path was: match 'A', mark '#', no valid neighbors, return `false` — the base case never fired. Fix: check `if idx + 1 == word.len() { return true; }` immediately after confirming the character matches, before entering the neighbor-exploration phase. All `#[test]` cases including `test_single_char` now pass. | Problem 13, `dfs` | Fixed |
 
 ### Style and Completeness
 
-- All 16 problems covered: 7 heap + 9 backtracking.
+- All 16 problems covered: 7 heap + 9 backtracking, plus 3 Approach 2 variants (LC621 O(1) formula, LC78 bitmask enumeration, LC51 bitmask N-Queens).
 - Consistent `struct Solution` + `impl Solution` pattern throughout.
 - Each problem has: problem statement, insight, complete runnable code, complexity analysis, Rust notes.
 - Backtracking intro provides the canonical template and Java comparison table once, avoiding repetition across 9 problems.

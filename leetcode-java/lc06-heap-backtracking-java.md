@@ -1741,6 +1741,7 @@ class Solution2 {
 | `(a, b) -> a - b` comparator can overflow for `Integer.MIN_VALUE` inputs | Low | All comparators in this chapter use `Integer.compare` or `Collections.reverseOrder()` except where overflow is impossible (coordinates bounded by `10^4`) |
 | Test helpers for Subsets, Combination Sum I/II, Subsets II used `List.of(...)` (immutable) as inner expected lists; `Collections.sort()` throws `UnsupportedOperationException` on those | Medium | Fixed — all expected inner lists now constructed via `mlist(Integer...)` which returns a mutable `ArrayList` |
 | Word Search test driver mutates the board; calling `exist` twice on the same board gives wrong results | Low | Fixed by adding `copyBoard()` helper in the test driver |
+| **LC79 Word Search — single-character board correctness audit** (Java path differs from Rust): Java `dfs` calls itself on out-of-bounds indices and returns `true` when `idx == word.length()` fires before the bounds check — so a 1-cell 1-char board works correctly. The Rust version had a real bug (the Rust `dfs` checks `idx == word.len()` at the top, then matches the character; the base case could never fire on a 1-cell board because after marking the cell '#' there were no valid neighbors). Fixed in Rust only. | High (Rust) / N/A (Java) | Java correct as-is; Rust bug fixed |
 | `Set.remove(col)` autoboxes `int` to `Integer` — if someone accidentally called `list.remove(col)` it would remove by index | Low | Only `HashSet` is used in N-Queens; documented in Java notes |
 | No `assert` keyword used anywhere | Verified — OK | All tests use `throw new AssertionError(...)` |
 | Heap comparators correct (min vs max) | Verified — OK | KthLargest and MedianFinder use min-heap (`new PriorityQueue<>()`); LastStoneWeight, TaskScheduler, Twitter, and KClosest use max-heap with `Collections.reverseOrder()` or descending lambda |
@@ -1751,7 +1752,7 @@ class Solution2 {
 ### What This Chapter Does Well
 
 - Consistent `class Solution { public ... }` + `public static void main` test
-  pattern throughout all 16 problems, matching LeetCode's submission format.
+  pattern throughout all 16 problems (plus 3 `Solution2` Approach 2 variants: LC621 formula, LC78 bitmask, LC51 bitmask N-Queens), matching LeetCode's submission format.
 - Explicit demonstration of both min-heap and max-heap patterns using
   `PriorityQueue` in the same chapter, with a Quick Reference table at the top.
 - The backtracking template is introduced once and then applied uniformly
@@ -1771,11 +1772,7 @@ class Solution2 {
   A `boolean[][] dp` precomputation table would reduce the total time complexity
   from O(n * 2^n) to O(2^n) with O(n^2) preprocessing. It was omitted here for
   readability, but a production solution should include it.
-- **Task Scheduler formula alternative:** An O(1) mathematical solution
-  `max(tasks.length, (maxFreq - 1) * (n + 1) + countOfMaxFreq)` exists and
-  handles all cases in constant time. The heap-simulation approach is included
-  because it is more generalizable and closer to the Rust equivalent, but the
-  formula should be shown as a note.
+- ~~**Task Scheduler formula alternative:**~~ **Resolved.** `Solution2` now implements the O(1) mathematical formula `max(tasks.length, (maxFreq - 1) * (n + 1) + countOfMaxFreq)` alongside the heap-simulation `Solution`. Both approaches are tested and verified.
 - **Design Twitter with a record:** The heap entry `int[] {timestamp, tweetId,
   userId, index}` works but is opaque. A Java 16+ record
   `record TweetEntry(int ts, int tweetId, int userId, int idx) {}` would
