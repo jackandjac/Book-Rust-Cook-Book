@@ -1683,7 +1683,7 @@ class Solution {
 
 | Issue | Severity | Fix Applied |
 |-------|----------|-------------|
-| Rust source has wrong test case: `maxCoins([1,1,1])` asserts 4 but brute force and DP both give 3 | High | Java test uses correct expected value 3; discrepancy noted in review |
+| LC 312 `maxCoins([1,1,1])` expected value | High | Correct value is 3; Rust test bug (was asserting 4) has been fixed; both Rust and Java now assert 3 |
 | `Integer.MIN_VALUE + price` overflow in LC 309 (Stock Cooldown) | High | Initialized `held = -prices[0]` instead of `Integer.MIN_VALUE`; added guard for `prices.length <= 1` |
 | `assert` keyword forbidden — must use `throw new AssertionError` | High | All test drivers use `throw new AssertionError("msg: got " + actual)` throughout |
 | `int` overflow in LC 115 (Distinct Subsequences) | High | Used `long[]` dp array, matching Rust's `u64`; cast to `int` only at return |

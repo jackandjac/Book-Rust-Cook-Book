@@ -1423,7 +1423,7 @@ fn main() {}
 
 ### Rust Notes
 
-- `i32::MIN` as the initial `held` value represents "impossible" (you cannot hold a stock you haven't bought). Adding a price to it would overflow; the `rest - price` path handles the first valid buy.
+- `i32::MIN` as the initial `held` value represents "impossible" (you cannot hold a stock you haven't bought). `sold = held + price` on day 1 gives a large-negative value that never wins the final `max`, so it is harmless. Because LeetCode guarantees `price >= 1`, `i32::MIN + price` does not overflow (it yields at most `i32::MIN + 1`). For extra safety in general contexts, initialize `held = -prices[0]` and loop from index 1.
 - `prev_sold` captures `sold` before it is overwritten — order of updates matters when reusing variables.
 
 ---
@@ -2066,7 +2066,7 @@ mod tests {
 
     #[test]
     fn test_all_ones() {
-        assert_eq!(Solution::max_coins(vec![1, 1, 1]), 4);
+        assert_eq!(Solution::max_coins(vec![1, 1, 1]), 3);
     }
 }
 

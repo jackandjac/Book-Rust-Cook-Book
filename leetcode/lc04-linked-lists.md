@@ -667,15 +667,47 @@ mod tests_p138 {
         v
     }
 
+    /// Returns the random-pointer indices for each node in the copied list.
+    /// For each node, finds which position in the list its `random` points to
+    /// (or None if null). This verifies that random pointers in the copy
+    /// point to the correct nodes within the copy — not into the original list.
+    fn collect_random_indices(head: &Option<Box<RandomNode>>) -> Vec<Option<usize>> {
+        // Build address → index map for the copied list nodes
+        let mut addr_to_idx = std::collections::HashMap::new();
+        let mut cur = head.as_ref();
+        let mut idx = 0usize;
+        while let Some(n) = cur {
+            addr_to_idx.insert(n.as_ref() as *const RandomNode as usize, idx);
+            idx += 1;
+            cur = n.next.as_ref();
+        }
+        // Walk again, resolving each random pointer to its index
+        let mut result = Vec::new();
+        cur = head.as_ref();
+        while let Some(n) = cur {
+            let ri = n.random.map(|ptr| {
+                let addr = ptr as usize;
+                *addr_to_idx.get(&addr).expect("random pointer out of copied list")
+            });
+            result.push(ri);
+            cur = n.next.as_ref();
+        }
+        result
+    }
+
     #[test]
     fn basic_copy() {
         // [[7,null],[13,0],[11,4],[10,2],[1,0]]
-        let original = build_random_list(
-            &[7, 13, 11, 10, 1],
-            &[None, Some(0), Some(4), Some(2), Some(0)],
-        );
+        let randoms = [None, Some(0), Some(4), Some(2), Some(0)];
+        let original = build_random_list(&[7, 13, 11, 10, 1], &randoms);
         let copied = copy_random_list(original);
+        // Verify node values are correct
         assert_eq!(collect_vals(&copied), vec![7, 13, 11, 10, 1]);
+        // Verify random pointers in the copy point to the correct copied nodes
+        assert_eq!(
+            collect_random_indices(&copied),
+            vec![None, Some(0), Some(4), Some(2), Some(0)]
+        );
     }
 
     #[test]
@@ -683,6 +715,7 @@ mod tests_p138 {
         let original = build_random_list(&[1], &[None]);
         let copied = copy_random_list(original);
         assert_eq!(collect_vals(&copied), vec![1]);
+        assert_eq!(collect_random_indices(&copied), vec![None]);
     }
 
     #[test]
@@ -1158,7 +1191,7 @@ fn take_k(
     mut head: Option<Box<ListNode>>,
     k: usize,
 ) -> (Option<Box<ListNode>>, Option<Box<ListNode>>) {
-    // Count to verify we have k nodes
+    // Count to verify we have k nodes (one pass, immutable borrow)
     let mut count = 0;
     let mut cur = head.as_ref();
     while let Some(node) = cur {
@@ -1170,26 +1203,22 @@ fn take_k(
         return (None, head); // fewer than k — return unchanged
     }
 
-    // Detach first k nodes
-    let mut chunk_head = None;
+    // Detach exactly k nodes in order by collecting into a Vec, then relinking.
+    // This avoids the wasted double-reversal of the prepend approach.
+    let mut nodes: Vec<Box<ListNode>> = Vec::with_capacity(k);
     for _ in 0..k {
         let mut node = head.take().unwrap();
-        head = node.next.take();
-        // Prepend to chunk (reverses as we go — we'll reverse the chunk below)
-        node.next = chunk_head;
-        chunk_head = Some(node);
+        head = node.next.take(); // head advances; node.next is now None
+        nodes.push(node);
     }
-    // chunk_head is now the reversed k-chunk; head is the remainder.
-    // But we want the chunk unreversed (we'll reverse it in the caller),
-    // so reverse it back first.
-    let mut unreversed = None;
-    while let Some(mut node) = chunk_head {
-        let next = node.next.take();
-        node.next = unreversed;
-        unreversed = Some(node);
-        chunk_head = next;
+    // Relink the k nodes: nodes[0].next = nodes[1], ..., nodes[k-2].next = nodes[k-1]
+    // Build from back to front so each node's `next` is already set.
+    let mut chunk = None;
+    for mut node in nodes.into_iter().rev() {
+        node.next = chunk;
+        chunk = Some(node);
     }
-    (unreversed, head)
+    (chunk, head)
 }
 
 /// Reverse a list of exactly k nodes. The caller guarantees length == k.
@@ -1282,7 +1311,7 @@ mod tests_p25 {
 ```
 
 **Rust-specific notes:**
-- `take_k` borrows-then-consumes: it first counts by immutable reference (to check k-availability) then consumes by taking ownership. This two-step is required because you cannot hold a mutable reference and count simultaneously in a single pass without more complex bookkeeping.
+- `take_k` borrows-then-consumes: it first counts by immutable reference (to check k-availability), then consumes by taking ownership. This two-step is required because you cannot hold a mutable borrow and count simultaneously. The k nodes are collected into a `Vec` and relinked back-to-front — this avoids the wasted double-reversal that a prepend-then-reverse approach would require.
 - The iterative approach here avoids the stack growth of a recursive solution. A recursive form is shorter but uses O(n/k) stack frames — for k=1 on a long list, that risks stack overflow.
 - Advancing `tail` by a fixed `k` steps after appending is O(k) per group — total across all groups is O(n).
 
@@ -1339,7 +1368,7 @@ mod tests_p25 {
 
 - **LC #23** — `NodeWrapper` with reversed `Ord` gives correct min-heap behavior. Comparing only on `val` (not `next`) is essential — including `next` in the comparison would give non-deterministic ordering.
 
-- **LC #25** — `take_k` double-traverses (count then take). The `reverse_k` helper reuses the exact same pattern as #206. Iterative group-by-group is O(n) total.
+- **LC #25** — `take_k` counts by immutable borrow first (required to check k-availability), then consumes by ownership. The k nodes are collected into a `Vec` and relinked back-to-front, avoiding the wasted double-reversal of a prepend approach. The `reverse_k` helper reuses the exact same pattern as #206. Iterative group-by-group is O(n) total.
 
 **Ownership patterns established in this chapter:**
 

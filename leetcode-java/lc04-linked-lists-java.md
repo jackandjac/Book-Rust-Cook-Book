@@ -43,10 +43,10 @@ The Rust chapter's "Two Essential Ownership Patterns" (`take()` and `while let`)
 
 **Running the code blocks:** Each problem is a self-contained class. Run on Java 17+ with:
 ```
-javac Solution206.java && java -ea Solution206
+javac Solution206.java && java Solution206
 ```
 Class names match the problem number (e.g. `Solution206`, `Solution21`, `LRUCacheLinkedHashMap`).
-The `-ea` flag enables `assert` statements. Without it, assertions are silently skipped.
+Assertions use `if (!cond) throw new AssertionError("msg")` — no `-ea` flag needed.
 
 ---
 
@@ -127,14 +127,18 @@ class Solution206 {
     }
 
     public static void main(String[] args) {
-        assert java.util.Arrays.equals(
-            toArray(reverseList(toList(1, 2, 3, 4, 5))), new int[]{5, 4, 3, 2, 1});
-        assert java.util.Arrays.equals(
-            toArray(reverseList(toList(1, 2))), new int[]{2, 1});
-        assert java.util.Arrays.equals(
-            toArray(reverseList(toList(1))), new int[]{1});
-        assert java.util.Arrays.equals(
-            toArray(reverseList(null)), new int[]{});
+        if (!java.util.Arrays.equals(
+            toArray(reverseList(toList(1, 2, 3, 4, 5))), new int[]{5, 4, 3, 2, 1}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
+            toArray(reverseList(toList(1, 2))), new int[]{2, 1}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
+            toArray(reverseList(toList(1))), new int[]{1}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
+            toArray(reverseList(null)), new int[]{}))
+            throw new AssertionError("arrays not equal");
         System.out.println("LC #206 — all assertions passed");
     }
 }
@@ -195,13 +199,16 @@ class Solution21 {
     }
 
     public static void main(String[] args) {
-        assert java.util.Arrays.equals(
+        if (!java.util.Arrays.equals(
             toArray(mergeTwoLists(toList(1, 2, 4), toList(1, 3, 4))),
-            new int[]{1, 1, 2, 3, 4, 4});
-        assert java.util.Arrays.equals(
-            toArray(mergeTwoLists(null, null)), new int[]{});
-        assert java.util.Arrays.equals(
-            toArray(mergeTwoLists(null, toList(0))), new int[]{0});
+            new int[]{1, 1, 2, 3, 4, 4}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
+            toArray(mergeTwoLists(null, null)), new int[]{}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
+            toArray(mergeTwoLists(null, toList(0))), new int[]{0}))
+            throw new AssertionError("arrays not equal");
         System.out.println("LC #21 — all assertions passed");
     }
 }
@@ -282,19 +289,23 @@ class Solution143 {
     public static void main(String[] args) {
         ListNode h1 = toList(1, 2, 3, 4, 5);
         reorderList(h1);
-        assert java.util.Arrays.equals(toArray(h1), new int[]{1, 5, 2, 4, 3});
+        if (!java.util.Arrays.equals(toArray(h1), new int[]{1, 5, 2, 4, 3}))
+            throw new AssertionError("arrays not equal");
 
         ListNode h2 = toList(1, 2, 3, 4);
         reorderList(h2);
-        assert java.util.Arrays.equals(toArray(h2), new int[]{1, 4, 2, 3});
+        if (!java.util.Arrays.equals(toArray(h2), new int[]{1, 4, 2, 3}))
+            throw new AssertionError("arrays not equal");
 
         ListNode h3 = toList(1, 2);
         reorderList(h3);
-        assert java.util.Arrays.equals(toArray(h3), new int[]{1, 2});
+        if (!java.util.Arrays.equals(toArray(h3), new int[]{1, 2}))
+            throw new AssertionError("arrays not equal");
 
         ListNode h4 = toList(1);
         reorderList(h4);
-        assert java.util.Arrays.equals(toArray(h4), new int[]{1});
+        if (!java.util.Arrays.equals(toArray(h4), new int[]{1}))
+            throw new AssertionError("arrays not equal");
 
         System.out.println("LC #143 — all assertions passed");
     }
@@ -358,18 +369,22 @@ class Solution19 {
     }
 
     public static void main(String[] args) {
-        assert java.util.Arrays.equals(
+        if (!java.util.Arrays.equals(
             toArray(removeNthFromEnd(toList(1, 2, 3, 4, 5), 2)),
-            new int[]{1, 2, 3, 5});
-        assert java.util.Arrays.equals(
+            new int[]{1, 2, 3, 5}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
             toArray(removeNthFromEnd(toList(1), 1)),
-            new int[]{});
-        assert java.util.Arrays.equals(
+            new int[]{}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
             toArray(removeNthFromEnd(toList(1, 2), 2)),
-            new int[]{2});
-        assert java.util.Arrays.equals(
+            new int[]{2}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
             toArray(removeNthFromEnd(toList(1, 2), 1)),
-            new int[]{1});
+            new int[]{1}))
+            throw new AssertionError("arrays not equal");
         System.out.println("LC #19 — all assertions passed");
     }
 }
@@ -447,12 +462,13 @@ class Solution138 {
         // [[7,null],[13,0],[11,4],[10,2],[1,0]]
         Node original = buildList(new int[]{7, 13, 11, 10, 1}, new int[]{-1, 0, 4, 2, 0});
         Node copied = copyRandomList(original);
-        assert java.util.Arrays.equals(collectVals(copied), new int[]{7, 13, 11, 10, 1});
+        if (!java.util.Arrays.equals(collectVals(copied), new int[]{7, 13, 11, 10, 1}))
+            throw new AssertionError("arrays not equal");
         // Verify it is a deep copy (different node objects)
-        assert copied != original;
-        assert copied.next != original.next;
+        if (copied == original) throw new AssertionError("expected deep copy, not same reference");
+        if (copied.next == original.next) throw new AssertionError("expected deep copy of .next");
 
-        assert copyRandomList(null) == null;
+        if (copyRandomList(null) != null) throw new AssertionError("expected null");
         System.out.println("LC #138 — all assertions passed");
     }
 }
@@ -515,20 +531,24 @@ class Solution2 {
     }
 
     public static void main(String[] args) {
-        assert java.util.Arrays.equals(
+        if (!java.util.Arrays.equals(
             toArray(addTwoNumbers(toList(2, 4, 3), toList(5, 6, 4))),
-            new int[]{7, 0, 8});
-        assert java.util.Arrays.equals(
+            new int[]{7, 0, 8}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
             toArray(addTwoNumbers(toList(0), toList(0))),
-            new int[]{0});
+            new int[]{0}))
+            throw new AssertionError("arrays not equal");
         // 999 + 1 = 1000
-        assert java.util.Arrays.equals(
+        if (!java.util.Arrays.equals(
             toArray(addTwoNumbers(toList(9, 9, 9), toList(1))),
-            new int[]{0, 0, 0, 1});
+            new int[]{0, 0, 0, 1}))
+            throw new AssertionError("arrays not equal");
         // 9999 + 9 = 10008
-        assert java.util.Arrays.equals(
+        if (!java.util.Arrays.equals(
             toArray(addTwoNumbers(toList(9, 9, 9, 9), toList(9))),
-            new int[]{8, 0, 0, 0, 1});
+            new int[]{8, 0, 0, 0, 1}))
+            throw new AssertionError("arrays not equal");
         System.out.println("LC #2 — all assertions passed");
     }
 }
@@ -571,10 +591,10 @@ class Solution287 {
     }
 
     public static void main(String[] args) {
-        assert findDuplicate(new int[]{1, 3, 4, 2, 2}) == 2;
-        assert findDuplicate(new int[]{3, 1, 3, 4, 2}) == 3;
-        assert findDuplicate(new int[]{1, 1})           == 1;
-        assert findDuplicate(new int[]{2, 5, 9, 6, 9, 3, 8, 9, 7, 1}) == 9;
+        if (!(findDuplicate(new int[]{1, 3, 4, 2, 2}) == 2)) throw new AssertionError("findDuplicate(new int[]{1, 3, 4, 2, 2}) == 2");
+        if (!(findDuplicate(new int[]{3, 1, 3, 4, 2}) == 3)) throw new AssertionError("findDuplicate(new int[]{3, 1, 3, 4, 2}) == 3");
+        if (!(findDuplicate(new int[]{1, 1})           == 1)) throw new AssertionError("findDuplicate(new int[]{1, 1})           == 1");
+        if (!(findDuplicate(new int[]{2, 5, 9, 6, 9, 3, 8, 9, 7, 1}) == 9)) throw new AssertionError("findDuplicate(new int[]{2, 5, 9, 6, 9, 3, 8, 9, 7, 1}) == 9");
         System.out.println("LC #287 — all assertions passed");
     }
 }
@@ -627,20 +647,20 @@ class LRUCacheLinkedHashMap extends LinkedHashMap<Integer, Integer> {
         LRUCacheLinkedHashMap cache = new LRUCacheLinkedHashMap(2);
         cache.put(1, 1);
         cache.put(2, 2);
-        assert cache.get(1) == 1;  // returns 1; key 1 is now most-recent
+        if (!(cache.get(1) == 1)) throw new AssertionError("cache.get(1) == 1");  // returns 1; key 1 is now most-recent
         cache.put(3, 3);           // evicts key 2 (LRU)
-        assert cache.get(2) == -1; // not found
+        if (!(cache.get(2) == -1)) throw new AssertionError("cache.get(2) == -1");  // not found
         cache.put(4, 4);           // evicts key 1 (LRU at this point)
-        assert cache.get(1) == -1; // not found
-        assert cache.get(3) == 3;
-        assert cache.get(4) == 4;
+        if (!(cache.get(1) == -1)) throw new AssertionError("cache.get(1) == -1");  // not found
+        if (!(cache.get(3) == 3)) throw new AssertionError("cache.get(3) == 3");
+        if (!(cache.get(4) == 4)) throw new AssertionError("cache.get(4) == 4");
 
         LRUCacheLinkedHashMap c2 = new LRUCacheLinkedHashMap(1);
         c2.put(2, 1);
-        assert c2.get(2) == 1;
+        if (!(c2.get(2) == 1)) throw new AssertionError("c2.get(2) == 1");
         c2.put(3, 2);
-        assert c2.get(2) == -1;
-        assert c2.get(3) == 2;
+        if (!(c2.get(2) == -1)) throw new AssertionError("c2.get(2) == -1");
+        if (!(c2.get(3) == 2)) throw new AssertionError("c2.get(3) == 2");
 
         System.out.println("LC #146 (LinkedHashMap) — all assertions passed");
     }
@@ -719,21 +739,21 @@ class LRUCacheManual {
         LRUCacheManual cache = new LRUCacheManual(2);
         cache.put(1, 1);
         cache.put(2, 2);
-        assert cache.get(1) == 1;
+        if (!(cache.get(1) == 1)) throw new AssertionError("cache.get(1) == 1");
         cache.put(3, 3);
-        assert cache.get(2) == -1;
+        if (!(cache.get(2) == -1)) throw new AssertionError("cache.get(2) == -1");
         cache.put(4, 4);
-        assert cache.get(1) == -1;
-        assert cache.get(3) == 3;
-        assert cache.get(4) == 4;
+        if (!(cache.get(1) == -1)) throw new AssertionError("cache.get(1) == -1");
+        if (!(cache.get(3) == 3)) throw new AssertionError("cache.get(3) == 3");
+        if (!(cache.get(4) == 4)) throw new AssertionError("cache.get(4) == 4");
 
         // Update existing key — should not evict
         LRUCacheManual c2 = new LRUCacheManual(2);
         c2.put(1, 1);
         c2.put(2, 2);
         c2.put(1, 10);
-        assert c2.get(1) == 10;
-        assert c2.get(2) == 2;
+        if (!(c2.get(1) == 10)) throw new AssertionError("c2.get(1) == 10");
+        if (!(c2.get(2) == 2)) throw new AssertionError("c2.get(2) == 2");
 
         System.out.println("LC #146 (manual DLL) — all assertions passed");
     }
@@ -798,23 +818,27 @@ class Solution23 {
     }
 
     public static void main(String[] args) {
-        assert java.util.Arrays.equals(
+        if (!java.util.Arrays.equals(
             toArray(mergeKLists(new ListNode[]{
                 toList(1, 4, 5), toList(1, 3, 4), toList(2, 6)
             })),
-            new int[]{1, 1, 2, 3, 4, 4, 5, 6});
+            new int[]{1, 1, 2, 3, 4, 4, 5, 6}))
+            throw new AssertionError("arrays not equal");
 
-        assert java.util.Arrays.equals(
+        if (!java.util.Arrays.equals(
             toArray(mergeKLists(new ListNode[]{})),
-            new int[]{});
+            new int[]{}))
+            throw new AssertionError("arrays not equal");
 
-        assert java.util.Arrays.equals(
+        if (!java.util.Arrays.equals(
             toArray(mergeKLists(new ListNode[]{null, null})),
-            new int[]{});
+            new int[]{}))
+            throw new AssertionError("arrays not equal");
 
-        assert java.util.Arrays.equals(
+        if (!java.util.Arrays.equals(
             toArray(mergeKLists(new ListNode[]{toList(1, 2, 3)})),
-            new int[]{1, 2, 3});
+            new int[]{1, 2, 3}))
+            throw new AssertionError("arrays not equal");
 
         System.out.println("LC #23 — all assertions passed");
     }
@@ -898,21 +922,26 @@ class Solution25 {
     }
 
     public static void main(String[] args) {
-        assert java.util.Arrays.equals(
+        if (!java.util.Arrays.equals(
             toArray(reverseKGroup(toList(1, 2, 3, 4, 5), 2)),
-            new int[]{2, 1, 4, 3, 5});
-        assert java.util.Arrays.equals(
+            new int[]{2, 1, 4, 3, 5}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
             toArray(reverseKGroup(toList(1, 2, 3, 4, 5), 3)),
-            new int[]{3, 2, 1, 4, 5});
-        assert java.util.Arrays.equals(
+            new int[]{3, 2, 1, 4, 5}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
             toArray(reverseKGroup(toList(1, 2, 3), 1)),
-            new int[]{1, 2, 3});
-        assert java.util.Arrays.equals(
+            new int[]{1, 2, 3}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
             toArray(reverseKGroup(toList(1, 2, 3), 3)),
-            new int[]{3, 2, 1});
-        assert java.util.Arrays.equals(
+            new int[]{3, 2, 1}))
+            throw new AssertionError("arrays not equal");
+        if (!java.util.Arrays.equals(
             toArray(reverseKGroup(toList(1), 1)),
-            new int[]{1});
+            new int[]{1}))
+            throw new AssertionError("arrays not equal");
         System.out.println("LC #25 — all assertions passed");
     }
 }
