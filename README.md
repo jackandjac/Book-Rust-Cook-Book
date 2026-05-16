@@ -187,6 +187,8 @@ The official book ([doc.rust-lang.org/book](https://doc.rust-lang.org/book)) rem
 | LC-14b | [Advanced DP Part 2](leetcode/lc14-advanced-dp-part2.md) | LC #337, #968, #124, #1372, #2246, #1519, #526, #1986, #1494, #2305, #847, #1125, #1434, #943, #309, #188, #123, #1911, #2826 | Tree DP, Bitmask DP, State Machine DP | lc14b |
 | LC-14c | [Advanced DP Part 3](leetcode/lc14-advanced-dp-part3.md) | LC #10, #44, #1458, #1092, #1062, #718, #1035, #837, #688, #576, #1230, #808, #1278, #1335, #410, #813, #879, #956, #1049, #474, #1066, #1981 | String DP, Probability DP, D&C Optimization, Advanced Knapsack | lc14c |
 | LC-14d | [Advanced DP Part 4](leetcode/lc14-advanced-dp-part4.md) | LC #1696, #1425, #2944, #862, #907, #2212, #1994, #2572, #329, #1857, #2050, #1697, #188, #2218, #2209, #2370, #2707, #2463, #2809, #3041 | Monotone Stack DP, SOS DP, DAG DP, Grandmaster Problems | lc14d |
+| LC-15 | [Trie Deep Dive](leetcode/lc15-trie-deep-dive.md) | LC #14, #139, #140, #336, #386, #421, #440, #472, #648, #676, #677, #692, #720, #820, #1032, #1178, #1268, #2416 | Array/HashMap Trie, Binary Trie (XOR), DP+Trie, Autocomplete | lc15 |
+| LC-16 | [Union-Find Deep Dive](leetcode/lc16-union-find-deep-dive.md) | LC #128, #130, #200, #305, #399, #547, #695, #721, #765, #803, #827, #839, #947, #952, #959, #990, #1101, #1202, #1319, #1489, #1559, #1584, #1970 | Path compression + union by rank, weighted DSU, grid DSU, Kruskal | lc16 |
 
 ### Problems by Difficulty
 
@@ -360,6 +362,8 @@ For teams migrating Java → Rust, seeing the same algorithm expressed in both l
 | JLC-14b | [Advanced DP Part 2 (Java)](leetcode-java/lc14-advanced-dp-part2-java.md) | LC #337, #968, #124, #1372, #2246, #1519, #526, #1986, #1494, #2305, #847, #1125, #1434, #943, #309, #188, #123, #1911, #2826 | Tree DP (`int[2]`), `1L<<j` bitmask, State Machine DP | jlc14b |
 | JLC-14c | [Advanced DP Part 3 (Java)](leetcode-java/lc14-advanced-dp-part3-java.md) | LC #10, #44, #1458, #1092, #1062, #718, #1035, #837, #688, #576, #1230, #808, #1278, #1335, #410, #813, #879, #956, #1049, #474, #1066, #1981 | String DP, Probability `double[][]`, D&C Optimization | jlc14c |
 | JLC-14d | [Advanced DP Part 4 (Java)](leetcode-java/lc14-advanced-dp-part4-java.md) | LC #1696, #1425, #2944, #862, #907, #2212, #1994, #2572, #329, #1857, #2050, #1697, #188, #2218, #2209, #2370, #2707, #2463, #2809, #3041 | Monotone Deque DP, SOS/Bitmask DP, DAG DP, Grandmaster Problems | jlc14d |
+| JLC-15 | [Trie Deep Dive (Java)](leetcode-java/lc15-trie-deep-dive-java.md) | LC #14, #139, #140, #336, #386, #421, #440, #472, #648, #676, #677, #692, #720, #820, #1032, #1178, #1268, #2416 | `TrieNode[] children = new TrieNode[26]`, Binary Trie XOR, DP+Trie | jlc15 |
+| JLC-16 | [Union-Find Deep Dive (Java)](leetcode-java/lc16-union-find-deep-dive-java.md) | LC #128, #130, #200, #305, #399, #547, #695, #721, #765, #803, #827, #839, #947, #952, #959, #990, #1101, #1202, #1319, #1489, #1559, #1584, #1970 | Path compression + union by rank, weighted DSU, grid DSU, Kruskal | jlc16 |
 
 ### Java Quick Reference: LeetCode Patterns
 

@@ -4,8 +4,8 @@
 #
 # Books produced:
 #   1. RUST_COOKBOOK.pdf          — 21 language chapters (Part I)
-#   2. RUST_LEETCODE.pdf          — 17 Rust LeetCode chapters (Part II)
-#   3. JAVA_LEETCODE.pdf          — 17 Java LeetCode chapters (Part III)
+#   2. RUST_LEETCODE.pdf          — 19 Rust LeetCode chapters (Part II)
+#   3. JAVA_LEETCODE.pdf          — 19 Java LeetCode chapters (Part III)
 #
 # Usage:
 #   ./generate-pdfs.sh            # skip PDFs whose sources haven't changed
@@ -158,7 +158,9 @@ concat_files "$BOOK2_MD" \
   leetcode/lc14-advanced-dp-part1.md \
   leetcode/lc14-advanced-dp-part2.md \
   leetcode/lc14-advanced-dp-part3.md \
-  leetcode/lc14-advanced-dp-part4.md
+  leetcode/lc14-advanced-dp-part4.md \
+  leetcode/lc15-trie-deep-dive.md \
+  leetcode/lc16-union-find-deep-dive.md
 
 generate_pdf "$BOOK2_MD" "$BOOK2_PDF" "Book 2: Rust LeetCode"
 
@@ -199,7 +201,9 @@ concat_files "$BOOK3_MD" \
   leetcode-java/lc14-advanced-dp-part1-java.md \
   leetcode-java/lc14-advanced-dp-part2-java.md \
   leetcode-java/lc14-advanced-dp-part3-java.md \
-  leetcode-java/lc14-advanced-dp-part4-java.md
+  leetcode-java/lc14-advanced-dp-part4-java.md \
+  leetcode-java/lc15-trie-deep-dive-java.md \
+  leetcode-java/lc16-union-find-deep-dive-java.md
 
 generate_pdf "$BOOK3_MD" "$BOOK3_PDF" "Book 3: Java LeetCode"
 
