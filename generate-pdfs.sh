@@ -208,9 +208,49 @@ concat_files "$BOOK3_MD" \
 generate_pdf "$BOOK3_MD" "$BOOK3_PDF" "Book 3: Java LeetCode"
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Book 4: System Design (16 chapters — bilingual Rust + Java)
+# ─────────────────────────────────────────────────────────────────────────────
+BOOK4_MD="$TMPDIR_LOCAL/SYSTEM_DESIGN.md"
+BOOK4_PDF="$SCRIPT_DIR/SYSTEM_DESIGN.pdf"
+
+cat > "$TMPDIR_LOCAL/book4_cover.md" << 'COVER'
+# System Design: Interview Prep & Production Patterns
+
+**Part IV: Distributed Systems Design**
+
+> From interview fundamentals (Rate Limiter, URL Shortener, Chat System) to distributed theory (CAP theorem, Raft, Consistent Hashing) to production patterns (Event Sourcing, Circuit Breaker, Saga Pattern).
+
+**Approach:** Every chapter: Requirements → Back-of-envelope math → Architecture → Component deep-dive → Tradeoffs → Compilable Rust + Java code snippets.
+**Code:** All snippets compile with `rustc --edition 2024` and `javac --release 17` — no external dependencies.
+
+---
+COVER
+
+concat_files "$BOOK4_MD" \
+  "$TMPDIR_LOCAL/book4_cover.md" \
+  system-design/sd01-rate-limiter.md \
+  system-design/sd02-url-shortener.md \
+  system-design/sd03-consistent-hashing.md \
+  system-design/sd04-cap-theorem.md \
+  system-design/sd05-raft-consensus.md \
+  system-design/sd06-key-value-store.md \
+  system-design/sd07-chat-system.md \
+  system-design/sd08-news-feed.md \
+  system-design/sd09-search-autocomplete.md \
+  system-design/sd10-notification-system.md \
+  system-design/sd11-distributed-cache.md \
+  system-design/sd12-load-balancing.md \
+  system-design/sd13-video-streaming.md \
+  system-design/sd14-event-sourcing-cqrs.md \
+  system-design/sd15-circuit-breaker.md \
+  system-design/sd16-saga-idempotency.md
+
+generate_pdf "$BOOK4_MD" "$BOOK4_PDF" "Book 4: System Design"
+
+# ─────────────────────────────────────────────────────────────────────────────
 echo ""
 echo "All done! PDFs in $SCRIPT_DIR:"
-for pdf in RUST_COOKBOOK.pdf RUST_LEETCODE.pdf JAVA_LEETCODE.pdf; do
+for pdf in RUST_COOKBOOK.pdf RUST_LEETCODE.pdf JAVA_LEETCODE.pdf SYSTEM_DESIGN.pdf; do
   if [[ -f "$SCRIPT_DIR/$pdf" ]]; then
     echo "  $(du -h "$SCRIPT_DIR/$pdf" | cut -f1 | xargs)  $pdf"
   fi
