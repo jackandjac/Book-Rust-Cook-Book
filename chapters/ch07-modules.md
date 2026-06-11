@@ -1314,3 +1314,7 @@ The chapter demonstrates the `use` scope-locality issue and provides the correct
 | 10 | OK | `super::` example: `super::deliver_order()` inside `back_of_house` correctly resolves to the crate root because `back_of_house` is a direct child of the root | Verified |
 | 11 | Low | `pub(in path)` — path must be an ancestor module; using a non-ancestor causes a compile error. Example uses `crate::outer` which is a valid ancestor of `outer::middle` | Correct |
 | 12 | Low | Line count: 1316 lines — exceeds the 700–900 target by ~45%. Reason: 12 topic sections, 6 pitfall examples, 4 practical project layouts (restaurant, library, CLI, plugin), and a Quick Reference Card all required distinct code blocks that could not be compressed further without losing the runnable-example requirement. | Noted; content is complete and correct |
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 27 runnable blocks compiled cleanly (warnings only). All 3 compile_fail blocks emit the claimed errors (E0603 private function, E0428+E0583 duplicate mod, E0425+E0433 use scope). The 25 no_run multi-file blocks were verified by structural analysis — module resolution rules are edition-independent. No code changes required.

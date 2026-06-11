@@ -50,7 +50,7 @@ struct BitNode {
 ```
 
 **Key insertion idiom** (avoids borrow-checker fights):
-```rust
+```rust,no_run
 fn insert(root: &mut TrieNode, word: &str) {
     let mut node = root;
     for c in word.bytes() {
@@ -1960,7 +1960,7 @@ Space O(W).
 
 This is the most important idiom for Trie insertion in Rust:
 
-```rust
+```rust,no_run
 node = node.children[idx].get_or_insert_with(|| Box::new(TrieNode::default()));
 ```
 
@@ -1984,7 +1984,7 @@ for c in word.bytes() {
 
 **Inserting (mutable):** Use `get_or_insert_with` — the compiler can prove the loop variable
 `node` is re-bound to a shorter-lived reference on each iteration:
-```rust
+```rust,no_run
 let mut node = &mut root;
 for c in word.bytes() {
     let idx = (c - b'a') as usize;

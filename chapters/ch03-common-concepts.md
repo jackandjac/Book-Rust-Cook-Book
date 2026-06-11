@@ -441,7 +441,7 @@ record MinMax(int min, int max) {}
 MinMax result = minMax(data);
 ```
 
-```rust
+```rust,no_run
 // Rust: just return a tuple — no boilerplate
 fn min_max(data: &[i32]) -> (i32, i32) { ... }
 let (lo, hi) = min_max(&data);
@@ -933,7 +933,7 @@ IntStream.range(0, 10).forEach(i -> ...);
 IntStream.rangeClosed(1, 10).forEach(i -> ...);
 ```
 
-```rust
+```rust,no_run
 // Rust exclusive range (like Java IntStream.range)
 for i in 0..10 { ... }
 
@@ -1011,9 +1011,10 @@ fn analyze(readings: &[f64]) -> Option<(f64, f64, f64)> {
         return None;
     }
 
-    let mut min = readings[0];
-    let mut max = readings[0];
+    let mut min = f64::INFINITY;
+    let mut max = f64::NEG_INFINITY;
     let mut sum = 0.0_f64;
+    let mut valid_count = 0usize;
 
     for &temp in readings {
         if !is_valid_temperature(temp) {
@@ -1021,11 +1022,16 @@ fn analyze(readings: &[f64]) -> Option<(f64, f64, f64)> {
             continue;
         }
         sum += temp;
+        valid_count += 1;
         if temp < min { min = temp; }
         if temp > max { max = temp; }
     }
 
-    let mean = sum / readings.len() as f64;
+    if valid_count == 0 {
+        return None;
+    }
+
+    let mean = sum / valid_count as f64;
     Some((min, mean, max))
 }
 
@@ -1093,7 +1099,7 @@ let arr: [i32; 4] = [1, 2, 3, 4];
 
 ### Control Flow Cheat Sheet
 
-```rust
+```rust,no_run
 // if as expression
 let x = if condition { 1 } else { 0 };
 
@@ -1167,6 +1173,22 @@ for i in (0..10).rev() { ... } // 9 down to 0
 
 5. **No `gen` keyword usage:** Rust 2024 reserves `gen` as a keyword. None of the examples use `gen` as an identifier. Verified.
 
+### Issues found in Round 2 (2026-06, rustc 1.94.0)
+
+1. **`analyze()` — two bugs producing wrong output** *(High — output mismatch)*
+   - **Bug 1:** `mean = sum / readings.len() as f64` divides by the total number of readings (7, including the invalid `-300.0`) instead of the valid count (6). Result: `18.5°C` not the stated `21.6°C`.
+   - **Bug 2:** `min` and `max` were initialized to `readings[0]`, which could be an invalid entry. If the first reading is invalid, `min`/`max` would be silently wrong.
+   - **Fix applied:** Added `valid_count: usize` counter incremented per valid reading; changed initialization of `min`/`max` to `f64::INFINITY` / `f64::NEG_INFINITY`; added `if valid_count == 0 { return None; }` guard. All other code unchanged. Confirmed output now matches the stated example exactly.
+
+2. **All other runnable code in Chapter 3 compiles cleanly under rustc 1.94.0 ✅**
+
+3. **Concrete output claims verified by running:**
+   - `encode_checksum([0xFF, 0x01, 0x02, 0x03])` = `0x05` ✅
+   - `250u8.overflowing_add(10)` = `(4, true)` ✅
+   - `(1..=100).sum::<u32>()` = `5050` ✅
+   - `fahrenheit_to_celsius(98.6)` = `37.0°C` ✅
+   - Labeled loop: `Found: i=5, j=5  (product=25)` ✅
+
 ### What this chapter deliberately omits (to cover later)
 
 - `Vec<T>` — the growable alternative to arrays (Chapter 8)
@@ -1178,3 +1200,14 @@ for i in (0..10).rev() { ... } // 9 down to 0
 ### Honest assessment
 
 The chapter hits 700-1000 lines. Java comparisons are accurate and flag real differences (char size, unsigned types, no implicit conversion, stack vs heap arrays) without manufacturing false ones. The overflow method section is the densest value-add for a Java developer who is accustomed to silently wrapping behavior in `int` computations. The `if`-as-expression and block-as-expression sections will be the biggest "aha" moments for Java developers.
+
+### Issues Found (Round 3 — 2026-06, rustc 1.94.0 per-block harness)
+
+| # | Issue | Severity | Fix Applied |
+|---|-------|----------|-------------|
+| 1 | Block at line 444: `fn min_max(data: &[i32]) -> (i32, i32) { ... }` — `...` is invalid Rust syntax; block was tagged plain ` ```rust ` but is a comparison skeleton | Low | Retagged to ` ```rust,no_run ` |
+| 2 | Block at line 936: Java-vs-Rust range comparison with `for i in 0..10 { ... }` — pseudo-code skeleton in plain ` ```rust ` | Low | Retagged to ` ```rust,no_run ` |
+| 3 | Block at line 1102: Control Flow Cheat Sheet with `while condition { ... }`, `for item in &collection { ... }` etc — skeleton in plain ` ```rust ` | Low | Retagged to ` ```rust,no_run ` |
+| 4 | **Root cause note:** Round 2 compiled ch01–ch09 via hand-assembled combined `main.rs`, which silently supplied real definitions and masked standalone-fragment failures. Per-block harness (used for ch10–21 in Round 2) was not applied to early chapters. Round 3 closes this gap. | — | Methodology corrected |
+| 5 | `analyze()` Round 2 fix re-verified: `valid_count` divisor, `INFINITY`/`NEG_INFINITY` init, output `21.6°C` confirmed ✅ | OK | No change |
+| 6 | All other 46 plain runnable blocks compile cleanly under per-block harness ✅ | OK | No change |

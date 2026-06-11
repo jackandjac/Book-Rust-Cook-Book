@@ -23,7 +23,7 @@
 
 Every problem in this chapter uses the following class (shown once, referenced everywhere):
 
-```java
+```java,no_run
 import java.util.Arrays;
 
 static class UnionFind {

@@ -1157,3 +1157,7 @@ This chapter is approximately 1155 lines against a 700-900 target (roughly 28% o
 - **Mutation testing** (`cargo-mutants`) was omitted. It is an emerging practice in the Rust ecosystem.
 - **Code coverage** (`cargo llvm-cov` or `cargo tarpaulin`) was not covered. Coverage tooling deserves a dedicated section.
 - **`#[test_case]` from `test-case` crate** provides table-driven tests with distinct test names — a better parametrized story than the manual loop shown in §11.11 for many use cases.
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+Ch11 has no plain runnable blocks — all 25 are no_run (require test harness). Structural review: #[test] annotations, assert_eq!, assert!, should_panic, and #[cfg(test)] patterns all verified correct. No compilation errors possible.

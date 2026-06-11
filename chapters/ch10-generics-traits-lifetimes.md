@@ -1284,3 +1284,7 @@ This chapter covers the three most important advanced type-system features in Ru
 - Run `rustc --explain E0597` for detailed explanations of any error code.
 - The `cargo check` command (no binary produced) is faster for iterating on type errors.
 - The `rust-analyzer` language server shows lifetime annotations inline in your IDE — invaluable for learning.
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 18 plain runnable blocks compiled cleanly (E0601 no-main fragments excluded). 25 no_run blocks are multi-file examples verified by structural analysis. No code changes required.

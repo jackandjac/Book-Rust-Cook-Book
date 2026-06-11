@@ -33,7 +33,7 @@
 
 ### Min-heap pattern (Kth largest problems)
 
-```java
+```java,no_run
 PriorityQueue<Integer> minHeap = new PriorityQueue<>();   // min at head
 minHeap.offer(5);
 minHeap.offer(1);
@@ -44,7 +44,7 @@ minHeap.offer(3);
 
 ### Max-heap pattern (Last stone weight, etc.)
 
-```java
+```java,no_run
 PriorityQueue<Integer> maxHeap =
     new PriorityQueue<>(Collections.reverseOrder());      // max at head
 maxHeap.offer(5);
@@ -56,7 +56,7 @@ maxHeap.offer(3);
 
 ### Never use `Stack` — use `ArrayDeque`
 
-```java
+```java,no_run
 // Bad (legacy, synchronized, slow):
 Stack<Integer> stack = new Stack<>();
 
@@ -780,7 +780,7 @@ class MedianFinder {
 Every backtracking problem below follows the same structure. The key steps are:
 **choose**, **explore**, **un-choose** (backtrack).
 
-```java
+```java,no_run
 void backtrack(
         int start,
         int[] nums,

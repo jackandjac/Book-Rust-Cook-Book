@@ -551,7 +551,7 @@ enum NodeState { FOLLOWER, CANDIDATE, LEADER }
 
 **Rust `Option<usize>`**: `voted_for: Option<usize>` is the idiomatic representation of "either has a node ID or has not voted." The compiler forces you to handle both cases before using the value — you cannot dereference `None` without a compile-time error. No null pointer exceptions are possible.
 
-```rust
+```rust,no_run
 // Compiler enforces handling:
 if let Some(node) = voted_for { /* use node */ }
 // or:

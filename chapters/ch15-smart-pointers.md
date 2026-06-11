@@ -1194,3 +1194,7 @@ The chapter covers all required topics for Chapter 15 — `Box<T>`, `Deref`, `Dr
 - Compiler error messages shown verbatim for: recursive type (`E0072`), explicit destructor call (`E0040`), RefCell panic, and use of moved value.
 - `println!("{var}")` capture syntax used throughout where applicable.
 - All five requested practical examples present and complete.
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 25 plain runnable blocks compiled cleanly. All 3 compile_fail blocks verified: E0072 (recursive type) ✅, E0040 (explicit drop) ✅, E0382 (use of moved value) ✅. Rc::strong_count sequence (1→2→3→2→1) verified by running ✅. No code changes required.

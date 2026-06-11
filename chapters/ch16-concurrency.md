@@ -1143,3 +1143,7 @@ The chapter covers the core concurrency primitives competently and hits every to
 - `AtomicUsize::fetch_add` with `Ordering` is correct; all ordering variants listed exist in `std::sync::atomic::Ordering`.
 - The `Send`/`Sync` table entries for `MutexGuard` (`Send: No`) are correct — `MutexGuard` is deliberately not `Send` to prevent unlocking on a different thread than the one that locked.
 - The `RwLock` non-reentrancy note is accurate for `std::sync::RwLock`; `parking_lot::RwLock` has defined (but still discouraged) reentrancy behavior.
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 27 plain runnable blocks compiled cleanly (E0601 unsafe FFI fragment excluded). Key output: total messages=9 verified ✅. RwLock placement note from prior review acknowledged — non-reentrancy warning position is a documentation improvement, not a bug. No code changes required.

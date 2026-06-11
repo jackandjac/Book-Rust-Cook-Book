@@ -10,7 +10,7 @@
 
 ### Standard BFS Template with `ArrayDeque`
 
-```java
+```java,no_run
 import java.util.ArrayDeque;
 
 static int[] bfs(int start, int[][] adj, int n) {
@@ -48,7 +48,7 @@ The key trick: snapshot `queue.size()` at the start of each outer loop iteration
 currently in the queue belongs to the current level; everything pushed during this round belongs
 to the next level.
 
-```java
+```java,no_run
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,7 +85,7 @@ static List<List<Integer>> bfsLevels(int start, List<List<Integer>> adj) {
 Pre-populate the queue with ALL sources before beginning the main loop. Every source starts at
 distance 0; the BFS propagates outward simultaneously from all of them.
 
-```java
+```java,no_run
 import java.util.ArrayDeque;
 
 static int[] multiSourceBfs(int[] sources, int[][] adj, int n) {
@@ -113,7 +113,7 @@ static int[] multiSourceBfs(int[] sources, int[][] adj, int n) {
 
 ### Grid BFS Skeleton (4-directional)
 
-```java
+```java,no_run
 import java.util.ArrayDeque;
 
 static final int[][] DIRS4 = {{-1,0},{1,0},{0,-1},{0,1}};
@@ -155,7 +155,7 @@ When edge weights are only 0 or 1, use `ArrayDeque` as a deque: push weight-0 ed
 **front** (`addFirst`) and weight-1 edges to the **back** (`addLast`). This gives Dijkstra-like
 shortest paths in O(V + E) without a `PriorityQueue`.
 
-```java
+```java,no_run
 import java.util.ArrayDeque;
 
 static int[] zeroOneBfs(int start, int n, int[][][] graph) {
@@ -188,7 +188,7 @@ Expand two frontiers simultaneously — one from source, one from target — sto
 meet. Time complexity drops from O(b^d) to O(b^(d/2)). Most effective for large symmetric graphs
 (Word Ladder, etc.).
 
-```java
+```java,no_run
 import java.util.HashSet;
 import java.util.Set;
 

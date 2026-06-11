@@ -700,3 +700,7 @@ The advisor recommended keeping the chapter toward ~750 lines to avoid the overr
 | 18 | `cargo tree --duplicates` vs `--duplicate` | Low | The correct flag is `--duplicates` (plural). Verify with `cargo tree --help`. Some versions of Cargo may accept both. The chapter uses `--duplicates`, which is the documented form. OK but worth noting for the copy-editor. |
 | 19 | Rust 2024 edition impact on Cargo features | OK | The Rust 2024 edition changes the default resolver to version 3 and adjusts some `edition`-specific behaviors, but the Cargo.toml feature syntax, profile syntax, and workspace syntax shown in this chapter are all compatible with edition 2024. |
 | 20 | `#[cfg_attr]` syntax correctness | OK | `#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]` is valid Rust syntax. The `serde::` path form inside `derive` requires serde 1.0+ and is standard practice. |
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+Ch14 (Cargo) has no runnable code blocks — all content is Cargo.toml configuration, command-line examples, and prose. edition="2024" used throughout ✅. No compilation required.

@@ -24,7 +24,7 @@ Each problem's `Solution` class redeclares `TrieNode` as a `static` nested class
 compiles independently. The shape below is the default; problem-specific variants (extra `count`
 field, binary `Node[2]` for XOR) are introduced where needed.
 
-```java
+```java,no_run
 static class TrieNode {
     TrieNode[] children = new TrieNode[26];
     boolean isEnd;

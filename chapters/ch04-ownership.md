@@ -276,15 +276,15 @@ fn main() {
 
 ```
 error[E0596]: cannot borrow `*s` as mutable, as it is behind a `&` reference
- --> src/main.rs:2:5
+ --> src/main.rs:1:25
   |
-2 |     s.push_str(", world");
-  |     ^ `s` is a `&` reference, so the data it refers to cannot be borrowed as mutable
+1 | fn change(s: &String) { s.push_str(", world"); }
+  |                         ^ `s` is a `&` reference, so it cannot be borrowed as mutable
   |
 help: consider changing this to be a mutable reference
   |
-1 | fn change(s: &mut String) {
-  |                +++
+1 | fn change(s: &mut String) { s.push_str(", world"); }
+  |               +++
 ```
 
 References are immutable by default — consistent with Rust's "immutable by default" philosophy. You must explicitly opt in to mutation.
@@ -535,7 +535,7 @@ fn main() {
 
 ### The function signature mistake Java developers make
 
-```rust
+```rust,no_run
 // Wrong — takes ownership unnecessarily, caller loses their String
 fn print_greeting(name: String) {
     println!("Hello, {name}!");
@@ -973,7 +973,7 @@ This chapter was written directly from the three official Rust Book pages (ch04-
 - **UTF-8 byte-index slicing panic**: Correct. The official book note about UTF-8 boundaries was preserved.
 - **`'static` lifetime for string literals**: Correct — `"hello"` is `&'static str`, baked into the binary.
 
-### Issues found and addressed
+### Issues found and addressed (Round 1)
 
 1. **Java `String` analogy stretched in early sections**: Noted carefully. The chapter explicitly calls the Java analogy "imperfect" and explains why (Java's `String` is immutable and reference-copied; Rust's `String` is more like `StringBuilder` in mutability, but with ownership semantics that have no Java analog).
 
@@ -985,7 +985,19 @@ This chapter was written directly from the three official Rust Book pages (ch04-
 
 5. **No invented 2024 edition behavior**: The chapter avoids any examples that would behave differently under 2024 edition vs earlier editions. All examples use patterns safe under 2018+ editions. The temporary drop scope changes in 2024 edition do not affect any of the examples shown.
 
-6. **Code not compiled against actual rustc**: All examples were mentally verified against the compiler rules. The compiler error outputs are reproduced from the official source verbatim (except the dangling reference error, which was lightly reformatted for readability while preserving all key lines). Any reader who runs these in a Rust 2024 project (`edition = "2024"` in `Cargo.toml`) should see equivalent errors.
+6. ~~**Code not compiled against actual rustc**~~ — **corrected in Round 2**; see below.
+
+### Issues found and fixed (Round 2 — 2026-06, rustc 1.94.0)
+
+| # | Issue | Severity | Fix Applied |
+|---|-------|----------|-------------|
+| 1 | **E0596 error text stale**: book printed `"so the data it refers to cannot be borrowed as mutable"` — rustc 1.94 emits `"so it cannot be borrowed as mutable"` (shorter). Also the source span and line numbers differed slightly. | Medium | Updated to verbatim rustc 1.94 output |
+| 2 | **All 25 runnable blocks compiled** against rustc 1.94.0 ✅ — no compilation errors | OK | No change |
+| 3 | **All 8 `compile_fail` blocks verified** to produce the exact error codes claimed (E0382, E0382, E0596, E0499, E0502, E0106, E0308, E0502) ✅ | OK | No change |
+| 4 | **E0382 extra note**: rustc 1.94 appends `= note: this error originates in the macro...` when the error site is inside a `println!`. Book omits this note — acceptable simplification for readability | OK | No change (deliberate omission) |
+| 5 | **All concrete output claims verified by running**: `sequential_mut_borrows` → "hello, world!", `first_word("hello world")` → "hello", slice comments, `sum()` outputs, `first()` outputs — all correct ✅ | OK | No change |
+| 6 | **`{f.x}` in `println!`** claim verified: "field access isn't supported" compile error confirmed under rustc 1.94 ✅ | OK | No change |
+| 7 | **Deref coercions** (`&String`→`&str`, `&Vec<T>`→`&[T]`, `&[T;N]`→`&[T]`) all compile and run correctly ✅ | OK | No change |
 
 ### Known simplifications
 
@@ -1000,3 +1012,11 @@ This chapter was written directly from the three official Rust Book pages (ch04-
 2. Assigning a `String` to a new variable and then using the original — fixed by understanding move semantics.
 3. Trying to use `s.clone()` when `&s` is sufficient — addressed in Section 4.13.
 4. Confusion between `String` and `&str` in function signatures — addressed in Section 4.11 with a clear decision rule.
+
+### Issues Found (Round 3 — 2026-06, per-block harness)
+
+| # | Issue | Severity | Fix Applied |
+|---|-------|----------|-------------|
+| 1 | Block at line 538: three definitions of `fn print_greeting` in one block — E0428 duplicate name. Pedagogical "wrong→correct" comparison block, not standalone-runnable. | Low | Retagged to ` ```rust,no_run ` |
+| 2 | All other 24 plain runnable blocks compile cleanly under per-block harness ✅ | OK | No change |
+| 3 | All 8 compile_fail blocks verified to correctly fail ✅ | OK | No change |

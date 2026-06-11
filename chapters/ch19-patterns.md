@@ -846,7 +846,7 @@ fn main() {
 | `Point { x: 5 }` in a `let` statement | No equivalent | `x: 5` in `let` patterns **renames**, not compares. To compare, use a match guard: `Point { x, .. } if x == 5` |
 | Non-exhaustive `match` | `switch` without `default` gives a warning | Rust gives a **compile error**. Add `_` or cover all variants. |
 | `let _s = val` vs `let _ = val` | No equivalent — GC avoids this | `_s` **takes ownership** (val is moved); bare `_` never binds, never moves. |
-| `1..5` in a pattern | No range-pattern analogy | Only `1..=5` (inclusive) is valid in patterns. `1..5` is a compile error. |
+| `1..5` in a pattern | No range-pattern analogy | Both `1..=5` (inclusive) and `1..5` (exclusive) are valid in patterns since Rust 1.87. Prefer `1..=5` for clarity; `1..5` matches 1, 2, 3, 4 (excludes 5). |
 | Shadowing in `match Some(y)` | No variable shadowing in switch | A pattern variable `y` in a `match` arm **shadows** an outer `y` — it does not compare to it. Use a guard to compare: `Some(n) if n == y`. |
 
 ```rust
@@ -882,7 +882,7 @@ Third-person critical review covering factual accuracy, code correctness, and pe
 | # | Severity | Item | Finding |
 |---|---|---|---|
 | 1 | **High** | Task prompt: `if let` chains version wrong | Prompt states "1.64+". Incorrect. Rust 1.65 stabilized `let...else`; `if let` chains stabilized in **Rust 1.88 (June 26, 2025)**, require **Rust 2024 edition**. Chapter corrects this. |
-| 2 | **High** | Exclusive range `1..5` not valid in patterns | Only `1..=5` (inclusive) is valid in patterns. `1..5` is a compile error. Chapter calls this out in §19.3.4 and §19.6. |
+| 2 | ~~**High**~~ → **Corrected (Round 2)** | Exclusive range `1..5` not valid in patterns | ~~Only `1..=5` (inclusive) is valid in patterns. `1..5` is a compile error.~~ **WRONG as of Rust 1.87**: exclusive range patterns `1..5` were stabilized in Rust 1.87 (2025). Both forms are now valid. Updated the Java comparison table in §19.6 to reflect this. |
 | 3 | **Medium** | `_` vs `_name` ownership footgun | `_name` takes ownership; bare `_` does not. Java GC makes this invisible to Java developers. Addressed in §19.3.9. |
 | 4 | **Medium** | Match guard scope over `\|` alternatives | In `4 \| 5 \| 6 if y`, the guard applies to all alternatives, not just `6`. Demonstrated in §19.3.10. |
 | 5 | **Medium** | `ref`/`ref mut` obsolete in Rust 2024 | Match ergonomics (Rust 1.26) infers binding modes; `ref` is a historical artefact rarely needed in 2024 edition code. Chapter avoids it in main examples. |
@@ -897,3 +897,9 @@ Third-person critical review covering factual accuracy, code correctness, and pe
 ### Summary
 
 Fixes applied before publication: float range pattern → guard form (#8); usize range arm → guard (#7); version corrected from "1.64+" to "1.88 / Rust 2024 edition" (#1). All runnable code examples are now correct. Overall quality: **Good**.
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 27 plain runnable blocks compiled cleanly. Output claims verified: parse_port("8080")=8080 ✅, distance=5 ✅, is_weekend(6)=true ✅, is_weekend(3)=false ✅, outer y=10 ✅.
+
+**Critical fix:** Prior review note #2 claimed "exclusive range `1..5` is a compile error in patterns." This was verified WRONG under rustc 1.94: exclusive range patterns (`1..5`) are stable since Rust 1.87 and compile cleanly in both edition 2021 and 2024. The Java comparison table and review note #2 were corrected.

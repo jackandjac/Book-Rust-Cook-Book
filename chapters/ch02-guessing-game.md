@@ -1287,15 +1287,15 @@ fn main() {
 
 ## 📝 Chapter Review Notes
 
-*Third-person critical review performed after drafting. Key patterns were compiled and verified against rand 0.9.2 with `cargo check --offline` on Rust 1.94.0 (edition 2024). Rand 0.10.1 was confirmed as the latest stable version; rand 0.9.2 was used for verification because it shares the same public API (`random_range`, `rng()`).*
+*Third-person critical review performed after drafting.*
 
-### Issues Found and Fixed
+### Issues Found and Fixed (Round 1)
 
 | # | Issue | Severity | Fix Applied |
 |---|-------|----------|-------------|
 | 1 | Initial draft used `rand::thread_rng().gen_range(1..=100)` — the 0.8 API, removed in 0.9 | High | Replaced with `rand::random_range(1..=100)`, the idiomatic rand 0.9+/0.10 top-level function; verified via changelog and rand source |
 | 2 | Initial draft used `use rand::Rng;` trait import — no longer needed for `random_range` as a top-level function | High | Removed the trait import; replaced with plain `use rand;`. Verified with `cargo check`: no warnings fired for `use rand;` when `rand::random_range` is called by full path in edition 2024 |
-| 3 | `Rng` trait renamed to `RngExt` in rand 0.10 (as `rand_core::RngCore` was renamed to `Rng`); needed for method-call syntax on the RNG handle | Medium | Added versioning callout in section 2.3 explaining old vs new API; chapter uses the top-level `rand::random_range()` function which requires no trait import |
+| 3 | ~~`Rng` trait renamed to `RngExt` in rand 0.10~~ — **this claim was incorrect**; see Round 2 correction | Medium | See Round 2 |
 | 4 | `Difficulty` struct with `const` instances — `&'static Difficulty` requires rvalue static promotion of `&CONST` | Medium | Verified with `cargo check`: compiles cleanly. `const` items have `'static` lifetime; taking `&EASY` returns a `&'static Difficulty`. Promotion works here because `Difficulty` has no `Drop` impl or interior mutability |
 | 5 | `match read_line().to_lowercase().as_str()` — temporary `String` from `to_lowercase()` could drop before `as_str()` is used | High | Verified with `cargo check`: compiles cleanly. Temporaries in a `match` scrutinee live until the end of the `match` statement. No fix needed |
 | 6 | Helper function name inconsistency: section 2.7.3 used `read_line()`, section 2.7.4 used `read_trimmed_line()`, section 2.7.5 used `read_line()` again — three names for the same helper | Medium | Standardized to `read_line()` throughout all examples |
@@ -1303,6 +1303,15 @@ fn main() {
 | 8 | `parse_u32_in_range` helper uses turbofish `input.parse::<u32>()` — verified syntactically correct | OK | No change; `cargo check` confirms |
 | 9 | `u32::MAX` used for `best_score` initial value — correct for unsigned "not yet set" sentinel | OK | No change; `u32::MAX` is `4_294_967_295` |
 | 10 | Edition `"2024"` in all `Cargo.toml` examples — correct for Rust 1.85+ | OK | Already correct |
+
+### Issues Found and Fixed (Round 2 — 2026-06, compiler: rustc 1.94.0)
+
+| # | Issue | Severity | Fix Applied |
+|---|-------|----------|-------------|
+| 1 | Round 1 note #3 claimed "`Rng` trait renamed to `RngExt` in rand 0.10" — **false**. In rand 0.9.2 (verified from source), the trait is still `pub trait Rng: RngCore`. `RngExt` does not exist in rand 0.9 or 0.10. The confusion may have come from `rand_core::RngCore` being the low-level trait. No text in the runnable chapter code mentions `RngExt`, so no code change needed; note corrected. | Medium | Round 1 note #3 struck through and corrected here |
+| 2 | All runnable code blocks verified to compile cleanly under rustc 1.94.0 against rand 0.9.2 (offline) ✅ | OK | No change |
+| 3 | `rand = "0.10"` in section 2.3 Cargo.toml — confirmed correct: rand 0.10.1 is the latest stable and introduces no breaking changes to `random_range`. Verified offline against rand 0.9.2 which shares the same public API. | OK | No change |
+| 4 | `use rand;` (bare crate import) verified to compile without warnings in edition 2024 when calling `rand::random_range` by full path ✅ | OK | No change |
 
 ### What This Chapter Does Well
 

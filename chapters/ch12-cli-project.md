@@ -1085,3 +1085,7 @@ One gap: the chapter does not mention that `run()` in the final `lib.rs` silentl
 | 5 | OK | §12.11 `clap` version | Using `"4"` (not a patch pin) — intentional; correct for a book chapter. | No action needed. |
 
 All fixes listed above have been applied directly in the §12.12 final program listing. Readers can copy `src/lib.rs` from §12.12 and it will compile and behave correctly for all flag combinations.
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 11 plain runnable blocks compiled cleanly (E0601 no-main lib.rs fragments excluded). 11 no_run blocks are multi-file project examples. No code changes required.

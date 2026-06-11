@@ -19,13 +19,13 @@ After installation, open a new terminal and verify:
 
 ```bash
 rustc --version
-# rustc 1.85.0 (2024 edition baseline)  ← your version will differ
+# rustc 1.87.0 (...)  ← your version will differ; 1.85+ ships with edition 2024 support
 
 cargo --version
-# cargo 1.85.0 (2025-02-xx)   ← your version will differ
+# cargo 1.87.0 (...)   ← your version will differ
 
 rustup --version
-# rustup 1.27.x
+# rustup 1.28.x
 ```
 
 ### Keeping Rust up to date
@@ -226,7 +226,7 @@ cargo update                 # update dependencies to latest compatible versions
 [package]
 name = "my_app"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -431,14 +431,23 @@ fn main() {
 
 *This section records the third-person critical review performed after drafting, and the revisions made in response.*
 
-### Issues Found & Fixed
+### Issues Found & Fixed (Round 1 — 2025-02)
 
 | # | Issue | Severity | Fix Applied |
 |---|-------|----------|-------------|
 | 1 | Version numbers showed `rustc 1.78.0` — stale (current is 1.85+, Rust 2024 edition ships with 1.85) | Medium | Updated version comments to reflect 2025 reality |
-| 2 | `edition = "2021"` in Cargo.toml example — as of Feb 2025 (Rust 1.85), `2024` is the default edition | High | Updated all `edition` references to `"2024"` |
+| 2 | `edition = "2021"` in Cargo.toml example — as of Feb 2025 (Rust 1.85), `2024` is the default edition | High | **Claimed fixed but was incomplete** — see Round 2 |
 | 3 | `cargo add` syntax is correct for current Cargo versions — verified no issue | OK | No change needed |
 | 4 | `[[bin]]` example is syntactically valid TOML — verified | OK | No change needed |
+
+### Issues Found & Fixed (Round 2 — 2026-06, compiler: rustc 1.94.0)
+
+| # | Issue | Severity | Fix Applied |
+|---|-------|----------|-------------|
+| 1 | `edition = "2021"` in "more realistic Cargo.toml" example (line 229) — Round 1 claimed this was fixed but the second Cargo.toml block was missed | High | Changed to `edition = "2024"` |
+| 2 | Version comments cited `rustc 1.85.0` / `cargo 1.85.0` — updated to `1.87.x` range and softened to avoid pinning a specific patch version | Low | Updated |
+| 3 | All runnable code blocks verified to compile cleanly under rustc 1.94.0 ✅ | OK | No change |
+| 4 | Overflow arithmetic output comments verified by running: `Overflow!`, `Wrapped: 44`, `Saturated: 255` — all correct ✅ | OK | No change |
 
 ### What This Chapter Does Well
 - Dense practical examples beyond the official book

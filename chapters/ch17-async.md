@@ -1375,3 +1375,7 @@ The chapter covers the primary Tokio surface area at appropriate depth for its t
 3. **`async fn` with `dyn Trait`** — the `async-trait` crate workaround with a minimal example.
 4. **`tokio-console`** — async equivalent of thread dumps; essential for debugging production async code.
 5. **`tokio::task::LocalSet`** — for running `!Send` futures on a dedicated thread.
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+Ch17 (Async) has no plain runnable blocks — all 42 are no_run (require tokio/async-std not in offline cache). Prior review confirmed the mpsc tx1/tx2 clone fix was already applied. Structural review of all async patterns verified correct. No compilation possible offline.

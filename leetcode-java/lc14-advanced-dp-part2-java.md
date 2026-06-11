@@ -1481,7 +1481,7 @@ class Solution2826 {
 
 ### Tree DP: return pair as int[2]
 
-```java
+```java,no_run
 private int[] dfs(TreeNode node) {
     if (node == null) return new int[]{0, 0};
     var left  = dfs(node.left);
@@ -1494,7 +1494,7 @@ private int[] dfs(TreeNode node) {
 
 ### Bitmask: iterate all subsets of a mask
 
-```java
+```java,no_run
 for (int sub = mask; sub > 0; sub = (sub - 1) & mask) {
     // process sub as a subset of mask
 }
@@ -1503,7 +1503,7 @@ for (int sub = mask; sub > 0; sub = (sub - 1) & mask) {
 
 ### State Machine: snapshot before updating
 
-```java
+```java,no_run
 int ph = held, ps = sold, pr = rest;  // snapshot
 held = Math.max(ph, pr - price);
 sold = ph + price;
@@ -1512,7 +1512,7 @@ rest = Math.max(pr, ps);
 
 ### Bitmask DP 0-1 knapsack (each item used at most once)
 
-```java
+```java,no_run
 long[] prev = dp.clone();  // snapshot at start of each item
 for (int mask = 0; mask <= full; mask++) {
     for (int person : itemUsers) {
@@ -1525,7 +1525,7 @@ for (int mask = 0; mask <= full; mask++) {
 
 ### Mutable accumulator in tree DFS
 
-```java
+```java,no_run
 // Option A: instance field (reset at method entry)
 private int ans;
 

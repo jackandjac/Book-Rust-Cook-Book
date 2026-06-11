@@ -83,7 +83,7 @@ fn main() {
 
 When a local variable shares the same name as a struct field, you can omit the repetition:
 
-```rust
+```rust,no_run
 fn build_user(email: String, username: String) -> User {
     User {
         active: true,
@@ -224,7 +224,7 @@ This is the safe, simple choice for beginners.
 
 You *can* store references in structs, but the compiler requires you to annotate lifetimes to prove the reference outlives the struct:
 
-```rust
+```rust,compile_fail
 // This will NOT compile — missing lifetime specifier
 struct Excerpt {
     text: &str,   // ❌ error[E0106]: missing lifetime specifier
@@ -975,7 +975,7 @@ fn partial_move_pitfall() {
 // ❌ PITFALL 3: Mutating a field without mut on the binding
 fn mutability_pitfall() {
     let rect = Rectangle { width: 10.0, height: 20.0 };
-    // rect.width = 30.0;  // error[E0596]: cannot assign to `rect.width`, `rect` is not declared as mutable
+    // rect.width = 30.0;  // error[E0594]: cannot assign to `rect.width`, as `rect` is not declared as mutable
     let mut rect = Rectangle { width: 10.0, height: 20.0 };
     rect.width = 30.0;  // ✅ OK
 }
@@ -1055,6 +1055,16 @@ impl Rectangle {
 | 8 | Pitfall 5 contradicted itself: the comment claimed `println!("{p}")` would fail, but `impl fmt::Display for Point` was defined five lines below in the same block — making the commented-out line actually valid | High | Reframed pitfall to show the error as a "before" scenario, clarified that the `impl` block is the fix, and annotated `println!("{p}")` as valid once Display is implemented |
 | 9 | `struct Good` in Pitfall 1 was defined but never used — would trigger a `dead_code` warning if copied | Low | Added a `_use_good()` helper function using the struct |
 
+### Issues Found & Fixed (Round 2 — 2026-06, rustc 1.94.0)
+
+| # | Issue | Severity | Fix Applied |
+|---|-------|----------|-------------|
+| 1 | **Pitfall 3 wrong error code**: commented `error[E0596]` for assigning to immutable struct field — actual rustc 1.94 emits `error[E0594]` ("cannot assign to `rect.width`, as `rect` is not declared as mutable"). E0596 is for borrowing through `&` references. | Medium | Changed to `error[E0594]` with correct message text |
+| 2 | All runnable code blocks compiled under rustc 1.94.0 ✅ (warnings only, no errors) | OK | No change |
+| 3 | All concrete output claims verified by running: Point distances (5.00 ✅), midpoint (1.5, 2) ✅, translate (2, 5) ✅, Rectangle(30x50) ✅, Area: 1500.00 ✅, Rectangle(60x100) ✅ | OK | No change |
+| 4 | Partial move behavior (struct update syntax) verified: after `User { username: "bob", ..user1 }`, `user1.age` (Copy) accessible ✅; `user1.username` would be E0382 if moved ✅ | OK | No change |
+| 5 | `BankAccount::transfer` with two `&mut` params: verified compiles correctly — Rust allows two distinct `&mut` borrows of different values simultaneously ✅ | OK | No change |
+
 ### What This Chapter Does Well
 - All five practical examples build from simple to complex, with each introducing a new concept
 - Java comparisons address specific mental model differences (consuming `self` has no Java analog; this is explicitly noted)
@@ -1071,3 +1081,11 @@ impl Rectangle {
 ---
 
 *Next: [Chapter 6 — Enums and Pattern Matching](ch06-enums.md)*
+
+### Issues Found (Round 3 — 2026-06, per-block harness)
+
+| # | Issue | Severity | Fix Applied |
+|---|-------|----------|-------------|
+| 1 | Block at line 86: `build_user` references `User` struct not defined in block — E0425. Fragment depends on surrounding struct definition. | Low | Retagged to ` ```rust,no_run ` |
+| 2 | Block at line 227: "This will NOT compile" `struct Excerpt { text: &str }` was tagged plain ` ```rust ` — should be ` ```rust,compile_fail `. E0106 confirmed as actual error code. | Low | Retagged to ` ```rust,compile_fail `. Error code E0106 verified correct. |
+| 3 | All other 24 plain runnable blocks compile cleanly under per-block harness ✅ | OK | No change |

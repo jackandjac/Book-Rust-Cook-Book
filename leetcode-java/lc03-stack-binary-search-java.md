@@ -509,7 +509,7 @@ class LC84LargestRectangle {
 Binary search in Java uses the same three-variable left/right/mid template as every other
 language. The critical rule is the **overflow-safe mid calculation**:
 
-```java
+```java,no_run
 // WRONG — can overflow if left + right > Integer.MAX_VALUE
 int mid = (left + right) / 2;
 
@@ -522,7 +522,7 @@ overflows a 32-bit `int`. The safe form avoids the addition entirely.
 
 **Standard template used throughout this section:**
 
-```java
+```java,no_run
 // "find leftmost position where condition holds" template
 int left = 0, right = nums.length; // right is exclusive upper bound
 while (left < right) {

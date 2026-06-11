@@ -1550,3 +1550,7 @@ This chapter covers the required OOP topics thoroughly and maintains the cookboo
 ### Overall Assessment
 
 The chapter is substantially complete and covers all required topics: encapsulation, no-inheritance, polymorphism, trait objects (including dyn-compatibility rules), and eight design patterns with practical examples. The three originally-High issues have been resolved in this revision. The remaining Medium/Low items are editorial improvements for a final production pass, not correctness blockers. The line-count overage is documented above.
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 20 plain runnable blocks compiled cleanly. Output claims verified: static squarer 9.0 ✅, dynamic cuber 27.0 ✅. Dyn-compatible vs non-dyn-compatible trait examples compile and fail as expected ✅. No code changes required.

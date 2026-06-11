@@ -13,7 +13,7 @@ The definitions below are shown once for clarity. Each problem's `class Solution
 re-declares `TreeNode` as a `static` nested class so every snippet compiles independently
 without external dependencies.
 
-```java
+```java,no_run
 // Shared TreeNode — re-declared inside each Solution class that needs it
 static class TreeNode {
     int val; TreeNode left, right;

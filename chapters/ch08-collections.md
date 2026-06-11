@@ -1102,3 +1102,7 @@ The chapter covers all required topics from the task specification: Vec creation
 | 8 | Low | Line count: ~980 lines — within the 800–1000 target range | Within budget |
 | 9 | OK | All five required practical examples present: word freq, phone book, CSV parser, KV store, string manipulation (reverse + Caesar) | Complete |
 | 10 | OK | Java comparisons present in all three major sections (Vec, String, HashMap) with explicit tables | Complete |
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All runnable blocks compiled cleanly (no errors). Output claims verified: ROT13 "Uryyb, Jbeyq!" ✅, decoded "Hello, World!" ✅, shift-3 "Dwwdfn dw gdzq" ✅, reverse words ✅, dedup without sort `[1, 2, 1, 3, 2]` ✅, dedup with sort `[1, 2, 3]` ✅, Cyrillic byte length 24 ✅, first 4 bytes "Зд" ✅. The compile_fail block (borrow of vec while ref held, E0502) verified correct.

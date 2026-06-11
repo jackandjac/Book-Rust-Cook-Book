@@ -1301,3 +1301,7 @@ All required TOPICS items are covered:
 - Closures: syntax forms [OK], type inference [OK], capture by ref/mut/value [OK], Fn/FnMut/FnOnce [OK], move for threads [OK], generic bounds [OK], impl Fn return [OK], memoization struct [OK], Java comparison [OK]
 - Iterators: next()/Item [OK], lazy evaluation [OK], consuming adaptors (all 11 listed) [OK], iterator adaptors (all 16 listed) [OK], into_iter/iter/iter_mut [OK], collect into Vec/HashMap/String/HashSet [OK], custom Fibonacci [OK], zero-cost/LLVM [OK], Java Stream comparison table [OK]
 - Practical examples: log processor [OK], word frequency [OK], Fibonacci pipeline [OK], zip pairing [OK], flat_map nested data [OK]
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 29 plain runnable blocks compiled cleanly. Key output claims verified: add_one(5)=6 ✅, multiply(4)=8 ✅, is_above(15)=true ✅. Iterator chains compile and produce correct output ✅. No code changes required.

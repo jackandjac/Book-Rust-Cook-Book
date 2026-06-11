@@ -1246,3 +1246,8 @@ The code examples in this chapter were written for Rust 2024 edition (stabilized
 - Error handling in `async` Rust with `tokio`/`async-std` (covered in the async chapter).
 - `?` in closures — `?` cannot be used inside `||` closures; you must use `match` or `.and_then()` instead. This is a common beginner frustration not covered in depth here.
 - `anyhow::Error::downcast_ref::<T>()` for inspecting the underlying concrete type.
+
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 12 plain runnable blocks compiled cleanly. Output claims verified: `parse_doubled("21")` → `Ok(42)` ✅, `parse_positive("5")` → `Ok(5)` ✅, `parse_positive("-3")` → `Err("expected non-negative, got -3")` ✅, `parse_all(["1","2","3","42"])` → `Ok([1, 2, 3, 42])` ✅, `find_first_digit("abc123")` → `Ok('1')` ✅, `localhost()` → `127.0.0.1` ✅. `thiserror`/`anyhow` blocks are `no_run` — not compiled offline (crates not cached). The `thiserror = "2"` API claim cannot be verified offline; the "Verify on publish" flag stands.

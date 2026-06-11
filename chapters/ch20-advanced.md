@@ -1103,3 +1103,7 @@ The chapter covers all five topic areas prescribed by the task brief — unsafe 
 | I-14 | OK | `?Sized` bound | `print_value<T: ?Sized + Display>(t: &T)` correct — `t` is behind `&` pointer | Verified |
 | I-15 | OK | `impl Fn` vs `Box<dyn Fn>` | Heterogeneous closure return type explained with compiler error callout | Verified |
 | I-16 | High | Union fields | The canonical Rust Book 5th unsafe superpower (union field access) is absent. The task brief replaced it with `extern "C"`, which is covered. A one-line note is included but could be more prominent for readers who cross-reference the Book. | Acceptable per task brief |
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 28 plain runnable blocks compiled cleanly (E0601 trait/macro fragments excluded). Output claims verified: |b|=5.0000 ✅, must_parse("99")=99 ✅, first_even=4 ✅, &i32 size=8 ✅, apply/double/square ✅, add5(3)=8 ✅. No code changes required.

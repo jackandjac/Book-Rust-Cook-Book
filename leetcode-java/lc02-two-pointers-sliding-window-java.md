@@ -654,7 +654,7 @@ class Solution {
 
 ### `int[26]` frequency array (preferred over `HashMap` for lowercase a–z)
 
-```java
+```java,no_run
 int[] freq = new int[26];
 for (char c : s.toCharArray()) freq[c - 'a']++;
 
@@ -664,7 +664,7 @@ if (Arrays.equals(freq1, freq2)) { /* match */ }
 
 ### `int[128]` for full ASCII (all printable characters)
 
-```java
+```java,no_run
 int[] lastSeen = new int[128];
 Arrays.fill(lastSeen, -1);  // -1 = "never seen" sentinel
 // Index with: lastSeen[s.charAt(i)]
@@ -672,7 +672,7 @@ Arrays.fill(lastSeen, -1);  // -1 = "never seen" sentinel
 
 ### `Map.merge` for frequency maps (Java 8+, cleaner than getOrDefault)
 
-```java
+```java,no_run
 Map<Character, Integer> freq = new HashMap<>();
 for (char c : t.toCharArray()) freq.merge(c, 1, Integer::sum);
 // Decrement: freq.merge(c, -1, Integer::sum);
@@ -680,7 +680,7 @@ for (char c : t.toCharArray()) freq.merge(c, 1, Integer::sum);
 
 ### `ArrayDeque` as a monotonic deque
 
-```java
+```java,no_run
 Deque<Integer> deque = new ArrayDeque<>();  // stores indices
 
 // Add index i, maintaining decreasing value order:
@@ -698,7 +698,7 @@ if (!deque.isEmpty() && deque.peekFirst() + k <= i)
 
 ### Two-pointer template
 
-```java
+```java,no_run
 int l = 0, r = arr.length - 1;
 while (l < r) {
     // process arr[l], arr[r]
@@ -709,7 +709,7 @@ while (l < r) {
 
 ### Variable sliding window template
 
-```java
+```java,no_run
 int left = 0, maxLen = 0;
 // state: int[26] or Map<Character, Integer>
 for (int right = 0; right < s.length(); right++) {

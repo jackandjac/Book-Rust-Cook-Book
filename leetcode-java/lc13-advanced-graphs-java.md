@@ -8,7 +8,7 @@
 
 ### Dijkstra's Algorithm (Min-Heap)
 
-```java
+```java,no_run
 import java.util.*;
 
 // PriorityQueue<int[]> is a min-heap on int[0] (distance).
@@ -40,7 +40,7 @@ static int[] dijkstra(List<int[]>[] graph, int src, int n) {
 
 ### Bellman-Ford Template
 
-```java
+```java,no_run
 static long[] bellmanFord(int[][] edges, int src, int n) {
     long[] dist = new long[n];
     Arrays.fill(dist, Long.MAX_VALUE / 2);
@@ -60,7 +60,7 @@ static long[] bellmanFord(int[][] edges, int src, int n) {
 
 ### Floyd-Warshall Template
 
-```java
+```java,no_run
 static int[][] floydWarshall(int n, int[][] edges) {
     final int INF = Integer.MAX_VALUE / 2;   // half-MAX avoids overflow on addition
     int[][] dist = new int[n][n];
@@ -83,7 +83,7 @@ static int[][] floydWarshall(int n, int[][] edges) {
 
 ### Topological Sort — Kahn's BFS (In-Degree)
 
-```java
+```java,no_run
 static int[] kahnTopo(int n, List<Integer>[] adj) {
     int[] inDeg = new int[n];
     for (int u = 0; u < n; u++)
@@ -105,7 +105,7 @@ static int[] kahnTopo(int n, List<Integer>[] adj) {
 
 ### Topological Sort — DFS Post-Order
 
-```java
+```java,no_run
 static int[] dfsTopo(int n, List<Integer>[] adj) {
     int[] state = new int[n];               // 0=unvisited 1=in-progress 2=done
     int[] order = new int[n];
@@ -132,7 +132,7 @@ private static void dfs(int u, List<Integer>[] adj, int[] state,
 
 ### Union-Find (Path Compression + Union by Rank)
 
-```java
+```java,no_run
 static class UnionFind {
     int[] parent, rank;
     int count;
@@ -162,7 +162,7 @@ static class UnionFind {
 
 ### Kruskal's MST
 
-```java
+```java,no_run
 static int kruskal(int n, int[][] edges) {
     Arrays.sort(edges, Comparator.comparingInt(a -> a[2]));
     var uf = new UnionFind(n);
@@ -175,7 +175,7 @@ static int kruskal(int n, int[][] edges) {
 
 ### Prim's MST
 
-```java
+```java,no_run
 static int prim(int n, List<int[]>[] graph) {
     boolean[] inMST = new boolean[n];
     PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[0]));

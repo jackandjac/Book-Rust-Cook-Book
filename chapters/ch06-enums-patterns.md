@@ -1058,9 +1058,20 @@ fn main() {
 | 9 | `parse_command` in Section 6.12 uses slice patterns (`["quit"]`, etc.) on a `Vec<&str>`. Slice patterns on Vec via `.as_slice()` are stable. Here `parts` is a `Split` iterator collected via `parts.next()` repeated calls, *not* converted to a slice — the pattern match is actually on `Option<&str>` from `.next()`, not a slice. Rewrote parse_line to avoid the misleading `as_slice` implication in comments. | Medium | Confirmed the final code uses `parts.next()` in a nested match, not a slice pattern. No slice pattern syntax appears. Code is correct. |
 | 10 | `while let Some(Some(event)) = events.pop()` in Section 6.11: `events` is `Vec<Option<&str>>`. `events.pop()` returns `Option<Option<&str>>`. Matching `Some(Some(event))` extracts the inner `&str`. This is correct nested destructuring — verified. | OK | No change needed. |
 
-### What Could Not Be Compile-Verified
+### Round 2 verification (2026-06, rustc 1.94.0)
 
-The code was written and traced by hand; it was not run through `rustc` or the Rust Playground. Readers who want certainty should paste each example into [play.rust-lang.org](https://play.rust-lang.org) with `edition = "2024"`. All examples are structured to be self-contained (each has its own `fn main()` or is a standalone fragment) and should compile without additional dependencies.
+All code in this chapter compiled and ran cleanly. Key verifications:
+
+| Item | Result |
+|------|--------|
+| All 25 runnable blocks compiled | ✅ (warnings only, no errors) |
+| Shape outputs (area/perimeter) | ✅ Circle 28.27/18.85, Rectangle 24.00/20.00, Triangle 6.00/12.00 |
+| State machine trace (3 fails → Failed) | ✅ Logic correct |
+| `safe_divide` outputs | ✅ 10/3=3.3333, 7/0=error, bad/2=error, 9/3=3.0000 |
+| `parse_command` slice patterns on `as_slice()` | ✅ Works correctly |
+| `while let Some(Some(event))` stops at `None` | ✅ "this is never reached" is never processed |
+| `let...else` (Rust 1.65+) compiles on 1.94 | ✅ |
+| Note #9 (prior review) was wrong — slice patterns DO appear and DO work | Corrected |
 
 ### What This Chapter Does Well
 

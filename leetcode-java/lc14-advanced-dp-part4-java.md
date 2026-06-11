@@ -1805,7 +1805,7 @@ class Solution3041 {
 
 ## Monotone Deque Cheatsheet (Java)
 
-```java
+```java,no_run
 // Max-deque: front = index of maximum dp in window
 var deq = new ArrayDeque<Integer>();
 for (int i = 0; i < n; i++) {

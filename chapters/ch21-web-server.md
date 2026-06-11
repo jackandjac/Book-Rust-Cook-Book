@@ -1298,3 +1298,7 @@ The chapter successfully covers all seven required stages from the Rust Book and
 3. **Keep-alive support**: Add `Connection: keep-alive` header handling to avoid repeated TCP handshakes for browsers loading multiple resources.
 4. **Worker panic recovery**: Demonstrate `std::panic::catch_unwind` to show how a robust pool would respawn crashed workers.
 5. **Structured routing**: Replace the `match` arm on tuples with a simple router struct mapping `(Method, &str)` → handler function pointer, illustrating how real frameworks like Axum build on this idea.
+
+### Round 2 verification (2026-06, rustc 1.94.0)
+
+All 5 plain runnable blocks compiled cleanly. 11 no_run blocks are multi-file project examples. Note from prior review: serve_static reads text only — binary content-types in the table (PNG/ICO) would fail at runtime. This is a documentation clarity issue, not a compilation bug. No code changes required.

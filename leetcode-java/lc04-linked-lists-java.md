@@ -54,7 +54,7 @@ Assertions use `if (!cond) throw new AssertionError("msg")` — no `-ea` flag ne
 
 This definition appears inside each problem's class so blocks are copy-paste runnable. The canonical form used throughout:
 
-```java
+```java,no_run
 static class ListNode {
     int val;
     ListNode next;
@@ -67,7 +67,7 @@ static class ListNode {
 
 Define these once in a combined file, or inline per-block as shown in each problem:
 
-```java
+```java,no_run
 static ListNode toList(int... vals) {
     ListNode dummy = new ListNode(0);
     ListNode tail = dummy;
